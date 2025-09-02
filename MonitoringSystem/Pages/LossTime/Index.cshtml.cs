@@ -64,7 +64,8 @@ namespace MonitoringSystem.Pages.LossTime
             "Material Shortage Inhouse",
             "Quality Trouble",
             "Machine Trouble",
-            "Rework"
+            "Rework",
+            "Loss Awal Hari"
         };
 
         private readonly List<(TimeSpan Start, TimeSpan End)> FixedBreakTimes = new List<(TimeSpan, TimeSpan)>
@@ -542,6 +543,8 @@ namespace MonitoringSystem.Pages.LossTime
                 return "Machine Trouble";
             else if (reason.Contains("rework"))
                 return "Rework";
+            else if (reason.Contains("loss awal hari"))
+                return "Loss Awal Hari";
             else
                 return "Other";  // Default category
         }

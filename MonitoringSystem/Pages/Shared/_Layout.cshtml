@@ -56,7 +56,7 @@
                     </a>
                 </li>
             </ul>
-            
+
             @* Final Production *@
             @if (title == "Production Summary")
             {
@@ -64,20 +64,20 @@
                     <p class="fs-5 fw-semibold text-white">PROD. SHIFT</p>
                     <div class="bg-white rounded-3 p-3">
                         <div class="form-check">
-                            <input class="form-check-input border-black" type="checkbox" id="shiftACheckBox" />
-                            <label class="form-check-label fs-5 fw-semibold" style="color: rgb(61, 121, 176);">
+                            <input class="form-check-input border-black" type="checkbox" id="shift1Checkbox"/>
+                            <label class="form-check-label fs-5 fw-semibold" for="shift1Checkbox" style="color: rgb(61, 121, 176);">
                                 SHIFT 1
                             </label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input border-black" type="checkbox" id="shiftBCheckBox" />
-                            <label class="form-check-label fs-5 fw-semibold" style="color: rgb(61, 121, 176);">
+                            <input class="form-check-input border-black" type="checkbox" id="shift2Checkbox"/>
+                            <label class="form-check-label fs-5 fw-semibold" for="shift2Checkbox" style="color: rgb(61, 121, 176);">
                                 SHIFT 2
                             </label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input border-black" type="checkbox" id="shiftBCheckBox" />
-                            <label class="form-check-label fs-5 fw-semibold" style="color: rgb(61, 121, 176);">
+                            <input class="form-check-input border-black" type="checkbox" id="shift3Checkbox"/>
+                            <label class="form-check-label fs-5 fw-semibold" for="shift3Checkbox" style="color: rgb(61, 121, 176);">
                                 SHIFT 3
                             </label>
                         </div>
@@ -95,8 +95,8 @@
                 </a>
                 <span class="ms-3">@layoutMenu</span>
             </div>
-            <div class="p-4" style="min-height: 100%">
-                <div class="d-flex justify-content-between align-items-center sticky-top p-3 bg-white rounded-3 shadow-sm mb-4">
+            <div class="p-2" style="min-height: 100%">
+                <div class="d-flex justify-content-between align-items-center sticky-top p-2 bg-white rounded-3 shadow-sm mb-2">
                     <div class="nav-menu d-flex align-items-center">
                         <h5 class="align-middle ms-2 fw-semibold">@ViewData["Title"]</h5>
                         <div class="ms-4 vr"></div>
@@ -112,13 +112,18 @@
                         <a class="ms-4 nav-link text-dark fw-semibold" href="~/LossTime/index ">
                             Loss Time
                         </a>
+
+                        <a class="ms-4 nav-link text-dark fw-semibold" href="~/LossTimeReport/index">
+                            Loss Time Report
+                        </a>
+
                         <a class="ms-4 nav-link text-dark fw-semibold" href="~/ProductionReport/index ">
                             Production Report
                         </a>
                     </div>
-                    <div class="d-flex align-items-center gap-3 text-end">
-                        <div class="refreshDateTime text-dark">
-                            <p class="mb-0 fw-semibold">@(DateTime.Now.ToString("dddd, dd MMM yyyy"))</p>
+                    <div class="d-flex align-items-center gap-3 justify-content-end text-end">
+                        <div class="refreshDateTime d-flex align-items-center gap-3 justify-content-end text-dark">
+                            <p class="mb-0 fw-semibold">@(DateTime.Now.ToString("dd MMM yyyy"))</p>
                             <p class="mb-0 fw-semibold">@(DateTime.Now.ToString("HH:mm:ss tt"))</p>
                         </div>
                     </div>
@@ -132,12 +137,25 @@
                 </div>
             </div>
             <div class="position-sticky sticky-bottom w-100 bg-white shadow-sm p-1 px-4">
-                @if (ViewContext.RouteData.Values["page"]?.ToString()?.Contains("LossTime") == true)
+                @if (ViewContext.RouteData.Values["page"]?.ToString()?.Contains("ProductionReport") == true)
+                {
+                    <div class="container-fluid text-center py-2">
+                        <span>&copy; 2025 - Panasonic Manufacturing Indonesia (PMI) - AC BU</span>
+                    </div>
+                }
+                else if (ViewContext.RouteData.Values["page"]?.ToString()?.Contains("LossTimeReport") == true)
+                {
+                        <div class="container-fluid text-center py-2">
+                            <span>&copy; 2025 - Panasonic Manufacturing Indonesia (PMI) - AC BU</span>
+                        </div>
+                }
+                else if (ViewContext.RouteData.Values["page"]?.ToString()?.Contains("LossTime") == true)
                 {
                     @await Html.PartialAsync("_LossTimeSummaryPartial")
                 }
-                @if (ViewContext.RouteData.Values["page"]?.ToString()?.Contains("LossTime") != true){
-                    <p class="text-dark text-center fs-6 mt-3">&copy; 2025 - Panasonic Manufacturing Indonesia (PMI) - AC BU</p>
+                else
+                {
+            <p class="text-dark text-center fs-6 mt-3">&copy; 2025 - Panasonic Manufacturing Indonesia (PMI) - AC BU</p>
                 }
             </div>
         </div>
@@ -168,25 +186,46 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/identity-scripts.js" asp-append-version="true"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const shiftACheckbox = document.getElementById("shiftACheckBox");
-            const shiftBCheckbox = document.getElementById("shiftBCheckBox");
-            const shiftATable = document.getElementById("ShiftATable");
-            const shiftBTable = document.getElementById("ShiftBTable");
+    document.addEventListener("DOMContentLoaded", function () {
+        // Hanya jalankan skrip ini jika kita berada di halaman Summary
+        const shift1Checkbox = document.getElementById("shift1Checkbox");
+        if (shift1Checkbox) {
+            // Ambil elemen checkbox
+            const shift2Checkbox = document.getElementById("shift2Checkbox");
+            const shift3Checkbox = document.getElementById("shift3Checkbox");
 
+            // Ambil elemen tabel dari halaman index.cshtml
+            const shift1Table = document.getElementById("Shift1Table");
+            const shift2Table = document.getElementById("Shift2Table");
+            const shift3Table = document.getElementById("Shift3Table");
+            // Tabel Overall akan selalu terlihat, jadi tidak perlu diatur
+
+            // Fungsi untuk memperbarui visibilitas tabel
             function updateTableVisibility() {
-                const showShiftA = shiftACheckbox.checked;
-                const showShiftB = shiftBCheckbox.checked;
+                const showShift1 = shift1Checkbox.checked;
+                const showShift2 = shift2Checkbox.checked;
+                const showShift3 = shift3Checkbox.checked;
 
-                shiftATable.style.display = showShiftA || (!showShiftA && !showShiftB) ? "" : "none";
-                shiftBTable.style.display = showShiftB || (!showShiftA && !showShiftB) ? "" : "none";
+                // Cek apakah ada checkbox yang dicentang
+                const anyChecked = showShift1 || showShift2 || showShift3;
+
+                // Logika untuk menampilkan/menyembunyikan tabel
+                // Jika tidak ada yang dicentang, tampilkan semua.
+                // Jika ada yang dicentang, tampilkan hanya yang sesuai.
+                if (shift1Table) shift1Table.style.display = showShift1 || !anyChecked ? "" : "none";
+                if (shift2Table) shift2Table.style.display = showShift2 || !anyChecked ? "" : "none";
+                if (shift3Table) shift3Table.style.display = showShift3 || !anyChecked ? "" : "none";
             }
 
-            shiftACheckbox.addEventListener("change", updateTableVisibility);
-            shiftBCheckbox.addEventListener("change", updateTableVisibility);
+            // Tambahkan event listener ke setiap checkbox
+            shift1Checkbox.addEventListener("change", updateTableVisibility);
+            shift2Checkbox.addEventListener("change", updateTableVisibility);
+            shift3Checkbox.addEventListener("change", updateTableVisibility);
 
+            // Panggil fungsi sekali saat halaman dimuat untuk mengatur status awal
             updateTableVisibility();
-        });
+        }
+    });
 
         $(document).ready(function () {
             setInterval(function () {

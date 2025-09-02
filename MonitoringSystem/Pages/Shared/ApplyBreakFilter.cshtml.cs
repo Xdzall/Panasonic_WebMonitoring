@@ -53,21 +53,41 @@ namespace MonitoringSystem.Pages.Shared
         {
             var today = DateTime.Today;
 
-            // Always create a new record instead of updating existing one
-            var breakTime = new AdditionalBreakTime
-            {
-                Date = today,
-                BreakTime1Start = BreakTime1Start,
-                BreakTime1End = BreakTime1End,
-                BreakTime2Start = BreakTime2Start,
-                BreakTime2End = BreakTime2End,
-                CreatedAt = DateTime.Now
-            };
+            // Cari data break time yang paling baru untuk hari ini
+            var existingBreakTime = await _context.Set<AdditionalBreakTime>()
+                .Where(b => b.Date.Date == today)
+                .OrderByDescending(b => b.CreatedAt)
+                .FirstOrDefaultAsync();
 
-            _context.Set<AdditionalBreakTime>().Add(breakTime);
+            if (existingBreakTime != null)
+            {
+                // Jika data sudah ada, perbarui nilainya
+                existingBreakTime.BreakTime1Start = BreakTime1Start;
+                existingBreakTime.BreakTime1End = BreakTime1End;
+                existingBreakTime.BreakTime2Start = BreakTime2Start;
+                existingBreakTime.BreakTime2End = BreakTime2End;
+
+                _context.Set<AdditionalBreakTime>().Update(existingBreakTime);
+            }
+            else
+            {
+                // Jika data belum ada, buat record baru
+                var newBreakTime = new AdditionalBreakTime
+                {
+                    Date = today,
+                    BreakTime1Start = BreakTime1Start,
+                    BreakTime1End = BreakTime1End,
+                    BreakTime2Start = BreakTime2Start,
+                    BreakTime2End = BreakTime2End,
+                    CreatedAt = DateTime.Now
+                };
+
+                _context.Set<AdditionalBreakTime>().Add(newBreakTime);
+            }
+
             await _context.SaveChangesAsync();
 
-            // Return to the page that initiated the form submission
+            // Kembali ke halaman asal
             return Redirect(Request.Headers["Referer"].ToString());
         }
     }

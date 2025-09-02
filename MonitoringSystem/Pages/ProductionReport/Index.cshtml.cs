@@ -11,23 +11,25 @@ namespace MonitoringSystem.Pages.ProductionReport
     {
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IConfiguration _configuration;
-
-        // Deklarasi connectionString di sini
         private string connectionString;
 
+        public bool IsCurrentMonthView { get; private set; }
         public int DaysInMonth { get; private set; }
         public List<string> ChartLabels { get; private set; } = new List<string>();
         public List<decimal> NormalData { get; private set; } = new List<decimal>();
         public List<decimal> OvertimeData { get; private set; } = new List<decimal>();
         public List<int> PlanData { get; private set; } = new List<int>();
-        public List<int> EstimateData { get; private set; } = new List<int>();
+
+        //public List<int> EstimateData { get; private set; } = new List<int>();
         public List<int> NoOfDirectWorkers { get; private set; } = new List<int>();
         public List<int> DailyWorkTime { get; private set; } = new List<int>();
         public List<int> OvertimeOperators { get; private set; } = new List<int>();
         public List<int> OvertimeMinutes { get; private set; } = new List<int>();
         public List<int> DailyLossTime { get; private set; } = new List<int>();
 
-        private class DailyData { public int Day { get; set; } public decimal LastNormalReading { get; set; } = 0; public decimal LastOvertimeReading { get; set; } = 0; public int Plan { get; set; } = 0; public int Estimate { get; set; } = 0; public int NoOfOperator { get; set; } = 0; public int OtOperatorCount { get; set; } = 0; public TimeSpan LastOtTime { get; set; } = TimeSpan.Zero; }
+        private class DailyData { public int Day { get; set; } public decimal LastNormalReading { get; set; } = 0; public decimal LastOvertimeReading { get; set; } = 0; public int Plan { get; set; } = 0; 
+        //public int Estimate { get; set; } = 0; 
+        public int NoOfOperator { get; set; } = 0; public int OtOperatorCount { get; set; } = 0; public TimeSpan LastOtTime { get; set; } = TimeSpan.Zero; }
         public class RestTime { public int Duration { get; set; } public TimeSpan StartTime { get; set; } public TimeSpan EndTime { get; set; } }
 
         public IndexModel(IWebHostEnvironment webHostEnvironment, IConfiguration configuration)
@@ -66,19 +68,166 @@ namespace MonitoringSystem.Pages.ProductionReport
             });
         }
 
+        [BindProperty]
+        public IFormFile UploadedFile { get; set; }
+        [BindProperty]
+        public string TargetMachine { get; set; }
+        [BindProperty]
+        public int TargetMonth { get; set; }
+        [BindProperty]
+        public int TargetYear { get; set; }
+
+        public async Task<IActionResult> OnPostUploadAsync()
+        {
+            if (UploadedFile == null || UploadedFile.Length == 0)
+            {
+                TempData["UploadError"] = "Silakan pilih file untuk diunggah.";
+                return RedirectToPage();
+            }
+
+            List<List<string>> dataInMemory;
+            try
+            {
+                dataInMemory = await ReadDataFromUpload(UploadedFile);
+            }
+            catch (Exception ex)
+            {
+                TempData["UploadError"] = $"Gagal membaca file: {ex.Message}";
+                return RedirectToPage();
+            }
+
+            if (!dataInMemory.Any() || !dataInMemory.First().Any())
+            {
+                TempData["UploadError"] = "File yang diunggah kosong atau formatnya tidak dikenali.";
+                return RedirectToPage();
+            }
+
+            string expectedPrefix = TargetMachine == "MCH1-01" ? "CU" : "CS";
+            string selectedMachineName = TargetMachine == "MCH1-01" ? "CU" : "CS";
+            string firstModelName = dataInMemory.First().First().Trim();
+
+            if (!firstModelName.StartsWith(expectedPrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                string fileContentPrefix = firstModelName.Split('-').FirstOrDefault() ?? "Tidak dikenal";
+                TempData["UploadError"] = $"File berisi data '{fileContentPrefix}', tetapi Anda memilih machine '{selectedMachineName}'. Unggahan dibatalkan.";
+                return RedirectToPage();
+            }
+
+            string machineType = TargetMachine == "MCH1-01" ? "cu" : "cs";
+            string monthName = CultureInfo.GetCultureInfo("en-US").DateTimeFormat.GetMonthName(TargetMonth);
+
+            var planCsvPath = Path.Combine(_webHostEnvironment.WebRootPath, "data", machineType, "plan", "csv", $"{monthName}_{TargetYear}_plan.csv");
+            var planXlsxPath = Path.Combine(_webHostEnvironment.WebRootPath, "data", machineType, "plan", "xlsx", $"{monthName}_{TargetYear}_plan.xlsx");
+            //var estimateCsvPath = Path.Combine(_webHostEnvironment.WebRootPath, "data", machineType, "estimate", "csv", $"{monthName}_{TargetYear}_estimate.csv");
+            //var estimateXlsxPath = Path.Combine(_webHostEnvironment.WebRootPath, "data", machineType, "estimate", "xlsx", $"{monthName}_{TargetYear}_estimate.xlsx");
+
+            Directory.CreateDirectory(Path.GetDirectoryName(planCsvPath));
+            Directory.CreateDirectory(Path.GetDirectoryName(planXlsxPath));
+            //Directory.CreateDirectory(Path.GetDirectoryName(estimateCsvPath));
+            //Directory.CreateDirectory(Path.GetDirectoryName(estimateXlsxPath));
+
+            WriteCsvFile(planCsvPath, dataInMemory);
+            WriteXlsxFile(planXlsxPath, dataInMemory);
+
+            string successMessage = $"Plan untuk {monthName} {TargetYear} telah berhasil diunggah dan diperbarui.";
+            TempData["UploadSuccess"] = successMessage;
+
+            return RedirectToPage(new { SelectedYear = TargetYear, SelectedMonth = TargetMonth, MachineLine = TargetMachine });
+        }
+
+        private async Task<List<List<string>>> ReadDataFromUpload(IFormFile file)
+        {
+            var data = new List<List<string>>();
+            var extension = Path.GetExtension(file.FileName).ToLower();
+            using var stream = new MemoryStream();
+            await file.CopyToAsync(stream);
+            stream.Position = 0;
+
+            if (extension == ".csv")
+            {
+                using var reader = new StreamReader(stream);
+                while (!reader.EndOfStream)
+                {
+                    var line = await reader.ReadLineAsync();
+                    if (!string.IsNullOrWhiteSpace(line))
+                    {
+                        data.Add(line.Split(',').ToList());
+                    }
+                }
+            }
+            else if (extension == ".xlsx")
+            {
+                using var package = new ExcelPackage(stream);
+                var worksheet = package.Workbook.Worksheets.FirstOrDefault();
+                if (worksheet != null)
+                {
+                    for (int row = 1; row <= worksheet.Dimension.End.Row; row++)
+                    {
+                        var rowData = new List<string>();
+                        for (int col = 1; col <= worksheet.Dimension.End.Column; col++)
+                        {
+                            rowData.Add(worksheet.Cells[row, col].Text);
+                        }
+                        data.Add(rowData);
+                    }
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException("Format file tidak didukung. Harap unggah file .csv atau .xlsx");
+            }
+            return data;
+        }
+
+        private void WriteCsvFile(string filePath, List<List<string>> data)
+        {
+            var lines = data.Select(row => string.Join(",", row));
+            System.IO.File.WriteAllLines(filePath, lines, Encoding.UTF8);
+        }
+
+        private void WriteXlsxFile(string filePath, List<List<string>> data)
+        {
+            using var package = new ExcelPackage();
+            var worksheet = package.Workbook.Worksheets.Add("Data");
+            for (int row = 0; row < data.Count; row++)
+            {
+                for (int col = 0; col < data[row].Count; col++)
+                {
+                    worksheet.Cells[row + 1, col + 1].Value = data[row][col];
+                }
+            }
+            var fileInfo = new FileInfo(filePath);
+            package.SaveAs(fileInfo);
+        }
+
+        public IActionResult OnGetDownloadTemplate(string type)
+        {
+            if (string.IsNullOrEmpty(type) || (type.ToLower() != "cu" && type.ToLower() != "cs"))
+            {
+                return NotFound("Invalid template type.");
+            }
+            string wwwrootPath = _webHostEnvironment.WebRootPath;
+            var templateFileName = $"template_{type.ToLower()}.xlsx";
+            var templateFilePath = Path.Combine(wwwrootPath, "data", type.ToLower(), "plan", $"{type.ToLower()}_plan_template.xlsx");
+            if (System.IO.File.Exists(templateFilePath))
+            {
+                return File(System.IO.File.ReadAllBytes(templateFilePath), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", templateFileName);
+            }
+            return NotFound($"Template file not found.");
+        }
+
         private void LoadChartData()
         {
-            // Mengisi variabel connectionString menggunakan konfigurasi yang sudah ada
             this.connectionString = _configuration.GetConnectionString("DefaultConnection");
 
             var dailyLosses = GetDailyLossTimeTotals();
             bool isCurrentMonthView = (SelectedYear == DateTime.Now.Year && SelectedMonth == DateTime.Now.Month);
+            this.IsCurrentMonthView = isCurrentMonthView;
             string dateFilter = isCurrentMonthView ? "AND CAST(SDate AS DATE) <= @TodayDate" : "";
             string machineType = MachineLine == "MCH1-01" ? "cu" : "cs";
             string monthName = CultureInfo.GetCultureInfo("en-US").DateTimeFormat.GetMonthName(SelectedMonth);
             this.DaysInMonth = DateTime.DaysInMonth(SelectedYear, SelectedMonth);
 
-            // --- KODE BARU: Kalkulasi Total Working Time dengan Pengecekan Hari ---
             TimeSpan workDayStart = new TimeSpan(7, 5, 0);
             TimeSpan workDayEnd = new TimeSpan(15, 55, 0);
 
@@ -124,11 +273,10 @@ namespace MonitoringSystem.Pages.ProductionReport
             var combinedData = Enumerable.Range(1, this.DaysInMonth).Select(day => new DailyData { Day = day }).ToList();
             var planFilePath = Path.Combine(_webHostEnvironment.WebRootPath, "data", machineType, "plan", "csv", $"{monthName}_{SelectedYear}_plan.csv");
             if (System.IO.File.Exists(planFilePath)) { var planValues = ReadDataFromCsv(planFilePath, this.DaysInMonth); for (int i = 0; i < planValues.Count; i++) { combinedData[i].Plan = planValues[i]; } }
-            var estimateFilePath = Path.Combine(_webHostEnvironment.WebRootPath, "data", machineType, "estimate", "csv", $"{monthName}_{SelectedYear}_estimate.csv");
-            if (System.IO.File.Exists(estimateFilePath)) { var estimateValues = ReadDataFromCsv(estimateFilePath, this.DaysInMonth); for (int i = 0; i < estimateValues.Count; i++) { combinedData[i].Estimate = estimateValues[i]; } }
+            //var estimateFilePath = Path.Combine(_webHostEnvironment.WebRootPath, "data", machineType, "estimate", "csv", $"{monthName}_{SelectedYear}_estimate.csv");
+            //if (System.IO.File.Exists(estimateFilePath)) { var estimateValues = ReadDataFromCsv(estimateFilePath, this.DaysInMonth); for (int i = 0; i < estimateValues.Count; i++) { combinedData[i].Estimate = estimateValues[i]; } }
 
             string shiftsForSql = SelectedShifts.Any() ? string.Join(",", SelectedShifts.Select(s => $"'{s}'")) : "'0'";
-            // --- GANTI KESELURUHAN ISI VARIABEL 'sql' DENGAN YANG INI ---
             var sql = $@"
                         WITH ShiftData AS (
                             SELECT
@@ -204,7 +352,9 @@ namespace MonitoringSystem.Pages.ProductionReport
 
             foreach (var data in combinedData)
             {
-                ChartLabels.Add(data.Day.ToString()); PlanData.Add(data.Plan); EstimateData.Add(data.Estimate); NormalData.Add(data.LastNormalReading);
+                ChartLabels.Add(data.Day.ToString()); PlanData.Add(data.Plan); 
+                //EstimateData.Add(data.Estimate); 
+                NormalData.Add(data.LastNormalReading);
                 var overtimeValue = data.LastOvertimeReading - data.LastNormalReading;
                 OvertimeData.Add(overtimeValue > 0 ? overtimeValue : 0);
                 NoOfDirectWorkers.Add(data.NoOfOperator); OvertimeOperators.Add(data.OtOperatorCount);
@@ -235,7 +385,6 @@ namespace MonitoringSystem.Pages.ProductionReport
             }
         }
 
-        // --- KODE BARU: Jadwal Istirahat Terpisah ---
         private readonly List<(TimeSpan Start, TimeSpan End)> RegularDayBreakTimes = new List<(TimeSpan, TimeSpan)>
         {
             (new TimeSpan(9, 30, 0), new TimeSpan(9, 35, 0)),    // Istirahat 5 menit
@@ -243,20 +392,17 @@ namespace MonitoringSystem.Pages.ProductionReport
             (new TimeSpan(14, 30, 0), new TimeSpan(14, 35, 0))   // Istirahat 5 menit
         };
 
-                private readonly List<(TimeSpan Start, TimeSpan End)> FridayBreakTimes = new List<(TimeSpan, TimeSpan)>
+        private readonly List<(TimeSpan Start, TimeSpan End)> FridayBreakTimes = new List<(TimeSpan, TimeSpan)>
         {
             (new TimeSpan(9, 30, 0), new TimeSpan(9, 35, 0)),    // Istirahat 5 menit
             (new TimeSpan(11, 50, 0), new TimeSpan(13, 15, 0)),  // Istirahat Sholat Jumat 85 menit
             (new TimeSpan(14, 30, 0), new TimeSpan(14, 35, 0))   // Istirahat 5 menit
         };
         private bool IsInBreakTime(TimeSpan startTime, TimeSpan endTime, List<(TimeSpan Start, TimeSpan End)> breakTimes) { foreach (var (breakStart, breakEnd) in breakTimes) { if (startTime < breakEnd && endTime > breakStart) { return true; } } return false; }
-        // --- KODE BARU: Logika Loss Time dengan Pengecekan Hari ---
-        // --- GANTI KESELURUHAN METODE INI ---
         private Dictionary<int, int> GetDailyLossTimeTotals()
         {
             var dailyTotals = new Dictionary<int, int>();
 
-            // --- AWAL PERUBAHAN: Sinkronisasi Definisi Shift ---
             string shiftFilterSql = "";
             // Hanya tambahkan filter jika tidak semua shift dipilih
             if (SelectedShifts.Any() && SelectedShifts.Count < 3)
@@ -280,7 +426,6 @@ namespace MonitoringSystem.Pages.ProductionReport
                 }
                 shiftFilterSql = $"AND ({string.Join(" OR ", shiftConditions)})";
             }
-            // --- AKHIR PERUBAHAN ---
 
             string query = $@"
         SELECT 
@@ -335,6 +480,8 @@ namespace MonitoringSystem.Pages.ProductionReport
             }
             return dailyTotals;
         }
+
+        //ini kayaknya ga kepakek hehe
         private List<(TimeSpan Start, TimeSpan End)> GetAdditionalBreakTimesForDate(DateTime date)
         {
             var additionalBreaks = new List<(TimeSpan, TimeSpan)>();

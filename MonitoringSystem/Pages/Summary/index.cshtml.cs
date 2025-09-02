@@ -1,1704 +1,441 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Data.SqlClient;
-using MonitoringSystem.Data;
-using Microsoft.EntityFrameworkCore;
-using MonitoringSystem.Models;
-
-
+using System.Data;
 
 namespace MonitoringSystem.Pages.Summary
 {
+    // Kelas Data Mentah
+    public class RawOeeData { public DateTime SDate { get; set; } public string MachineCode { get; set; } public string ProductName { get; set; } public int SUT { get; set; } public int NoOfOperator { get; set; } }
+    public class RawNgData { public DateTime SDate { get; set; } public string MachineCode { get; set; } }
+    public class RawRestTimeData { public string DayType { get; set; } public TimeSpan StartTime { get; set; } public TimeSpan EndTime { get; set; } }
+    public class RawLossTimeData { public DateTime Date { get; set; } public TimeSpan StartTime { get; set; } public TimeSpan EndTime { get; set; } public string MachineCode { get; set; } }
+
     public class SummaryModel : PageModel
     {
         public string connectionString = "Server=10.83.33.103;trusted_connection=false;Database=PROMOSYS;User Id=sa;Password=sa;Persist Security Info=False;Encrypt=False";
-        //public string connectionString = "Data Source=DESKTOP-NBPATD6\\MSSQLSERVERR;trusted_connection=true;trustservercertificate=True;Database=PROMOSYS;Integrated Security=True;Encrypt=False";
         public string errorMessage = "";
 
-        private readonly ApplicationDbContext _context;
+        // Properti publik untuk menampung semua data mentah
+        public List<RawOeeData> RawOeeData { get; private set; }
+        public List<RawNgData> RawNgData { get; private set; }
+        public List<PlanQty> PlanData { get; private set; }
+        public List<RawRestTimeData> RawRestTimeData { get; private set; }
+        public List<RawLossTimeData> RawLossTimeData { get; private set; } // PENAMBAHAN BARU
 
-        public SummaryModel(ApplicationDbContext context)
+        public SummaryModel()
         {
-            _context = context;  // Dependency injection
+            // Inisialisasi list
+            RawOeeData = new List<RawOeeData>();
+            RawNgData = new List<RawNgData>();
+            PlanData = new List<PlanQty>();
+            RawRestTimeData = new List<RawRestTimeData>();
+            RawLossTimeData = new List<RawLossTimeData>(); // PENAMBAHAN BARU
         }
 
-        public List<PlanQty> plansQty = new List<PlanQty>();
-        public List<ManPower> noOfOperator = new List<ManPower>();
+        [BindProperty] public DateTime StartSelectedDate { get; set; } = DateTime.Today;
+        [BindProperty] public DateTime EndSelectedDate { get; set; } = DateTime.Today;
 
-        [BindProperty]
-        public DateTime StartSelectedDate { get; set; } = DateTime.Today;
-        public List<ProductionAchievement> listProdAchieve = new List<ProductionAchievement>();
+        private void InitializePage() { LoadRawDataForDateRange(); }
+        public void OnGet() { StartSelectedDate = DateTime.Today; EndSelectedDate = DateTime.Today; InitializePage(); }
+        public void OnPost() { if (EndSelectedDate < StartSelectedDate) { EndSelectedDate = StartSelectedDate; } InitializePage(); }
 
-        [BindProperty]
-        public DateTime EndSelectedDate { get; set; } = DateTime.Today;
-        public List<HourlyPlanData> HourlyPlans { get; set; }
-
-        public TimeSpan? BreakTime1Start { get; set; }
-        public TimeSpan? BreakTime1End { get; set; }
-        public TimeSpan? BreakTime2Start { get; set; }
-        public TimeSpan? BreakTime2End { get; set; }
-
-
-        private readonly List<(TimeSpan Start, TimeSpan End)> fixedBreakTimes = new List<(TimeSpan, TimeSpan)>
+        // GANTI SELURUH ISI METODE DENGAN KODE DI BAWAH INI
+        private void LoadRawDataForDateRange()
         {
-            (TimeSpan.FromHours(7), TimeSpan.FromHours(7).Add(TimeSpan.FromMinutes(5))),
-            (TimeSpan.FromHours(9).Add(TimeSpan.FromMinutes(30)), TimeSpan.FromHours(9).Add(TimeSpan.FromMinutes(35))),
-            (TimeSpan.FromHours(15).Add(TimeSpan.FromMinutes(30)), TimeSpan.FromHours(15).Add(TimeSpan.FromMinutes(35))),
-            (TimeSpan.FromHours(18).Add(TimeSpan.FromMinutes(15)), TimeSpan.FromHours(18).Add(TimeSpan.FromMinutes(45)))
-        };
+            var globalStartTime = StartSelectedDate.Date;
+            var globalEndTime = EndSelectedDate.Date.AddDays(1);
 
-        public void OnGet()
-        {
-            StartSelectedDate = DateTime.Today;
-            EndSelectedDate = DateTime.Today;
-            GetProductionPlan();
-            GetManPower();
-        }
+            // Kosongkan list data setiap kali method ini dipanggil untuk menghindari duplikasi
+            RawOeeData.Clear();
+            RawNgData.Clear();
+            PlanData.Clear();
+            RawRestTimeData.Clear();
+            RawLossTimeData.Clear();
 
-        public void OnPost()
-        {
-            var StartDate = Request.Form["StartSelectedDate"];
-            var EndDate = Request.Form["EndSelectedDate"];
-
-            if (EndSelectedDate < StartSelectedDate)
-            {
-                EndSelectedDate = DateTime.Today;
-            }
-
-            if (string.IsNullOrEmpty(StartDate) && string.IsNullOrEmpty(EndDate))
-            {
-                StartSelectedDate = DateTime.Today;
-                EndSelectedDate = DateTime.Today;
-            } 
-            else if (string.IsNullOrEmpty(StartDate) && !string.IsNullOrEmpty(EndDate))
-            {
-                StartSelectedDate = DateTime.Today;
-            }
-            else if (!string.IsNullOrEmpty(StartDate) && string.IsNullOrEmpty(EndDate))
-            {
-                EndSelectedDate = DateTime.Today;
-            }
-
-            GetProductionPlan();
-            GetManPower();
-        }
-
-        private List<(DateTime Start, DateTime End)> GetFixedBreakTimes_DateTime(DateTime date)
-        {
-            return new List<(DateTime, DateTime)>
-            {
-                (date.Date.AddHours(7), date.Date.AddHours(7).AddMinutes(5)),
-                (date.Date.AddHours(9).AddMinutes(30), date.Date.AddHours(9).AddMinutes(35)),
-                (date.Date.AddHours(15).AddMinutes(30), date.Date.AddHours(15).AddMinutes(35)),
-                (date.Date.AddHours(18).AddMinutes(15), date.Date.AddHours(18).AddMinutes(45))
-            };
-        }
-        private List<(TimeSpan Start, TimeSpan End)> GetAdditionalBreakTimes()
-        {
-            List<(TimeSpan Start, TimeSpan End)> additionalBreaks = new List<(TimeSpan, TimeSpan)>();
             try
             {
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
                     connection.Open();
-                    string sql = @"SELECT TOP 1 BreakTime1Start, BreakTime1End, BreakTime2Start, BreakTime2End 
-                           FROM AdditionalBreakTimes 
-                           WHERE Date = @Date
-                           ORDER BY CreatedAt DESC";
-                    using (SqlCommand cmd = new SqlCommand(sql, connection))
+
+                    // Query 1: OEE Data (Sudah diperbarui dengan NoOfOperator)
+                    string oeeSql = @"
+                SELECT OEESN.SDate, OEESN.MachineCode, md.ProductName, md.SUT, OEESN.NoOfOperator 
+                FROM OEESN 
+                JOIN MasterData md ON OEESN.Product_Id = md.Product_Id 
+                WHERE OEESN.SDate >= @StartTime AND OEESN.SDate < @EndTime";
+
+                    using (SqlCommand cmd = new SqlCommand(oeeSql, connection))
                     {
-                        cmd.Parameters.AddWithValue("@Date", DateTime.Today); // fix hari ini
+                        cmd.Parameters.AddWithValue("@StartTime", globalStartTime);
+                        cmd.Parameters.AddWithValue("@EndTime", globalEndTime);
                         using (SqlDataReader reader = cmd.ExecuteReader())
                         {
-                            if (reader.Read())
+                            while (reader.Read())
                             {
-                                if (!reader.IsDBNull(0) && !reader.IsDBNull(1))
-                                    additionalBreaks.Add((reader.GetTimeSpan(0), reader.GetTimeSpan(1)));
-                                if (!reader.IsDBNull(2) && !reader.IsDBNull(3))
-                                    additionalBreaks.Add((reader.GetTimeSpan(2), reader.GetTimeSpan(3)));
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("GetAdditionalBreakTimes error: " + ex.Message);
-            }
-            return additionalBreaks;
-        }
-
-
-        private List<(DateTime Start, DateTime End)> GetAdditionalBreakTimes_DateTime(DateTime date)
-        {
-            List<(DateTime Start, DateTime End)> additionalBreaks = new List<(DateTime, DateTime)>();
-            try {
-                using (SqlConnection connection = new SqlConnection(connectionString)) {
-                    connection.Open();
-                    string sql = @"SELECT TOP 1 BreakTime1Start, BreakTime1End, BreakTime2Start, BreakTime2End 
-                           FROM AdditionalBreakTimes 
-                           WHERE Date = @Date
-                           ORDER BY CreatedAt DESC";
-                    using (SqlCommand cmd = new SqlCommand(sql, connection)) {
-                        cmd.Parameters.AddWithValue("@Date", date.Date);
-                        using (SqlDataReader reader = cmd.ExecuteReader()) {
-                            if (reader.Read())
-                            {
-                                if (!reader.IsDBNull(0) && !reader.IsDBNull(1)){
-                                    additionalBreaks.Add((date.Date.Add(reader.GetTimeSpan(0)), date.Date.Add(reader.GetTimeSpan(1))));
-                                }
-                                if (!reader.IsDBNull(2) && !reader.IsDBNull(3)) {
-                                    additionalBreaks.Add((date.Date.Add(reader.GetTimeSpan(2)), date.Date.Add(reader.GetTimeSpan(3))));
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex) {
-                Console.WriteLine("GetAdditionalBreakTimes_DateTime error: " + ex.Message);
-            }
-            return additionalBreaks;
-        }
-
-        private List<(DateTime Start, DateTime End)> GetTodayBreakTimes_DateTime(DateTime date)
-        {
-            var fixedBreaks = GetFixedBreakTimes_DateTime(date);
-            var additionalBreaks = GetAdditionalBreakTimes_DateTime(date);
-            return fixedBreaks.Concat(additionalBreaks).OrderBy(b => b.Start).ToList();
-        }
-
-        private List<(DateTime Start, DateTime End)> SplitIntervalExcludingBreaks_DateTime((DateTime Start, DateTime End) workInterval, List<(DateTime Start, DateTime End)> breaks)
-        {
-            var resultIntervals = new List<(DateTime, DateTime)>();
-            var currentStart = workInterval.Start;
-
-            foreach (var brk in breaks)
-            {
-                if (brk.End <= currentStart) continue;
-                if (brk.Start >= workInterval.End) break;
-
-                if (brk.Start > currentStart) {
-                    resultIntervals.Add((currentStart, brk.Start));
-                }
-                currentStart = brk.End > currentStart ? brk.End : currentStart;
-            }
-
-            if (currentStart < workInterval.End) {
-                resultIntervals.Add((currentStart, workInterval.End));
-            }
-
-            return resultIntervals;
-        }
-
-
-        public void GetProductionPlan()
-        {
-            try {
-                using (SqlConnection connection = new SqlConnection(connectionString)) {
-                    connection.Open();
-                    string getTotalProduction = @"SELECT SUM(Quantity), ProductionRecords.MachineCode FROM ProductionRecords 
-                                                  JOIN ProductionPlan ON ProductionRecords.PlanId = ProductionPlan.Id
-                                                  WHERE ProductionPlan.CurrentDate BETWEEN @StartSelectedDate AND @EndSelectedDate
-                                                  GROUP BY ProductionRecords.MachineCode;";
-                    using (SqlCommand command = new SqlCommand(getTotalProduction, connection)) {
-                        command.Parameters.AddWithValue("@StartSelectedDate", StartSelectedDate);
-                        command.Parameters.AddWithValue("@EndSelectedDate", EndSelectedDate);
-                        using (SqlDataReader dataReader = command.ExecuteReader()) {
-                            while (dataReader.Read()) {
-                                PlanQty plan = new PlanQty();
-                                plan.Quantity = dataReader.GetInt32(0);
-                                plan.MachineCode = dataReader.GetString(1);
-                                plansQty.Add(plan);
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex) {
-                Console.WriteLine("Exception: " + ex.ToString());
-            }
-        }
-
-        public List<ActualQty> GetActualData(TimeSpan StartTime, TimeSpan EndTime)
-        {
-            List<ActualQty> listActualQty = new List<ActualQty>();
-
-            var breakTimes = GetTodayBreakTimes();
-
-            // pecah interval kerja jadi subinterval tidak overlap break time
-            var intervals = SplitIntervalExcludingBreaks((StartTime, EndTime), breakTimes);
-
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-
-                    foreach (var interval in intervals)
-                    {
-                        string getActualData = @"SELECT COUNT(*) AS Qty, MachineCode FROM OEESN
-                                         WHERE CAST(SDate AS Date) BETWEEN @StartSelectedDate AND @EndSelectedDate
-                                               AND CAST(SDate AS Time) >= @StartTime
-                                               AND CAST(SDate AS Time) < @EndTime
-                                         GROUP BY MachineCode;";
-
-                        using (SqlCommand command = new SqlCommand(getActualData, connection))
-                        {
-                            command.Parameters.AddWithValue("@StartSelectedDate", StartSelectedDate);
-                            command.Parameters.AddWithValue("@EndSelectedDate", EndSelectedDate);
-                            command.Parameters.AddWithValue("@StartTime", interval.Start);
-                            command.Parameters.AddWithValue("@EndTime", interval.End);
-
-                            using (SqlDataReader dataReader = command.ExecuteReader())
-                            {
-                                while (dataReader.Read())
+                                RawOeeData.Add(new RawOeeData
                                 {
-                                    var machineCode = dataReader.GetString(1);
-                                    var qty = dataReader.GetInt32(0);
-
-                                    // cek apakah sudah ada di list, jika ada tambahkan qty-nya
-                                    var existing = listActualQty.FirstOrDefault(a => a.MachineCode == machineCode);
-                                    if (existing != null)
-                                    {
-                                        existing.Quantity += qty;
-                                    }
-                                    else
-                                    {
-                                        listActualQty.Add(new ActualQty { MachineCode = machineCode, Quantity = qty });
-                                    }
-                                }
+                                    SDate = reader.GetDateTime(0),
+                                    MachineCode = reader.GetString(1),
+                                    ProductName = reader.GetString(2),
+                                    SUT = reader.GetInt32(3),
+                                    // Pembacaan data yang aman, jika kolom NULL, akan diisi 0
+                                    NoOfOperator = reader.IsDBNull(4) ? 0 : reader.GetInt32(4)
+                                });
                             }
-                        }
+                        } // Reader untuk OEE data otomatis tertutup di sini
                     }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Exception: " + ex.ToString());
-            }
 
-            return listActualQty;
-        }
-        // Untuk CU (MCH1-01)
-        public int GetPlanForSummaryCU(DateTime selectedDate)
-        {
-            return _context.HourlyPlanData
-                .Where(x => x.SelectedDate == selectedDate && x.MachineCode == "MCH1-01")  // Filter berdasarkan machine code CU
-                .Sum(x => x.TotalPlan);  // Mengembalikan jumlah total Plan untuk CU
-        }
-
-        // Untuk CS (MCH1-02)
-        public int GetPlanForSummaryCS(DateTime selectedDate)
-        {
-            return _context.HourlyPlanData
-                .Where(x => x.SelectedDate == selectedDate && x.MachineCode == "MCH1-02")  // Filter berdasarkan machine code CS
-                .Sum(x => x.TotalPlan);  // Mengembalikan jumlah total Plan untuk CS
-        }
-
-        private List<(TimeSpan Start, TimeSpan End)> GetTodayBreakTimes()
-        {
-            var additional = GetAdditionalBreakTimes();
-            return fixedBreakTimes.Concat(additional).OrderBy(b => b.Start).ToList();
-        }
-
-        private List<(TimeSpan Start, TimeSpan End)> SplitIntervalExcludingBreaks((TimeSpan Start, TimeSpan End) workInterval, List<(TimeSpan Start, TimeSpan End)> breaks)
-        {
-            var resultIntervals = new List<(TimeSpan, TimeSpan)>();
-            var currentStart = workInterval.Start;
-
-            foreach (var brk in breaks)
-            {
-                if (brk.End <= currentStart) continue; // break sebelum current start
-                if (brk.Start >= workInterval.End) break; // break setelah work interval
-
-                if (brk.Start > currentStart)
-                {
-                    // interval sebelum break
-                    resultIntervals.Add((currentStart, brk.Start));
-                }
-                // update current start setelah break end
-                currentStart = brk.End > currentStart ? brk.End : currentStart;
-            }
-
-            if (currentStart < workInterval.End)
-            {
-                resultIntervals.Add((currentStart, workInterval.End));
-            }
-
-            return resultIntervals;
-        }
-
-
-        public List<SUTModel> GetSUTModel(TimeSpan StartTime, TimeSpan EndTime)
-        {
-            List<SUTModel> listSUTModel = new List<SUTModel>();
-            var breakTimes = GetTodayBreakTimes();
-            var intervals = SplitIntervalExcludingBreaks((StartTime, EndTime), breakTimes);
-
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-
-                    foreach (var interval in intervals)
+                    // Query 2: NG Data
+                    string ngSql = @"SELECT SDate, MachineCode FROM NG_RPTS WHERE SDate >= @StartTime AND SDate < @EndTime";
+                    using (SqlCommand cmd = new SqlCommand(ngSql, connection))
                     {
-                        string sql = @"SELECT MasterData.SUT, OEESN.MachineCode FROM OEESN
-                               JOIN MasterData ON OEESN.Product_Id = MasterData.Product_Id
-                               WHERE CAST(OEESN.SDate AS DATE) BETWEEN @StartSelectedDate AND @EndSelectedDate
-                                     AND CAST(SDate AS Time) >= @StartTime 
-                                     AND CAST(SDate AS Time) < @EndTime
-                               ORDER BY SDate DESC;";
-
-                        using (SqlCommand cmd = new SqlCommand(sql, connection))
+                        cmd.Parameters.AddWithValue("@StartTime", globalStartTime);
+                        cmd.Parameters.AddWithValue("@EndTime", globalEndTime);
+                        using (SqlDataReader reader = cmd.ExecuteReader())
                         {
-                            cmd.Parameters.AddWithValue("@StartSelectedDate", StartSelectedDate);
-                            cmd.Parameters.AddWithValue("@EndSelectedDate", EndSelectedDate);
-                            cmd.Parameters.AddWithValue("@StartTime", interval.Start);
-                            cmd.Parameters.AddWithValue("@EndTime", interval.End);
-
-                            using (SqlDataReader reader = cmd.ExecuteReader())
-                            {
-                                while (reader.Read())
-                                {
-                                    var sut = reader.GetInt32(0);
-                                    var machineCode = reader.GetString(1);
-
-                                    // Cek jika sudah ada data yg sama, supaya tidak duplicate
-                                    if (!listSUTModel.Any(s => s.SUT == sut && s.MachineCode == machineCode))
-                                    {
-                                        listSUTModel.Add(new SUTModel { SUT = sut, MachineCode = machineCode });
-                                    }
-                                }
-                            }
+                            while (reader.Read()) RawNgData.Add(new RawNgData { SDate = reader.GetDateTime(0), MachineCode = reader.GetString(1) });
                         }
                     }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Exception: " + ex.ToString());
-            }
 
-            return listSUTModel;
-        }
-
-
-        public List<RestTime> GetRestTime(string dayTipe)
-        {
-            List<RestTime> listRestTime = new List<RestTime>();
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    string GetRestTime = @"SELECT Duration, StartTime, EndTime FROM RestTime WHERE DayType = @DayTipe";
-                    using (SqlCommand command = new SqlCommand(GetRestTime, connection))
+                    // Query 3: Plan Data
+                    string planSql = @"SELECT SUM(Quantity) as Quantity, ProductionRecords.MachineCode FROM ProductionRecords JOIN ProductionPlan ON ProductionRecords.PlanId = ProductionPlan.Id WHERE ProductionPlan.CurrentDate >= @StartTime AND ProductionPlan.CurrentDate < @EndTime GROUP BY ProductionRecords.MachineCode;";
+                    using (SqlCommand cmd = new SqlCommand(planSql, connection))
                     {
-                        command.Parameters.AddWithValue("@DayTipe", dayTipe);
-                        using (SqlDataReader dataReader = command.ExecuteReader())
+                        cmd.Parameters.AddWithValue("@StartTime", globalStartTime);
+                        cmd.Parameters.AddWithValue("@EndTime", globalEndTime);
+                        using (SqlDataReader reader = cmd.ExecuteReader())
                         {
-                            while (dataReader.Read())
-                            {
-                                if (!dataReader.IsDBNull(0))
-                                {
-                                    RestTime restTime = new RestTime();
-                                    restTime.Duration = dataReader.GetInt32(0);
-                                    restTime.StartTime = dataReader.GetTimeSpan(1);
-                                    restTime.EndTime = dataReader.GetTimeSpan(2);
-                                    listRestTime.Add(restTime);
-                                }
-                            }
+                            while (reader.Read()) PlanData.Add(new PlanQty { Quantity = reader.GetInt32(0), MachineCode = reader.GetString(1) });
+                        }
+                    }
+
+                    // Query 4: Rest Time
+                    string restTimeSql = @"SELECT DayType, StartTime, EndTime FROM RestTime";
+                    using (SqlCommand cmd = new SqlCommand(restTimeSql, connection))
+                    {
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read()) RawRestTimeData.Add(new RawRestTimeData { DayType = reader.GetString(0), StartTime = reader.GetTimeSpan(1), EndTime = reader.GetTimeSpan(2) });
+                        }
+                    }
+
+                    // Query 5: Loss Time Data
+                    string lossTimeSql = @"SELECT Date, Time, EndDateTime, MachineCode FROM AssemblyLossTime WHERE Date >= @StartTime AND Date < @EndTime";
+                    using (SqlCommand cmd = new SqlCommand(lossTimeSql, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@StartTime", globalStartTime);
+                        cmd.Parameters.AddWithValue("@EndTime", globalEndTime);
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read()) RawLossTimeData.Add(new RawLossTimeData { Date = reader.GetDateTime(0), StartTime = reader.GetTimeSpan(1), EndTime = reader.GetTimeSpan(2), MachineCode = reader.GetString(3) });
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Exception: " + ex.ToString());
+                errorMessage = "Gagal memuat data mentah dari database: " + ex.Message;
+                Console.WriteLine("TERJADI ERROR DI LoadRawDataForDateRange: " + ex.ToString());
             }
-            return listRestTime;
         }
 
+        // --- Metode Perhitungan ---
+
+        public List<RestTime> GetRestTime(string dayTipe) => RawRestTimeData.Where(r => r.DayType == dayTipe).Select(r => new RestTime { StartTime = r.StartTime, EndTime = r.EndTime }).ToList();
+        public List<ActualQty> GetActualData(TimeSpan startTime, TimeSpan endTime) => RawOeeData.Where(d => d.SDate.TimeOfDay >= startTime && d.SDate.TimeOfDay < endTime).GroupBy(d => d.MachineCode).Select(g => new ActualQty { MachineCode = g.Key, Quantity = g.Count() }).ToList();
+        public List<SUTModel> GetSUTModel(TimeSpan startTime, TimeSpan endTime) => RawOeeData.Where(d => d.SDate.TimeOfDay >= startTime && d.SDate.TimeOfDay < endTime).OrderByDescending(d => d.SDate).GroupBy(d => d.MachineCode).Select(g => new SUTModel { MachineCode = g.Key, SUT = g.First().SUT }).ToList();
+        public List<TotalDefect> GetTotalDefect(TimeSpan startTime, TimeSpan endTime) => RawNgData.Where(d => d.SDate.TimeOfDay >= startTime && d.SDate.TimeOfDay < endTime).GroupBy(d => d.MachineCode).Select(g => new TotalDefect { MachineCode = g.Key, DefectQty = g.Count() }).ToList();
+        public int GetTotalChangeModel(string machineCode, TimeSpan startTime, TimeSpan endTime) => RawOeeData.Where(d => d.MachineCode == machineCode && d.SDate.TimeOfDay >= startTime && d.SDate.TimeOfDay < endTime).Select(d => d.ProductName).Distinct().Count();
+
+        // PENAMBAHAN BARU: Metode untuk menghitung Loss Time dari data mentah
+        public int CalculateTotalLossTime(string machineCode, TimeSpan shiftStart, TimeSpan shiftEnd, List<RestTime> breaks)
+        {
+            var totalLossSeconds = RawLossTimeData
+                .Where(lt =>
+                    lt.MachineCode == machineCode &&
+                    lt.StartTime >= shiftStart &&
+                    lt.EndTime < shiftEnd &&
+                    !breaks.Any(b => lt.StartTime < b.EndTime && lt.EndTime > b.StartTime) // Cek tidak tumpang tindih dengan istirahat
+                )
+                .Sum(lt => (lt.EndTime - lt.StartTime).TotalSeconds);
+
+            return (int)totalLossSeconds / 60; // Kembalikan dalam menit
+        }
+
+        // --- Metode Helper ---
+        public string DetermineTypeOfDay(DayOfWeek day) => day switch { DayOfWeek.Friday => "FRIDAY", DayOfWeek.Saturday or DayOfWeek.Sunday => "WEEKEND", _ => "REGULAR" };
         public int GetTotalRestTime(List<RestTime> listRestTime, TimeSpan StartTime, TimeSpan EndTime, TimeSpan CurrentTime)
         {
-            int TotalRestTime = 0;
-            TotalRestTime = listRestTime.Sum(rest =>
+            int totalRestMinutes = 0;
+            TimeSpan effectiveCurrentTime = (StartSelectedDate.Date == DateTime.Today) ? CurrentTime : EndTime;
+            foreach (var rest in listRestTime)
             {
-                TimeSpan restStart = rest.StartTime < StartTime ? StartTime : rest.StartTime;
-                TimeSpan restEnd = rest.EndTime > EndTime ? EndTime : rest.EndTime;
-                if (StartSelectedDate == DateTime.Now.Date)
-                {
-                    restStart = restStart > CurrentTime ? CurrentTime : restStart;
-                    restEnd = restEnd > CurrentTime ? CurrentTime : restEnd;
-                }
-                return restStart < restEnd ? (int)(restEnd - restStart).TotalMinutes : 0;
-            });
-
-            return TotalRestTime;
-        }
-
-        public string DetermineTypeOfDay(DayOfWeek day)
-        {
-            return day switch
-            {
-                DayOfWeek.Monday or DayOfWeek.Tuesday or DayOfWeek.Wednesday or DayOfWeek.Thursday => "REGULAR",
-                DayOfWeek.Friday => "FRIDAY",
-                DayOfWeek.Saturday or DayOfWeek.Sunday => "WEEKEND",
-                _ => throw new NotImplementedException()
-            };
-        }
-
-        public List<AssemblyTime> GetAssemblyTime(TimeSpan StartTime, TimeSpan EndTime)
-        {
-            List<AssemblyTime> listAssemblyTime = new List<AssemblyTime>();
-            var breakTimes = GetTodayBreakTimes();
-            var intervals = SplitIntervalExcludingBreaks((StartTime, EndTime), breakTimes);
-
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-
-                    foreach (var interval in intervals)
-                    {
-                        string sql = @"SELECT MasterData.ProductName As Model, OEESN.MachineCode As MachineCode, 
-                                      MasterData.SUT As SUT, CAST(OEESN.SDate AS Time) As ProductionTime
-                               FROM OEESN JOIN Masterdata ON OEESN.Product_Id = MasterData.Product_Id
-                               WHERE CAST(OEESN.SDate AS DATE) BETWEEN @StartSelectedDate AND @EndSelectedDate
-                                     AND CAST(SDate AS Time) >= @StartTime 
-                                     AND CAST(SDate AS Time) < @EndTime
-                               ORDER BY CAST(OEESN.SDate AS TIME) ASC";
-
-                        using (SqlCommand cmd = new SqlCommand(sql, connection))
-                        {
-                            cmd.Parameters.AddWithValue("@StartSelectedDate", StartSelectedDate);
-                            cmd.Parameters.AddWithValue("@EndSelectedDate", EndSelectedDate);
-                            cmd.Parameters.AddWithValue("@StartTime", interval.Start);
-                            cmd.Parameters.AddWithValue("@EndTime", interval.End);
-
-                            using (SqlDataReader reader = cmd.ExecuteReader())
-                            {
-                                while (reader.Read())
-                                {
-                                    listAssemblyTime.Add(new AssemblyTime
-                                    {
-                                        Model = reader.GetString(0),
-                                        MachineCode = reader.GetString(1),
-                                        SUT = reader.GetInt32(2),
-                                        ProductionTime = reader.GetTimeSpan(3)
-                                    });
-                                }
-                            }
-                        }
-                    }
-                }
+                var overlapStart = new TimeSpan(Math.Max(StartTime.Ticks, rest.StartTime.Ticks));
+                var overlapEnd = new TimeSpan(Math.Min(effectiveCurrentTime.Ticks, rest.EndTime.Ticks));
+                if (overlapEnd > overlapStart) totalRestMinutes += (int)(overlapEnd - overlapStart).TotalMinutes;
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Exception: " + ex.ToString());
-            }
+            return totalRestMinutes;
+        }
 
-            return listAssemblyTime;
+        // Metode ini akan menangani rentang waktu yang melewati tengah malam
+
+        public List<ActualQty> GetActualData(DateTime startTime, DateTime endTime) =>
+            RawOeeData
+                .Where(d => d.SDate >= startTime && d.SDate < endTime)
+                .GroupBy(d => d.MachineCode)
+                .Select(g => new ActualQty { MachineCode = g.Key, Quantity = g.Count() })
+                .ToList();
+
+        public List<TotalDefect> GetTotalDefect(DateTime startTime, DateTime endTime) =>
+            RawNgData
+                .Where(d => d.SDate >= startTime && d.SDate < endTime)
+                .GroupBy(d => d.MachineCode)
+                .Select(g => new TotalDefect { MachineCode = g.Key, DefectQty = g.Count() })
+                .ToList();
+
+        public int CalculateTotalLossTime(string machineCode, DateTime shiftStart, DateTime shiftEnd, List<RestTime> breaks)
+        {
+            var totalLossSeconds = RawLossTimeData
+                .Where(lt =>
+                {
+                    // Buat DateTime lengkap untuk setiap loss event
+                    var lossStart = lt.Date.Date + lt.StartTime;
+                    var lossEnd = lt.Date.Date + lt.EndTime;
+                    // Jika loss melewati tengah malam, tambahkan satu hari ke waktu akhir
+                    if (lossEnd < lossStart) lossEnd = lossEnd.AddDays(1);
+
+                    return lt.MachineCode == machineCode &&
+                           lossStart >= shiftStart &&
+                           lossEnd < shiftEnd &&
+                           !breaks.Any(b => {
+                               var breakStart = shiftStart.Date + b.StartTime;
+                               var breakEnd = shiftStart.Date + b.EndTime;
+                               if (b.StartTime > b.EndTime) breakEnd = breakEnd.AddDays(1); // Handle istirahat lintas hari jika ada
+                               return lossStart < breakEnd && lossEnd > breakStart;
+                           });
+                })
+                .Sum(lt => {
+                    var lossEnd = lt.Date.Date + lt.EndTime;
+                    if (lossEnd < (lt.Date.Date + lt.StartTime)) lossEnd = lossEnd.AddDays(1);
+                    return (lossEnd - (lt.Date.Date + lt.StartTime)).TotalSeconds;
+                });
+
+            return (int)totalLossSeconds / 60; // Kembalikan dalam menit
         }
 
 
-        public List<ProductionAchievement> GetHourlyAchievement(TimeSpan StartTime, TimeSpan EndTime)
+        public int GetTotalChangeModel(string machineCode, DateTime startTime, DateTime endTime) =>
+            RawOeeData
+                .Where(d => d.MachineCode == machineCode && d.SDate >= startTime && d.SDate < endTime)
+                .Select(d => d.ProductName)
+                .Distinct()
+                .Count();
+
+        public List<StartEndModel> GetStartEndModel(string machineCode, DateTime startTime, DateTime endTime)
         {
-            List<ProductionAchievement> listProdAchieve = new List<ProductionAchievement>();
-            var breakTimes = GetTodayBreakTimes();
-            var intervals = SplitIntervalExcludingBreaks((StartTime, EndTime), breakTimes);
+            var results = new List<StartEndModel>();
+            var filteredData = RawOeeData
+                .Where(d => d.MachineCode == machineCode && d.SDate >= startTime && d.SDate < endTime)
+                .OrderBy(d => d.SDate)
+                .ToList();
 
-            try
+            if (!filteredData.Any()) return results;
+
+            var currentBlock = new StartEndModel { Model = filteredData.First().ProductName, StartTime = filteredData.First().SDate, EndTime = filteredData.First().SDate };
+            for (int i = 1; i < filteredData.Count; i++)
             {
-                using (SqlConnection connection = new SqlConnection(connectionString))
+                if (filteredData[i].ProductName == currentBlock.Model)
                 {
-                    connection.Open();
-
-                    foreach (var interval in intervals)
-                    {
-                        string sql = @"SELECT MIN(OEESN.SDate) As FirstTime,
-                                      CAST(DATEADD(HOUR, DATEDIFF(HOUR, 0, OEESN.SDate), 0) AS TIME) AS StartTime,
-                                      CAST(DATEADD(HOUR, DATEDIFF(HOUR, 0, OEESN.SDate) + 1, 0) AS TIME) As EndTime,
-                                      Masterdata.ProductName As Model, 
-                                      OEESN.MachineCode As MachineCode,
-                                      MasterData.QtyHour As Target,
-                                      MasterData.SUT AS SUT,
-                                      COUNT(*) AS Actual
-                               FROM OEESN
-                                    JOIN Masterdata ON OEESN.Product_Id = MasterData.Product_Id
-                               WHERE CAST(SDate As DATE) BETWEEN @StartSelectedDate AND @EndSelectedDate
-                                     AND CAST(SDate As TIME) >= @StartTime
-                                     AND CAST(SDate As TIME) < @EndTime   
-                               GROUP BY DATEDIFF(HOUR, 0, SDate), Masterdata.ProductName, MasterData.QtyHour, MasterData.SUT, OEESN.MachineCode
-                               ORDER BY MIN(OEESN.SDate);";
-
-                        using (SqlCommand cmd = new SqlCommand(sql, connection))
-                        {
-                            cmd.Parameters.AddWithValue("@StartSelectedDate", StartSelectedDate);
-                            cmd.Parameters.AddWithValue("@EndSelectedDate", EndSelectedDate);
-                            cmd.Parameters.AddWithValue("@StartTime", interval.Start);
-                            cmd.Parameters.AddWithValue("@EndTime", interval.End);
-
-                            using (SqlDataReader reader = cmd.ExecuteReader())
-                            {
-                                while (reader.Read())
-                                {
-                                    TimeSpan startTimeHour = reader.GetTimeSpan(1);
-                                    TimeSpan endTimeHour = reader.GetTimeSpan(2);
-                                    var time = $"{startTimeHour:hh\\:mm} - {endTimeHour:hh\\:mm}";
-
-                                    var existing = listProdAchieve.FirstOrDefault(p => p.StartTime == startTimeHour
-                                                                                      && p.EndTime == endTimeHour
-                                                                                      && p.Model == reader.GetString(3)
-                                                                                      && p.MachineCode == reader.GetString(4));
-                                    if (existing == null)
-                                    {
-                                        listProdAchieve.Add(new ProductionAchievement
-                                        {
-                                            FirstTime = reader.GetDateTime(0),
-                                            StartTime = startTimeHour,
-                                            EndTime = endTimeHour,
-                                            Time = time,
-                                            Model = reader.GetString(3),
-                                            MachineCode = reader.GetString(4),
-                                            Plan = reader.GetInt32(5),
-                                            SUT = reader.GetInt32(6),
-                                            Actual = reader.GetInt32(7)
-                                        });
-                                    }
-                                    else
-                                    {
-                                        // jika data sudah ada, tambahkan Actual-nya
-                                        existing.Actual += reader.GetInt32(7);
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    currentBlock.EndTime = filteredData[i].SDate;
+                }
+                else
+                {
+                    results.Add(currentBlock);
+                    currentBlock = new StartEndModel { Model = filteredData[i].ProductName, StartTime = filteredData[i].SDate, EndTime = filteredData[i].SDate };
                 }
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Exception: " + ex.ToString());
-            }
-
-            return listProdAchieve;
+            results.Add(currentBlock);
+            return results;
         }
-        private bool IsOverlappingWithBreakTime(TimeSpan start, TimeSpan end, int toleranceSeconds = 60)
+
+        public int CalculateTotalWorkingTimeForRange(TimeSpan shiftStart, TimeSpan shiftEnd)
         {
-            // tambah toleransi 1 menit (60 detik)
-            TimeSpan tolerance = TimeSpan.FromSeconds(toleranceSeconds);
+            double totalMinutes = 0;
 
-            bool Overlaps(TimeSpan bStart, TimeSpan bEnd)
+            // Loop untuk setiap hari dalam rentang tanggal yang dipilih
+            for (var day = StartSelectedDate.Date; day <= EndSelectedDate.Date; day = day.AddDays(1))
             {
-                if (bStart == null || bEnd == null) return false;
+                var dayType = DetermineTypeOfDay(day.DayOfWeek);
 
-                // Check overlap dengan toleransi
-                return start < (bEnd + tolerance) && (end + tolerance) > bStart;
-            }
-
-            return (BreakTime1Start != null && BreakTime1End != null && Overlaps(BreakTime1Start.Value, BreakTime1End.Value))
-                || (BreakTime2Start != null && BreakTime2End != null && Overlaps(BreakTime2Start.Value, BreakTime2End.Value));
-        }
-        public List<TotalChangesModel> GetTotalChangeModel(TimeSpan StartTime, TimeSpan EndTime)
-        {
-            List<TotalChangesModel> listTotalChangeModel = new List<TotalChangesModel>();
-            var breakTimes = GetTodayBreakTimes();
-            var intervals = SplitIntervalExcludingBreaks((StartTime, EndTime), breakTimes);
-
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
+                // Lewati hari libur (misal: Weekend)
+                if (dayType == "WEEKEND")
                 {
-                    connection.Open();
-
-                    foreach (var interval in intervals)
-                    {
-                        string sql = @"SELECT COUNT(DISTINCT OEESN.Product_Id), OEESN.MachineCode FROM OEESN
-                               WHERE CAST(SDate AS Date) BETWEEN @StartSelectedDate AND @EndSelectedDate
-                                     AND CAST(SDate AS Time) >= @StartTime
-                                     AND CAST(SDate AS Time) < @EndTime
-                               GROUP BY OEESN.Product_Id, OEESN.MachineCode;";
-
-                        using (SqlCommand cmd = new SqlCommand(sql, connection))
-                        {
-                            cmd.Parameters.AddWithValue("@StartSelectedDate", StartSelectedDate);
-                            cmd.Parameters.AddWithValue("@EndSelectedDate", EndSelectedDate);
-                            cmd.Parameters.AddWithValue("@StartTime", interval.Start);
-                            cmd.Parameters.AddWithValue("@EndTime", interval.End);
-
-                            using (SqlDataReader reader = cmd.ExecuteReader())
-                            {
-                                while (reader.Read())
-                                {
-                                    var productId = reader.GetInt32(0);
-                                    var machineCode = reader.GetString(1);
-
-                                    if (!listTotalChangeModel.Any(t => t.ProductId == productId && t.MachineCode == machineCode))
-                                    {
-                                        listTotalChangeModel.Add(new TotalChangesModel
-                                        {
-                                            ProductId = productId,
-                                            MachineCode = machineCode
-                                        });
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    continue;
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Exception: " + ex.ToString());
-            }
 
-            return listTotalChangeModel;
-        }
+                // Ambil jadwal istirahat untuk tipe hari ini
+                var breaksForDay = RawRestTimeData
+                    .Where(r => r.DayType == dayType)
+                    .ToList();
 
+                double shiftDurationMinutes = (shiftEnd - shiftStart).TotalMinutes;
+                double restMinutesForDay = 0;
 
-        public List<ModelTime> GetModelTime(TimeSpan StartTime, TimeSpan EndTime)
-        {
-            List<ModelTime> listModelTime = new List<ModelTime>();
-            var breakTimes = GetTodayBreakTimes();
-            var intervals = SplitIntervalExcludingBreaks((StartTime, EndTime), breakTimes);
-
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
+                foreach (var rest in breaksForDay)
                 {
-                    connection.Open();
-
-                    foreach (var interval in intervals)
+                    // Hitung durasi istirahat yang berada dalam jam kerja shift
+                    var overlapStart = new TimeSpan(Math.Max(shiftStart.Ticks, rest.StartTime.Ticks));
+                    var overlapEnd = new TimeSpan(Math.Min(shiftEnd.Ticks, rest.EndTime.Ticks));
+                    if (overlapEnd > overlapStart)
                     {
-                        string sql = @"SELECT MIN(CAST(OEESN.SDate AS Time)) AS StartTime, MAX(CAST(OEESN.SDate AS Time)) AS EndTime, OEESN.MachineCode FROM OEESN 
-                               JOIN Masterdata ON OEESN.Product_Id = MasterData.Product_Id
-                               WHERE CAST (OEESN.SDate AS DATE) BETWEEN @StartSelectedDate AND @EndSelectedDate
-                                     AND CAST(SDate AS Time) >= @StartTime 
-                                     AND CAST(SDate AS Time) < @EndTime
-                               GROUP BY OEESN.MachineCode";
-
-                        using (SqlCommand cmd = new SqlCommand(sql, connection))
-                        {
-                            cmd.Parameters.AddWithValue("@StartSelectedDate", StartSelectedDate);
-                            cmd.Parameters.AddWithValue("@EndSelectedDate", EndSelectedDate);
-                            cmd.Parameters.AddWithValue("@StartTime", interval.Start);
-                            cmd.Parameters.AddWithValue("@EndTime", interval.End);
-
-                            using (SqlDataReader reader = cmd.ExecuteReader())
-                            {
-                                while (reader.Read())
-                                {
-                                    listModelTime.Add(new ModelTime
-                                    {
-                                        StartTime = reader.GetTimeSpan(0),
-                                        EndTime = reader.GetTimeSpan(1),
-                                        MachineCode = reader.GetString(2)
-                                    });
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Exception: " + ex.ToString());
-            }
-
-            return listModelTime;
-        }
-
-
-        public List<TotalDefect> GetTotalDefect(TimeSpan StartTime, TimeSpan EndTime)
-        {
-            List<TotalDefect> listTotalDefect = new List<TotalDefect>();
-            var breakTimes = GetTodayBreakTimes();
-            var intervals = SplitIntervalExcludingBreaks((StartTime, EndTime), breakTimes);
-
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-
-                    foreach (var interval in intervals)
-                    {
-                        string sql = @"SELECT MachineCode, COUNT(*) AS TotalDefect FROM NG_RPTS 
-                               WHERE CAST(SDate AS DATE) BETWEEN @StartSelectedDate AND @EndSelectedDate
-                                     AND CAST(SDate AS Time) >= @StartTime 
-                                     AND CAST(SDate AS Time) < @EndTime
-                               GROUP BY MachineCode";
-
-                        using (SqlCommand cmd = new SqlCommand(sql, connection))
-                        {
-                            cmd.Parameters.AddWithValue("@StartSelectedDate", StartSelectedDate);
-                            cmd.Parameters.AddWithValue("@EndSelectedDate", EndSelectedDate);
-                            cmd.Parameters.AddWithValue("@StartTime", interval.Start);
-                            cmd.Parameters.AddWithValue("@EndTime", interval.End);
-
-                            using (SqlDataReader reader = cmd.ExecuteReader())
-                            {
-                                while (reader.Read())
-                                {
-                                    var machineCode = reader.GetString(0);
-                                    var defectQty = reader.GetInt32(1);
-
-                                    var existing = listTotalDefect.FirstOrDefault(d => d.MachineCode == machineCode);
-                                    if (existing != null)
-                                    {
-                                        existing.DefectQty += defectQty;
-                                    }
-                                    else
-                                    {
-                                        listTotalDefect.Add(new TotalDefect
-                                        {
-                                            MachineCode = machineCode,
-                                            DefectQty = defectQty
-                                        });
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Exception: " + ex.ToString());
-            }
-
-            return listTotalDefect;
-        }
-
-
-        public List<StartEndModel> GetStartEndModel(string MachineCode, TimeSpan StartTime, TimeSpan EndTime)
-        {
-            List<StartEndModel> ListStartEnd = new List<StartEndModel>();
-            var breakTimes = GetTodayBreakTimes();
-            var intervals = SplitIntervalExcludingBreaks((StartTime, EndTime), breakTimes);
-
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-
-                    foreach (var interval in intervals)
-                    {
-                        string sql = @"WITH GroupedData AS (
-                                   SELECT 
-                                       MasterData.ProductName AS Model,
-                                       CAST(OEESN.SDate AS Time) AS StartTime,
-                                       CAST(OEESN.SDate AS Time) AS EndTime,
-                                       ROW_NUMBER() OVER (ORDER BY CAST(OEESN.SDate AS Time)) 
-                                       - ROW_NUMBER() OVER (PARTITION BY MasterData.ProductName ORDER BY CAST(OEESN.SDate AS Time)) AS GroupID
-                                   FROM OEESN
-                                   JOIN MasterData ON OEESN.Product_Id = MasterData.Product_Id
-                                   WHERE 
-                                       OEESN.MachineCode = @MachineCode
-                                       AND CAST(OEESN.SDate AS Time) >= @StartTime
-                                       AND CAST(OEESN.SDate AS Time) < @EndTime
-                               ),
-                               MergedData AS (
-                                   SELECT 
-                                       Model,
-                                       MIN(StartTime) AS StartTime,
-                                       MAX(EndTime) AS EndTime
-                                   FROM GroupedData
-                                   GROUP BY Model, GroupID
-                               )
-                               SELECT Model, StartTime, EndTime FROM MergedData ORDER BY StartTime;";
-
-                        using (SqlCommand cmd = new SqlCommand(sql, connection))
-                        {
-                            cmd.Parameters.AddWithValue("@MachineCode", MachineCode);
-                            cmd.Parameters.AddWithValue("@StartTime", interval.Start);
-                            cmd.Parameters.AddWithValue("@EndTime", interval.End);
-
-                            using (SqlDataReader reader = cmd.ExecuteReader())
-                            {
-                                while (reader.Read())
-                                {
-                                    ListStartEnd.Add(new StartEndModel
-                                    {
-                                        Model = reader.GetString(0),
-                                        StartTime = reader.GetTimeSpan(1),
-                                        EndTime = reader.GetTimeSpan(2)
-                                    });
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Exception: " + ex.ToString());
-            }
-
-            return ListStartEnd;
-        }
-
-
-        public void GetManPower()
-        {
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    string getManPower = @"SELECT DISTINCT TOP 2 NoOfOperator, MachineCode FROM OEESN WHERE CAST(SDate AS DATE) BETWEEN @StartSelectedDate AND @EndSelectedDate";
-                    using (SqlCommand command = new SqlCommand(getManPower, connection))
-                    {
-                        command.Parameters.AddWithValue("@StartSelectedDate", StartSelectedDate);
-                        command.Parameters.AddWithValue("@EndSelectedDate", EndSelectedDate);
-                        using (SqlDataReader dataReader = command.ExecuteReader())
-                        {
-                            while (dataReader.Read())
-                            {
-                                ManPower manPower = new ManPower();
-                                manPower.NoOfOperator = dataReader.GetInt32(0);
-                                manPower.MachineCode = dataReader.GetString(1);
-                                noOfOperator.Add(manPower);
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)    
-            {
-                Console.WriteLine(ex.Message);
-            }
-        }
-
-        public int GetModelPlan(string model)
-        {
-            int QuantityPlan = 0;
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    string getQuantityModel = @"SELECT ProductionRecords.Quantity FROM ProductionRecords 
-                                                JOIN ProductionPlan ON ProductionRecords.PlanId = ProductionPlan.Id 
-                                                WHERE ProductionRecords.ProductName = @Model 
-                                                      AND ProductionPlan.CurrentDate BETWEEN @StartSelectedDate AND @EndSelectedDate";
-                    using (SqlCommand command = new SqlCommand(getQuantityModel, connection))
-                    {
-                        command.Parameters.AddWithValue("@Model", model);
-                        command.Parameters.AddWithValue("@StartSelectedDate", StartSelectedDate);
-                        command.Parameters.AddWithValue("@EndSelectedDate", EndSelectedDate);
-
-                        var Result = command.ExecuteScalar();
-                        if (Result != null)
-                        {
-                            QuantityPlan = (int)Result;
-                        }
-                        else
-                        {
-                            QuantityPlan = 0;
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Exception: " + ex.ToString());
-            }
-            return QuantityPlan;
-        }
-
-        public int CalculatePlan(
-            TimeSpan startTime,
-            TimeSpan endTime,
-            int SUT,
-            List<RestTime> restTime
-        )
-        {
-            TimeSpan effectiveTime = endTime - startTime;
-            foreach (var rest in restTime)
-            {
-                if (startTime < rest.EndTime && endTime > rest.StartTime)
-                {
-                    TimeSpan overlapStart = TimeSpan.FromTicks(Math.Max(startTime.Ticks, rest.StartTime.Ticks));
-                    TimeSpan overlapEnd = TimeSpan.FromTicks(Math.Min(endTime.Ticks, rest.EndTime.Ticks));
-                    effectiveTime -= (overlapEnd - overlapStart);
-                }
-            }
-            return Convert.ToInt32(effectiveTime.TotalSeconds / SUT);
-        }
-
-        public int CalculatePlanPerSUT(
-            int DailyPlan, 
-            List<ProductionAchievement> ProdAchievement,
-            List<RestTime> listRestTime
-        )
-        {
-            int TotalPlanPerSUT = 0;
-            int PlanPerSUT = 0;
-            var PreviousModel = "";
-            var CurrentDate = DateTime.Now.Date;
-            var CurrentWorkingTime = DateTime.Now.TimeOfDay;
-
-            if (ProdAchievement.Count > 0)
-            {
-                for (int i = 0; i < ProdAchievement.Count; i++)
-                {
-                    var CurrentModel = ProdAchievement[i].Model;
-                    var SUT = ProdAchievement[i].SUT;
-                    var StartTime = ProdAchievement[i].StartTime;
-                    var EndTime = ProdAchievement[i].EndTime;
-
-                    var FirstTime_Model = TimeSpan.Zero;
-                    var LastTime_Model = TimeSpan.Zero;
-                    var QuantityPlan = 0;
-
-                    if (CurrentModel != null)
-                    {
-                        FirstTime_Model = GetFirstTimeModel(StartTime, EndTime, CurrentModel);
-                        LastTime_Model = GetLastTimeModel(StartTime, EndTime, CurrentModel);
-                        QuantityPlan = GetModelPlan(CurrentModel);
-                    }
-
-                    if (StartSelectedDate == CurrentDate)
-                    {
-                        if (CurrentWorkingTime >= StartTime && CurrentWorkingTime <= EndTime)
-                        {
-                            if (CurrentModel == PreviousModel)
-                            {
-                                PlanPerSUT = CalculatePlan(StartTime, CurrentWorkingTime, SUT, listRestTime);
-                            }
-                            else
-                            {
-                                PlanPerSUT = 0;
-                                PlanPerSUT = CalculatePlan(FirstTime_Model, EndTime, SUT, listRestTime);
-                            }
-                        }
-                        else
-                        {
-                            if (CurrentModel == PreviousModel)
-                            {
-                                PlanPerSUT = CalculatePlan(StartTime, EndTime, SUT, listRestTime);
-                            }
-                            else
-                            {
-                                PlanPerSUT = 0;
-                                PlanPerSUT = CalculatePlan(FirstTime_Model, EndTime, SUT, listRestTime);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        PlanPerSUT = 0;
-                        if (CurrentModel == PreviousModel)
-                        {
-                            PlanPerSUT = CalculatePlan(StartTime, EndTime, SUT, listRestTime);
-                        }
-                        else
-                        {
-                            PlanPerSUT = 0;
-                            PlanPerSUT = CalculatePlan(FirstTime_Model, EndTime, SUT, listRestTime);
-                        }
-                    }
-                    PlanPerSUT = Math.Min(PlanPerSUT, QuantityPlan);
-                    PreviousModel = CurrentModel;
-                    TotalPlanPerSUT += PlanPerSUT;
-                    TotalPlanPerSUT = Math.Min(TotalPlanPerSUT, DailyPlan);
-                }
-            }
-            return TotalPlanPerSUT;
-        }
-
-        public int CalculateTotalLossTime(
-            List<AssemblyTime> assemblyTimes,
-            List<RestTime> restTimes
-        )
-        {
-            int totalLossTime = 0;
-            var sortedAssemblyTimes = assemblyTimes.OrderBy(p => p.ProductionTime).ToList();
-
-            for (int i = 0; i < sortedAssemblyTimes.Count; i++)
-            {
-                var current = sortedAssemblyTimes[i];
-                var expectedEndTime = current.ProductionTime.Add(TimeSpan.FromSeconds(current.SUT * 3));
-                var actualEndTime = i < sortedAssemblyTimes.Count - 1 ? sortedAssemblyTimes[i + 1].ProductionTime : expectedEndTime;
-
-                foreach (var rest in restTimes)
-                {
-                    if (current.ProductionTime < rest.EndTime && actualEndTime > rest.StartTime)
-                    {
-                        if (current.ProductionTime >= rest.StartTime && current.ProductionTime < rest.EndTime)
-                        {
-                            current.ProductionTime = rest.EndTime;
-                            expectedEndTime = current.ProductionTime.Add(TimeSpan.FromSeconds(current.SUT * 3));
-                        }
-                        if (actualEndTime > rest.EndTime && current.ProductionTime <= rest.StartTime)
-                        {
-                            actualEndTime = rest.StartTime;
-                        }
-                        if (actualEndTime > rest.StartTime && actualEndTime <= rest.EndTime)
-                        {
-                            actualEndTime = rest.StartTime;
-                        }
+                        restMinutesForDay += (overlapEnd - overlapStart).TotalMinutes;
                     }
                 }
 
-                int lossTime = 0;
-                if (expectedEndTime < actualEndTime)
-                {
-                    lossTime = Math.Max(0, (int)(actualEndTime - current.ProductionTime).TotalSeconds);
-                }
-
-                totalLossTime += lossTime;
+                // Tambahkan waktu kerja bersih hari ini ke total
+                totalMinutes += (shiftDurationMinutes - restMinutesForDay);
             }
-            return totalLossTime;
+
+            // Logika untuk hari ini (jika rentang mencakup hari ini, maka waktu kerja dihitung sampai jam saat ini)
+            if (EndSelectedDate.Date == DateTime.Today && StartSelectedDate.Date == DateTime.Today)
+            {
+                var workingDurationToday = (DateTime.Now.TimeOfDay > shiftStart ? (DateTime.Now.TimeOfDay < shiftEnd ? DateTime.Now.TimeOfDay - shiftStart : shiftEnd - shiftStart) : TimeSpan.Zero);
+                var totalRestTimeToday = GetTotalRestTime(GetRestTime(DetermineTypeOfDay(DateTime.Today.DayOfWeek)), shiftStart, shiftEnd, DateTime.Now.TimeOfDay);
+                return Math.Max(0, (int)workingDurationToday.TotalMinutes - totalRestTimeToday);
+            }
+
+
+            return (int)totalMinutes;
         }
 
-        public TimeSpan GetLastWorkingTime(string MachineCode, TimeSpan StartTime)
+        public List<StartEndModel> GetStartEndModel(string machineCode, TimeSpan startTime, TimeSpan endTime)
         {
-            TimeSpan lastWorkingTime = TimeSpan.Zero;
-            try
+            var results = new List<StartEndModel>();
+            var filteredData = RawOeeData.Where(d => d.MachineCode == machineCode && d.SDate.TimeOfDay >= startTime && d.SDate.TimeOfDay < endTime).OrderBy(d => d.SDate).ToList();
+            if (!filteredData.Any()) return results;
+            var currentBlock = new StartEndModel { Model = filteredData.First().ProductName, StartTime = filteredData.First().SDate, EndTime = filteredData.First().SDate };
+            for (int i = 1; i < filteredData.Count; i++)
             {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    string getLastWorkingTime = @"SELECT MAX(CAST(SDate AS Time)) FROM OEESN 
-                                                  WHERE CAST (SDate AS Date) BETWEEN @StartSelectedDate AND @EndSelectedDate 
-                                                        AND CAST(SDate AS Time) >= @StartTime";
-                    using (SqlCommand command = new SqlCommand(getLastWorkingTime, connection))
-                    {
-                        command.Parameters.AddWithValue("@StartSelectedDate", StartSelectedDate);
-                        command.Parameters.AddWithValue("@EndSelectedDate", EndSelectedDate);
-                        command.Parameters.AddWithValue("@MachineCode", MachineCode);
-                        command.Parameters.AddWithValue("@StartTime", StartTime);
+                if (filteredData[i].ProductName == currentBlock.Model) { currentBlock.EndTime = filteredData[i].SDate; }
+                else { results.Add(currentBlock); currentBlock = new StartEndModel { Model = filteredData[i].ProductName, StartTime = filteredData[i].SDate, EndTime = filteredData[i].SDate }; }
+            }
+            results.Add(currentBlock);
+            return results;
+        }
+        public int GetAverageWorkersForPeriod(string machineCode, DateTime startTime, DateTime endTime)
+        {
+            var workersPerDay = RawOeeData
+                .Where(d => d.MachineCode == machineCode && d.SDate >= startTime && d.SDate < endTime)
+                .GroupBy(d => d.SDate.Date)
+                .Select(g => g.Max(d => d.NoOfOperator)) 
+                .ToList();
 
-                        var Result = command.ExecuteScalar();
-                        if (Result != null)
-                        {
-                            lastWorkingTime = (TimeSpan)Result;
-                        }
-                        else
-                        {
-                            lastWorkingTime = TimeSpan.Zero;
-                        }
+            if (workersPerDay.Any())
+            {
+                return (int)Math.Round(workersPerDay.Average());
+            }
+            return 0;
+        }
+
+        // Tambahkan metode baru ini di dalam kelas SummaryModel
+        public double CalculateSingleDayElapsedWorkingTime(DateTime day, TimeSpan shiftStart, TimeSpan shiftEnd, List<RestTime> shiftBreaks)
+        {
+            var now = DateTime.Now;
+
+            // Jika hari yang diproses adalah di masa depan, waktu kerja adalah 0
+            if (day.Date > now.Date)
+            {
+                return 0;
+            }
+
+            // Jika hari yang diproses adalah di masa lalu, hitung waktu kerja bersih satu shift penuh
+            // BLOK BARU YANG SUDAH DIPERBAIKI
+            if (day.Date < now.Date)
+            {
+                double totalShiftMinutes = (shiftEnd - shiftStart).TotalMinutes;
+                double actualBreakMinutesInShift = 0;
+
+                // Loop melalui setiap jadwal istirahat yang ada untuk hari itu
+                foreach (var rest in shiftBreaks)
+                {
+                    // Tentukan waktu mulai dan akhir dari tumpang tindih (overlap) antara jam kerja dan jam istirahat
+                    var overlapStart = new TimeSpan(Math.Max(shiftStart.Ticks, rest.StartTime.Ticks));
+                    var overlapEnd = new TimeSpan(Math.Min(shiftEnd.Ticks, rest.EndTime.Ticks));
+
+                    // Jika ada tumpang tindih yang valid (waktu akhir > waktu mulai)
+                    if (overlapEnd > overlapStart)
+                    {
+                        // Tambahkan durasi tumpang tindih tersebut ke total istirahat yang valid
+                        actualBreakMinutesInShift += (overlapEnd - overlapStart).TotalMinutes;
                     }
                 }
+                return totalShiftMinutes - actualBreakMinutesInShift;
             }
-            catch (Exception ex)
+
+            // Jika hari yang diproses adalah HARI INI, hitung secara dinamis
+            // Waktu efektif berakhir adalah waktu saat ini, kecuali jika shift sudah selesai
+            TimeSpan effectiveEndTime = (now.TimeOfDay > shiftEnd) ? shiftEnd : now.TimeOfDay;
+
+            // Jika shift belum dimulai, waktu kerja adalah 0
+            if (effectiveEndTime <= shiftStart)
             {
-                Console.WriteLine(ex.Message);
+                return 0;
             }
-            return lastWorkingTime;
+
+            // Hitung durasi kotor dari awal shift hingga waktu efektif berakhir
+            double grossDurationMinutes = (effectiveEndTime - shiftStart).TotalMinutes;
+
+            // Hitung total istirahat yang sudah terjadi dalam durasi tersebut
+            int restMinutesElapsed = GetTotalRestTime(shiftBreaks, shiftStart, shiftEnd, now.TimeOfDay);
+
+            return Math.Max(0, grossDurationMinutes - restMinutesElapsed);
         }
 
-        public TimeSpan GetFirstTimeModel(TimeSpan StartTime, TimeSpan EndTime, string model)
+        // Tambahkan metode baru ini di dalam kelas SummaryModel
+
+        public double CalculateOvernightShiftElapsedWorkingTime(DateTime startDay, TimeSpan shiftStart, TimeSpan shiftEnd, List<RestTime> shiftBreaks)
         {
-            TimeSpan FirstTime = TimeSpan.Zero;
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    string getFirstTime = @"SELECT CAST(MIN(OEESN.SDate) AS Time) FROM OEESN 
-                                            JOIN MasterData ON OEESN.Product_Id = MasterData.Product_Id 
-                                            WHERE MasterData.ProductName = @Model AND CAST(OEESN.SDate AS Time) >= @StartTime 
-                                                AND CAST(OEESN.SDate AS Time) <= @EndTime 
-                                                AND CAST(OEESN.SDate AS DATE) BETWEEN @StartSelectedDate AND @EndSelectedDate";
+            var now = DateTime.Now;
 
-                    using (SqlCommand command = new SqlCommand(getFirstTime, connection))
-                    {
-                        command.Parameters.AddWithValue("@Model", model);
-                        command.Parameters.AddWithValue("@StartTime", StartTime);
-                        command.Parameters.AddWithValue("@EndTime", EndTime);
-                        command.Parameters.AddWithValue("@StartSelectedDate", StartSelectedDate);
-                        command.Parameters.AddWithValue("@EndSelectedDate", EndSelectedDate);
+            // Tentukan waktu mulai dan selesai shift secara penuh (start di hari ini, end di hari besok)
+            var shiftStartDateTime = startDay.Date + shiftStart;
+            var shiftEndDateTime = startDay.Date.AddDays(1) + shiftEnd;
 
-                        var Result = command.ExecuteScalar();
-                        if (Result != null)
-                        {
-                            FirstTime = (TimeSpan)Result;
-                        }
-                        else
-                        {
-                            FirstTime = TimeSpan.Zero;
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
+            // 1. Jika shift di masa depan (waktu sekarang masih sebelum shift dimulai)
+            if (now < shiftStartDateTime)
             {
-                Console.WriteLine("Exception: " + ex.ToString());
+                return 0;
             }
-            return FirstTime;
+
+            // 2. Jika shift sudah sepenuhnya berlalu (waktu sekarang sudah melewati akhir shift)
+            if (now >= shiftEndDateTime)
+            {
+                double totalShiftMinutes = (shiftEndDateTime - shiftStartDateTime).TotalMinutes;
+                // Asumsi jam istirahat untuk shift malam tidak ada atau sudah termasuk dalam kalkulasi total.
+                // Jika ada, perlu penanganan khusus. Untuk saat ini, kita anggap total durasi.
+                double totalBreakMinutes = 0; // Sesuaikan jika ada jadwal istirahat tetap untuk shift 3
+                return totalShiftMinutes - totalBreakMinutes;
+            }
+
+            // 3. Jika shift sedang berjalan (waktu sekarang ada di antara mulai dan selesai shift)
+            // Durasi kotor dari awal shift hingga saat ini
+            double grossDurationMinutes = (now - shiftStartDateTime).TotalMinutes;
+
+            // Hitung istirahat yang sudah terjadi (jika ada)
+            // NOTE: Metode GetTotalRestTime yang ada mungkin perlu penyesuaian untuk shift malam.
+            // Untuk saat ini kita asumsikan 0 untuk penyederhanaan.
+            int restMinutesElapsed = 0;
+
+            return Math.Max(0, grossDurationMinutes - restMinutesElapsed);
         }
 
-        public TimeSpan GetLastTimeModel(TimeSpan StartTime, TimeSpan EndTime, string model)
-        {
-            TimeSpan LastTime = TimeSpan.Zero;
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    string getLastTime = @"SELECT CAST(MAX(OEESN.SDate) AS Time) FROM OEESN 
-                                            JOIN MasterData ON OEESN.Product_Id = MasterData.Product_Id 
-                                            WHERE MasterData.ProductName = @Model AND CAST(OEESN.SDate AS Time) >= @StartTime 
-                                                AND CAST(OEESN.SDate AS Time) <= @EndTime 
-                                                AND CAST(OEESN.SDate AS DATE) BETWEEN @StartSelectedDate AND @EndSelectedDate";
-
-                    using (SqlCommand command = new SqlCommand(getLastTime, connection))
-                    {
-                        command.Parameters.AddWithValue("@Model", model);
-                        command.Parameters.AddWithValue("@StartTime", StartTime);
-                        command.Parameters.AddWithValue("@EndTime", EndTime);
-                        command.Parameters.AddWithValue("@StartSelectedDate", StartSelectedDate);
-                        command.Parameters.AddWithValue("@EndSelectedDate", EndSelectedDate);
-
-                        var Result = command.ExecuteScalar();
-                        if (Result != null)
-                        {
-                            LastTime = (TimeSpan)Result;
-                        }
-                        else
-                        {
-                            LastTime = TimeSpan.Zero;
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Exception: " + ex.ToString());
-            }
-            return LastTime;
-        }
-
-        //---------------------------------------------------------------------------
-        //------------------------ KHUSUS UNTUK SHIFT 3 -----------------------------
-        //---------------------------------------------------------------------------
-
-        public DateTime GetLastWorkingTime_03(string MachineCode, DateTime StartTime, DateTime EndTime)
-        {
-            DateTime lastWorkingTime = StartSelectedDate.AddDays(1).AddHours(7);
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    string getLastWorkingTime = @"SELECT MAX(SDate) FROM OEESN 
-                                                  WHERE MachineCode = @MachineCode AND SDate BETWEEN @StartTime AND @EndTime;";
-                    using (SqlCommand command = new SqlCommand(getLastWorkingTime, connection))
-                    {
-                        command.Parameters.AddWithValue("@MachineCode", MachineCode);
-                        command.Parameters.AddWithValue("@StartTime", StartTime);
-                        command.Parameters.AddWithValue("@EndTime", EndTime);
-
-                        var Result = command.ExecuteScalar();
-                        if (Result != null)
-                        {
-                            lastWorkingTime = (DateTime)Result;
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-            return lastWorkingTime;
-        }
-
-        public List<ActualQty> GetActualData_03(DateTime StartTime, DateTime EndTime)
-        {
-            List<ActualQty> listActualQty = new List<ActualQty>();
-
-            var breakTimes = GetTodayBreakTimes_DateTime(StartTime.Date);
-            var intervals = SplitIntervalExcludingBreaks_DateTime((StartTime, EndTime), breakTimes);
-
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-
-                    foreach (var interval in intervals)
-                    {
-                        string sql = @"SELECT COUNT(*) AS Qty, MachineCode FROM OEESN 
-                               WHERE SDate BETWEEN @StartTime AND @EndTime
-                               GROUP BY MachineCode;";
-
-                        using (SqlCommand cmd = new SqlCommand(sql, connection))
-                        {
-                            cmd.Parameters.AddWithValue("@StartTime", interval.Start);
-                            cmd.Parameters.AddWithValue("@EndTime", interval.End);
-
-                            using (SqlDataReader reader = cmd.ExecuteReader())
-                            {
-                                while (reader.Read())
-                                {
-                                    var machineCode = reader.GetString(1);
-                                    var qty = reader.GetInt32(0);
-
-                                    var existing = listActualQty.FirstOrDefault(a => a.MachineCode == machineCode);
-                                    if (existing != null)
-                                    {
-                                        existing.Quantity += qty;
-                                    }
-                                    else
-                                    {
-                                        listActualQty.Add(new ActualQty { MachineCode = machineCode, Quantity = qty });
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Exception: " + ex.ToString());
-            }
-
-            return listActualQty;
-        }
-
-
-        public List<SUTModel> GetSUTModel_03(DateTime StartTime, DateTime EndTime)
-        {
-            List<SUTModel> listSUTModel = new List<SUTModel>();
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    string GetSUT = @"SELECT MasterData.SUT, OEESN.MachineCode FROM OEESN
-	                                         JOIN MasterData ON OEESN.Product_Id = MasterData.Product_Id
-                                      WHERE OEESN.SDate BETWEEN @StartTime AND @EndTime
-                                      ORDER BY SDate DESC;";
-                    using (SqlCommand command = new SqlCommand(GetSUT, connection))
-                    {
-                        command.Parameters.AddWithValue("@StartTime", StartTime);
-                        command.Parameters.AddWithValue("@EndTime", EndTime);
-                        using (SqlDataReader dataReader = command.ExecuteReader())
-                        {
-                            while (dataReader.Read())
-                            {
-                                SUTModel sutModel = new SUTModel();
-                                sutModel.SUT = dataReader.GetInt32(0);
-                                sutModel.MachineCode = dataReader.GetString(1);
-                                listSUTModel.Add(sutModel);
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Exception: " + ex.ToString());
-            }
-            return listSUTModel;
-        }
-
-        public List<ProductionAchievement> GetHourlyAchievement_03(DateTime StartTime, DateTime EndTime)
-        {
-            List<ProductionAchievement> listProdAchieve = new List<ProductionAchievement>();
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    string SelectHourlyData = @"SELECT MIN(OEESN.SDate) As FirstTime,
-                                                       CAST(DATEADD(HOUR, DATEDIFF(HOUR, 0, OEESN.SDate), 0) AS TIME) AS StartTime,
-                                                       CAST(DATEADD(HOUR, DATEDIFF(HOUR, 0, OEESN.SDate) + 1, 0) AS TIME) As EndTime,
-                                                       Masterdata.ProductName As Model, 
-                                                       OEESN.MachineCode As MachineCode,
-                                                       MasterData.QtyHour As Target,
-                                                       MasterData.SUT AS SUT,
-                                                       COUNT(*) AS Actual
-                                                FROM OEESN
-                                                       JOIN Masterdata ON OEESN.Product_Id = MasterData.Product_Id
-                                                WHERE OEESN.SDate BETWEEN @StartTime AND @EndTime
-                                                GROUP BY DATEDIFF(HOUR, 0, SDate), Masterdata.ProductName, 
-                                                         MasterData.QtyHour, MasterData.SUT, OEESN.MachineCode
-                                                ORDER BY MIN(OEESN.SDate);";
-
-                    using (SqlCommand Command = new SqlCommand(SelectHourlyData, connection))
-                    {
-                        Command.Parameters.AddWithValue("@StartTime", StartTime);
-                        Command.Parameters.AddWithValue("@EndTime", EndTime);
-                        using (SqlDataReader dataReader = Command.ExecuteReader())
-                        {
-                            while (dataReader.Read())
-                            {
-                                TimeSpan startTime = dataReader.GetTimeSpan(1);
-                                TimeSpan endTime = dataReader.GetTimeSpan(2);
-                                var time = $"{startTime:hh\\:mm} - {endTime:hh\\:mm}";
-
-                                ProductionAchievement achievement = new ProductionAchievement();
-
-                                achievement.FirstTime = dataReader.GetDateTime(0);
-                                achievement.StartTime = startTime;
-                                achievement.EndTime = endTime;
-                                achievement.Time = time;
-                                achievement.Model = dataReader.GetString(3);
-                                achievement.MachineCode = dataReader.GetString(4);
-                                achievement.Plan = dataReader.GetInt32(5);
-                                achievement.SUT = dataReader.GetInt32(6);
-                                achievement.Actual = dataReader.GetInt32(7);
-
-                                listProdAchieve.Add(achievement);
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Exception: " + ex.ToString());
-            }
-            return listProdAchieve;
-        }
-
-        public int GetTotalRestTime_03(List<RestTime> listRestTime, DateTime StartTime, DateTime EndTime, TimeSpan CurrentTime)
-        {
-            int TotalRestTime = 0;
-            TotalRestTime = listRestTime.Sum(rest =>
-            {
-                TimeSpan restStart = rest.StartTime < StartTime.TimeOfDay ? StartTime.TimeOfDay : rest.StartTime;
-                TimeSpan restEnd = rest.EndTime > EndTime.TimeOfDay ? EndTime.TimeOfDay : rest.EndTime;
-                if (StartSelectedDate == DateTime.Now.Date)
-                {
-                    restStart = restStart > CurrentTime ? CurrentTime : restStart;
-                    restEnd = restEnd > CurrentTime ? CurrentTime : restEnd;
-                }
-                return restStart < restEnd ? (int)(restEnd - restStart).TotalMinutes : 0;
-            });
-
-            return TotalRestTime;
-        }
-
-        public List<AssemblyTime> GetAssemblyTime_03(DateTime StartTime, DateTime EndTime)
-        {
-            List<AssemblyTime> listAssemblyTime = new List<AssemblyTime>();
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    string GetAssemblyProductionTime = @"SELECT MasterData.ProductName As Model, OEESN.MachineCode As MachineCode, 
-                                                                MasterData.SUT As SUT, CAST(OEESN.SDate AS Time) As ProductionTime
-                                                         FROM OEESN JOIN Masterdata ON OEESN.Product_Id = MasterData.Product_Id
-                                                         WHERE OEESN.SDate BETWEEN @StartTime AND @EndTime
-                                                         ORDER BY CAST(OEESN.SDate AS TIME) ASC";
-                    using (SqlCommand command = new SqlCommand(GetAssemblyProductionTime, connection))
-                    {
-                        command.Parameters.AddWithValue("@StartTime", StartTime);
-                        command.Parameters.AddWithValue("@EndTime", EndTime);
-                        using (SqlDataReader reader = command.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                AssemblyTime assemblyTime = new AssemblyTime();
-                                assemblyTime.Model = reader.GetString(0);
-                                assemblyTime.MachineCode = reader.GetString(1);
-                                assemblyTime.SUT = reader.GetInt32(2);
-                                assemblyTime.ProductionTime = reader.GetTimeSpan(3);
-                                listAssemblyTime.Add(assemblyTime);
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
-            return listAssemblyTime;
-        }
-        
-        public List<ModelTime> GetModelTime_03(DateTime StartTime, DateTime EndTime)
-        {
-            List<ModelTime> listModelTime = new List<ModelTime>();
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    string GetModelTime = @"SELECT MIN(CAST(OEESN.SDate AS Time)) AS StartTime, MAX(CAST(OEESN.SDate AS Time)) AS EndTime, OEESN.MachineCode FROM OEESN 
-                                            JOIN Masterdata ON OEESN.Product_Id = MasterData.Product_Id
-                                            WHERE OEESN.SDate BETWEEN @StartTime AND @EndTime
-                                            GROUP BY OEESN.MachineCode";
-
-                    using (SqlCommand command = new SqlCommand(GetModelTime, connection))
-                    {
-                        command.Parameters.AddWithValue("@StartTime", StartTime);
-                        command.Parameters.AddWithValue("@EndTime", EndTime);
-                        using (SqlDataReader reader = command.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                ModelTime modelTime = new ModelTime();
-                                modelTime.StartTime = reader.GetTimeSpan(0);
-                                modelTime.EndTime = reader.GetTimeSpan(1);
-                                modelTime.MachineCode = reader.GetString(2);
-                                listModelTime.Add(modelTime);
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
-            return listModelTime;
-        }
-
-        public List<TotalChangesModel> GetTotalChangeModel_03(DateTime StartTime, DateTime EndTime)
-        {
-            List<TotalChangesModel> listTotalChangeModel = new List<TotalChangesModel>();
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    string getTotalChangeModel = @"SELECT COUNT(DISTINCT OEESN.Product_Id), OEESN.MachineCode FROM OEESN
-                                                  WHERE OEESN.SDate BETWEEN @StartTime AND @EndTime
-                                                  GROUP BY OEESN.Product_Id, OEESN.MachineCode;";
-                    using (SqlCommand command = new SqlCommand(getTotalChangeModel, connection))
-                    {
-                        command.Parameters.AddWithValue("@StartTime", StartTime);
-                        command.Parameters.AddWithValue("@EndTime", EndTime);
-                        using (SqlDataReader reader = command.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                TotalChangesModel totalChange = new TotalChangesModel();
-                                totalChange.ProductId = reader.GetInt32(0);
-                                totalChange.MachineCode = reader.GetString(1);
-                                listTotalChangeModel.Add(totalChange);
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
-            return listTotalChangeModel;
-        }
-
-        public int GetModelPlan_03(string model)
-        {
-            int QuantityPlan = 0;
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    string getQuantityModel = @"SELECT ProductionRecords.Quantity FROM ProductionRecords 
-                                                JOIN ProductionPlan ON ProductionRecords.PlanId = ProductionPlan.Id 
-                                                WHERE ProductionRecords.ProductName = @Model AND ProductionPlan.CurrentDate BETWEEN @StartSelectedDate AND @EndSelectedDate";
-                    using (SqlCommand command = new SqlCommand(getQuantityModel, connection))
-                    {
-                        command.Parameters.AddWithValue("@Model", model);
-                        command.Parameters.AddWithValue("@StartSelectedDate", StartSelectedDate);
-                        command.Parameters.AddWithValue("@EndSelectedDate", EndSelectedDate);
-                        var Result = command.ExecuteScalar();
-                        if (Result != null)
-                        {
-                            QuantityPlan = (int)Result;
-                        }
-                        else
-                        {
-                            QuantityPlan = 0;
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Exception: " + ex.ToString());
-            }
-            return QuantityPlan;
-        }
-
-        public List<TotalDefect> GetTotalDefect_03(DateTime StartTime, DateTime EndTime)
-        {
-            List<TotalDefect> listTotalDefect = new List<TotalDefect>();
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    string getTotalDefect = @"SELECT MachineCode, COUNT(*) AS TotalDefect FROM NG_RPTS 
-                                              WHERE OEESN.SDate BETWEEN @StartTime AND @EndTime
-                                              GROUP BY MachineCode";
-                    using (SqlCommand command = new SqlCommand(getTotalDefect, connection))
-                    {
-                        command.Parameters.AddWithValue("@StartTime", StartTime);
-                        command.Parameters.AddWithValue("@EndTime", EndTime);
-
-                        using (SqlDataReader reader = command.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                TotalDefect totalDefect = new TotalDefect();
-                                totalDefect.MachineCode = reader.GetString(0);
-                                totalDefect.DefectQty = reader.GetInt32(1);
-                                listTotalDefect.Add(totalDefect);
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Exception: " + ex.ToString());
-            }
-            return listTotalDefect;
-        }
-
-        public List<StartEndModel> GetStartEndModel_03(string MachineCode, DateTime StartTime, DateTime EndTime)
-        {
-            List<StartEndModel> ListStartEnd = new List<StartEndModel>();
-
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    string getStartEndModel = @"WITH GroupedData AS (
-                                                    SELECT 
-                                                        MasterData.ProductName AS Model,
-                                                        CAST(OEESN.SDate AS Time) AS StartTime,
-                                                        CAST(OEESN.SDate AS Time) AS EndTime,
-                                                        ROW_NUMBER() OVER (ORDER BY CAST(OEESN.SDate AS Time)) 
-                                                        - ROW_NUMBER() OVER (PARTITION BY MasterData.ProductName ORDER BY CAST(OEESN.SDate AS Time)) AS GroupID
-                                                    FROM OEESN
-                                                    JOIN MasterData ON OEESN.Product_Id = MasterData.Product_Id
-                                                    WHERE 
-                                                        OEESN.MachineCode = @MachineCode
-                                                        AND OEESN.SDate BETWEEN @StartTime AND @EndTime
-                                                ),
-                                                MergedData AS (
-                                                    SELECT 
-                                                        Model,
-                                                        MIN(StartTime) AS StartTime,
-                                                        MAX(EndTime) AS EndTime
-                                                    FROM GroupedData
-                                                    GROUP BY Model, GroupID
-                                                )
-                                                SELECT Model, StartTime, EndTime FROM MergedData ORDER BY StartTime;";
-
-                    using (SqlCommand command = new SqlCommand(getStartEndModel, connection))
-                    {
-                        command.Parameters.AddWithValue("@MachineCode", MachineCode);
-                        command.Parameters.AddWithValue("@StartTime", StartTime);
-                        command.Parameters.AddWithValue("@EndTime", EndTime);
-
-                        using (SqlDataReader dataReader = command.ExecuteReader())
-                        {
-                            while (dataReader.Read())
-                            {
-                                StartEndModel StartEnd = new StartEndModel();
-                                StartEnd.Model = dataReader.GetString(0);
-                                StartEnd.StartTime = dataReader.GetTimeSpan(1);
-                                StartEnd.EndTime = dataReader.GetTimeSpan(2);
-                                ListStartEnd.Add(StartEnd);
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-            return ListStartEnd;
-        }
-
-        // Model Data
-        public class PlanQty
-        {
-            public int Quantity { get; set; }
-            public string? MachineCode { get; set; }
-        }
-
-        public class ActualQty
-        {
-            public int Quantity { get; set; }
-            public string? MachineCode { get; set; }
-        }
-
-        public class SUTModel
-        {
-            public int SUT { get; set; }
-            public string? MachineCode { get; set; }
-        }
-
-        public class RestTime
-        {
-            public int Duration { get; set; }
-            public TimeSpan StartTime { get; set; }
-            public TimeSpan EndTime { get; set; }
-        }
-
-        public class AssemblyTime
-        {
-            public string? Model { get; set; }
-            public string? MachineCode { get; set; }
-            public int SUT { get; set; }
-            public TimeSpan ProductionTime { get; set; }
-        }
-
-        public class TotalDefect
-        {
-            public string? MachineCode { get; set; }
-            public int DefectQty { get; set; }
-        }
-
-		public class ManPower
-		{
-			public int NoOfOperator { get; set; }
-			public string? MachineCode { get; set; }
-		}
-
-		public class TotalChangesModel
-        {
-            public int ProductId { get; set; }
-            public string? MachineCode { get; set; }
-        }
-
-        public class ModelTime
-        {
-            public TimeSpan StartTime { get; set; }
-            public TimeSpan EndTime { get; set; }
-            public string? MachineCode { get; set; }
-        }
-
-        public class StartEndModel
-        {
-            public string? Model { get; set; }
-            public TimeSpan StartTime { get; set; }
-            public TimeSpan EndTime { get; set; }
-        }
-        public class ProductionAchievement
-        {
-            public DateTime FirstTime { get; set; }
-            public TimeSpan StartTime { get; set; }
-            public TimeSpan EndTime { get; set; }
-            public string? Time { get; set; }
-            public string? Model { get; set; }
-            public string? MachineCode { get; set; }
-            public int Plan { get; set; }
-            public int SUT { get; set; }
-            public int Actual { get; set; }
-        }
+        public class PlanQty { public int Quantity { get; set; } public string MachineCode { get; set; } }
+        public class ActualQty { public int Quantity { get; set; } public string MachineCode { get; set; } }
+        public class SUTModel { public int SUT { get; set; } public string MachineCode { get; set; } }
+        public class RestTime { public TimeSpan StartTime { get; set; } public TimeSpan EndTime { get; set; } }
+        public class TotalDefect { public string MachineCode { get; set; } public int DefectQty { get; set; } }
+        public class StartEndModel { public string Model { get; set; } public DateTime StartTime { get; set; } public DateTime EndTime { get; set; } }
     }
 }

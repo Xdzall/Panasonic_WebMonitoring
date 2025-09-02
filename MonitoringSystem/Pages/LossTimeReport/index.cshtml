@@ -1,0 +1,415 @@
+﻿@page
+@model MonitoringSystem.Pages.LossTimeReport.indexModel
+@{
+    ViewData["Title"] = "Loss Time Report";
+
+    // Mendefinisikan mapping dari kategori data ke nama yang ditampilkan di tabel
+    var categoryDisplayMapping = new Dictionary<string, string>
+    {
+        { "Loss Awal Hari", "Morning Assembly" },
+        // Asumsikan Break Time & Cleaning adalah kategori tetap, bukan dari data dinamis
+        // "Break Time (AM/PM)" -> Tidak ada di AllCategories
+        // "Cleaning" -> Tidak ada di AllCategories
+        // "General Assembly" -> Tidak ada di AllCategories
+        // "Company Activity" -> Tidak ada di AllCategories
+        // "Training Education" -> Tidak ada di AllCategories
+        // "Free Talking/QC Activity" -> Tidak ada di AllCategories
+        // "Stock Opname" -> Tidak ada di AllCategories
+        // "Trial Run" -> Tidak ada di AllCategories
+        // "Maintenance" -> Tidak ada di AllCategories
+        // "No Production (PSI)" -> Tidak ada di AllCategories
+        // "Set Repairing Loss" -> Tidak ada di AllCategories
+        // "GAWSE - External Bodies" -> Tidak ada di AllCategories
+        { "Material Shortage External", "Material Shortage External" },
+        { "Change Model", "Model Change" },
+        // "Mold/Dies/Jig Change" -> Tidak ada di AllCategories
+        { "MP Adjustment", "Man Power Adjustment" },
+        { "Material Shortage Internal", "Material Shortage Internal" },
+        { "Material Shortage Inhouse", "Material Shortage Inhouse" },
+        { "Quality Trouble", "Quality Trouble" },
+        { "Rework", "Rework" },
+        { "Machine Trouble", "Machine & Tools Trouble" }
+        // "Mold & Dies Trouble" -> Tidak ada di AllCategories
+        // "Other" sengaja tidak dimasukkan di sini karena tidak ada di layout baru
+    };
+}
+
+
+
+<div id="reportContainer">
+    <div class="container-fluid">
+        <div class="row g-3 align-items-center justify-content-center">
+            <div class="col-12">
+                @* Bagian filter header tetap sama dengan nilai default *@
+                <div class="row g-3 align-items-center justify-content-between flex-wrap">
+                    <div class="col-auto">
+                        <form method="post" class="mb-3">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <label for="SelectedYear" class="form-label fw-bold mb-0">Pilih Tahun Laporan:</label>
+                                        <select asp-for="SelectedYear" class="form-select" style="width: 150px;">
+                                                                    @for (int year = DateTime.Today.Year; year >= 2020; year--)
+                                                                    {
+                                                    <option value="@year">@year</option>
+                                                                    }
+                                        </select>
+                                        <button type="submit" class="btn btn-sm btn-primary">Tampilkan</button>
+                                    </div>
+                        </form>
+                    </div>
+                    
+
+                <div class="row mt-4" id="chartDiv">
+                    <canvas id="timeLossChart" width="100%" height="25%"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-bordered text-center align-middle w-100" id="lossTimeTable">
+        <thead class="table-dark">
+            <tr>
+                <th id="toggleExtraRows" style="min-width: 150px; cursor: pointer; user-select: none;">
+                    <div class="d-flex align-items-center">
+                        <i id="toggleIcon" class="bi bi-chevron-down me-2"></i>
+                        <span>Loss Category</span>
+                    </div>
+                </th>
+                @foreach (var monthLabel in Model.MonthLabels)
+                {
+                        <th>@monthLabel</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="table-secondary extra-row">
+                <td colspan="13" class="text-center">Fixed Loss</td>
+            </tr>
+            <tr class="extra-row">
+                <td>Morning Assembly</td>
+                @for (int i = 0; i < 12; i++)
+                {
+                        <td>
+                        @{
+                            var minutes = Model.ReportData.MonthlyLosses.ContainsKey("Loss Awal Hari") ? Model.SecondsToMinutes(Model.ReportData.MonthlyLosses["Loss Awal Hari"][i]) : 0;
+                            @(minutes > 0 ? minutes.ToString("F1") : "0")
+                        }
+                        </td>
+                }
+            </tr>
+            <tr class="extra-row">
+                <td>Break Time (AM/PM)</td>
+                @for (int i = 0; i < 12; i++)
+                {
+                    <td>0</td>
+                }
+            </tr>
+            <tr class="extra-row">
+                <td>Cleaning</td>
+                @for (int i = 0; i < 12; i++)
+                {
+                    <td>0</td>
+                }
+            </tr>
+             <tr class="extra-row">
+                <td>General Assembly</td>
+                @for (int i = 0; i < 12; i++)
+                {
+                    <td>0</td>
+                }
+            </tr>
+
+            <tr class="table-secondary extra-row">
+                <td colspan="13" class="text-center">Control Loss</td>
+            </tr>
+             <tr class="extra-row">
+                <td>Material Shortage External</td>
+                @for (int i = 0; i < 12; i++)
+                {
+                        <td>
+                        @{
+                            var minutes = Model.ReportData.MonthlyLosses.ContainsKey("Material Shortage External") ? Model.SecondsToMinutes(Model.ReportData.MonthlyLosses["Material Shortage External"][i]) : 0;
+                            @(minutes > 0 ? minutes.ToString("F1") : "0")
+                        }
+                        </td>
+                }
+            </tr>
+
+            <tr class="table-secondary extra-row">
+                <td colspan="13" class="text-center">Operation Loss</td>
+            </tr>
+             <tr class="extra-row">
+                <td>Model Change</td>
+                @for (int i = 0; i < 12; i++)
+                {
+                        <td>
+                        @{
+                            var minutes = Model.ReportData.MonthlyLosses.ContainsKey("Change Model") ? Model.SecondsToMinutes(Model.ReportData.MonthlyLosses["Change Model"][i]) : 0;
+                            @(minutes > 0 ? minutes.ToString("F1") : "0")
+                        }
+                        </td>
+                }
+            </tr>
+            <tr class="extra-row">
+                <td>Man Power Adjustment</td>
+                @for (int i = 0; i < 12; i++)
+                {
+                        <td>
+                        @{
+                            var minutes = Model.ReportData.MonthlyLosses.ContainsKey("MP Adjustment") ? Model.SecondsToMinutes(Model.ReportData.MonthlyLosses["MP Adjustment"][i]) : 0;
+                            @(minutes > 0 ? minutes.ToString("F1") : "0")
+                        }
+                        </td>
+                }
+            </tr>
+
+            <tr class="table-secondary extra-row">
+                <td colspan="13" class="text-center">Balance Loss</td>
+            </tr>
+             <tr class="extra-row">
+                <td>Material Shortage Internal</td>
+                @for (int i = 0; i < 12; i++)
+                {
+                        <td>
+                        @{
+                            var minutes = Model.ReportData.MonthlyLosses.ContainsKey("Material Shortage Internal") ? Model.SecondsToMinutes(Model.ReportData.MonthlyLosses["Material Shortage Internal"][i]) : 0;
+                            @(minutes > 0 ? minutes.ToString("F1") : "0")
+                        }
+                        </td>
+                }
+            </tr>
+
+            <tr class="table-secondary extra-row">
+                <td colspan="13" class="text-center">Delivery Loss</td>
+            </tr>
+             <tr class="extra-row">
+                <td>Material Shortage Inhouse</td>
+                @for (int i = 0; i < 12; i++)
+                {
+                        <td>
+                        @{
+                            var minutes = Model.ReportData.MonthlyLosses.ContainsKey("Material Shortage Inhouse") ? Model.SecondsToMinutes(Model.ReportData.MonthlyLosses["Material Shortage Inhouse"][i]) : 0;
+                            @(minutes > 0 ? minutes.ToString("F1") : "0")
+                        }
+                        </td>
+                }
+            </tr>
+
+            <tr class="table-secondary extra-row">
+                <td colspan="13" class="text-center">Loss Adjustment</td>
+            </tr>
+            <tr class="extra-row">
+                <td>Quality Trouble</td>
+                @for (int i = 0; i < 12; i++)
+                {
+                        <td>
+                        @{
+                            var minutes = Model.ReportData.MonthlyLosses.ContainsKey("Quality Trouble") ? Model.SecondsToMinutes(Model.ReportData.MonthlyLosses["Quality Trouble"][i]) : 0;
+                            @(minutes > 0 ? minutes.ToString("F1") : "0")
+                        }
+                        </td>
+                }
+            </tr>
+            <tr class="extra-row">
+                <td>Rework</td>
+                @for (int i = 0; i < 12; i++)
+                {
+                        <td>
+                        @{
+                            var minutes = Model.ReportData.MonthlyLosses.ContainsKey("Rework") ? Model.SecondsToMinutes(Model.ReportData.MonthlyLosses["Rework"][i]) : 0;
+                            @(minutes > 0 ? minutes.ToString("F1") : "0")
+                        }
+                        </td>
+                }
+            </tr>
+            <tr class="extra-row">
+                <td>Machine & Tools Trouble</td>
+                @for (int i = 0; i < 12; i++)
+                {
+                        <td>
+                        @{
+                            var minutes = Model.ReportData.MonthlyLosses.ContainsKey("Machine Trouble") ? Model.SecondsToMinutes(Model.ReportData.MonthlyLosses["Machine Trouble"][i]) : 0;
+                            @(minutes > 0 ? minutes.ToString("F1") : "0")
+                        }
+                        </td>
+                }
+            </tr>
+
+            <tr class="table-secondary extra-row">
+                <td colspan="13" class="text-center">Total Loss & Actual</td>
+            </tr>
+            <tr class="table-group-divider">
+                <td class="fw-bold">Total Working Time</td>
+                @for (int i = 0; i < 12; i++)
+                {
+                    <td>0</td>
+                }
+            </tr>
+            <tr>
+                <td class="fw-bold">Total Loss</td>
+                @for (int i = 0; i < 12; i++)
+                {
+                        <td>@Model.SecondsToMinutes(Model.ReportData.TotalLossByMonth[i]).ToString("F1")</td>
+                }
+            </tr>
+             <tr>
+                <td class="fw-bold">Actual Loss = Total Loss - Fixed Loss</td>
+                @for (int i = 0; i < 12; i++)
+                {
+                    <td>0</td>
+                }
+            </tr>
+            <tr>
+                <td class="fw-bold">Actual WT = Total WT - Fixed Loss</td>
+                @for (int i = 0; i < 12; i++)
+                {
+                    <td>0</td>
+                }
+            </tr>
+            <tr>
+                <td class="fw-bold">Actual Loss vs Actual Working Time (%)</td>
+                @for (int i = 0; i < 12; i++)
+                {
+                    <td>0%</td>
+                }
+            </tr>
+            <tr>
+                <td class="fw-bold">Total Loss vs Total Working Time (%)</td>
+                @for (int i = 0; i < 12; i++)
+                {
+                    <td>0%</td>
+                }
+            </tr>
+            <tr>
+                <td class="fw-bold">BP Total Loss vs Total Working Time (%)</td>
+                @for (int i = 0; i < 12; i++)
+                {
+                    <td>0%</td>
+                }
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .table th,
+    .table td {
+        font-size: 10px;
+        padding: 0.3rem;
+        white-space: nowrap;
+        word-wrap: break-word;
+        vertical-align: middle;
+    }
+
+    .table th:first-child,
+    .table td:first-child {
+        min-width: 100px;
+        white-space: normal;
+        text-align: left;
+        padding-left: .5rem;
+    }
+    .extra-row {
+        display: none;
+    }
+</style>
+
+@section Scripts {
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                // --- CHART SCRIPT ---
+                const timeLossCtx = document.getElementById('timeLossChart');
+                if (timeLossCtx) {
+                    try {
+                        const chartData = @Html.Raw(Model.ChartDataJson);
+                        new Chart(timeLossCtx, {
+                            type: 'bar',
+                            data: chartData,
+                            options: {
+                                devicePixelRatio: 3,
+                                responsive: true,
+                                animation: { duration: 500 },
+                                interaction: { mode: 'index', intersect: false },
+                                scales: {
+                                    x: { 
+                                        stacked: true,
+                                        title: {
+                                           display: true,
+                                           text: 'Period'
+                                         }
+                                    },
+                                    y: {
+                                        stacked: true,
+                                        type: 'linear',
+                                        display: true,
+                                        position: 'left',
+                                        title: { display: true, text: 'Loss Time (Minutes)' },
+                                        beginAtZero: true
+                                    },
+                                    y1: {
+                                        type: 'linear',
+                                        display: true,
+                                        position: 'right',
+                                        max: 120,
+                                        grid: { drawOnChartArea: false },
+                                        title: { display: true, text: 'Percentage (%)' },
+                                        ticks: { callback: (value) => value + '%' }
+                                    }
+                                },
+                                plugins: {
+                                    title: { display: true, text: 'Time Loss Progress' },
+                                    legend: {
+                                        position: 'top',
+                                    },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function (context) {
+                                                let label = context.dataset.label || '';
+                                                if (label) { label += ': '; }
+                                                if (context.parsed.y !== null) {
+                                                    label += context.dataset.yAxisID === 'y1' ? context.parsed.y.toFixed(2) + '%' : context.parsed.y.toFixed(1) + ' min';
+                                                }
+                                                return label;
+                                            },
+                                            footer: function(tooltipItems) {
+                                                let sum = 0;
+                                                tooltipItems.forEach(function(tooltipItem) {
+                                                    if (tooltipItem.dataset.yAxisID !== 'y1') {
+                                                        sum += tooltipItem.parsed.y;
+                                                    }
+                                                });
+                                                return 'Total: ' + sum.toFixed(1) + ' minutes';
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    } catch (e) {
+                        console.error("Failed to create chart:", e);
+                    }
+                }
+
+                // --- TABLE ROW TOGGLE SCRIPT ---
+                const toggleHeader = document.getElementById('toggleExtraRows');
+                if (toggleHeader) {
+                    toggleHeader.addEventListener('click', function () {
+                        const extraRows = document.querySelectorAll('.extra-row');
+                        const toggleIcon = document.getElementById('toggleIcon');
+                        // Cek visibilitas baris pertama untuk menentukan status saat ini
+                        const isVisible = extraRows[0] && extraRows[0].style.display !== 'none';
+
+                        extraRows.forEach(row => {
+                            row.style.display = isVisible ? 'none' : 'table-row';
+                        });
+
+                        if (toggleIcon) {
+                            toggleIcon.classList.toggle('bi-chevron-down', isVisible);
+                            toggleIcon.classList.toggle('bi-chevron-up', !isVisible);
+                        }
+                    });
+                }
+            });
+        </script>
+}
