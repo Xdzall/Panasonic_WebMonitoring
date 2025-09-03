@@ -22,7 +22,8 @@ namespace MonitoringSystem.Pages.LossTimeReport
         {
             _context = context;
         }
-
+        [BindProperty]
+        public string MachineLine { get; set; } = "All";
         public class LossReportData
         {
             public Dictionary<string, Dictionary<int, int>> MonthlyLosses { get; set; } = new Dictionary<string, Dictionary<int, int>>();
@@ -74,9 +75,14 @@ namespace MonitoringSystem.Pages.LossTimeReport
             InitializeEmptyData();
 
             string query = @"
-                SELECT [Date], [Reason], [LossTime]
+                SELECT [Date], [Reason], [LossTime], [MachineCode]
                 FROM AssemblyLossTime 
                 WHERE [Date] >= @StartDate AND [Date] <= @EndDate";
+
+            if (!string.Equals(MachineLine, "All", StringComparison.OrdinalIgnoreCase))
+            {
+                query += " AND [MachineCode] = @MachineCode";
+            }
 
             try
             {
@@ -87,6 +93,11 @@ namespace MonitoringSystem.Pages.LossTimeReport
                     {
                         command.Parameters.AddWithValue("@StartDate", startDate);
                         command.Parameters.AddWithValue("@EndDate", endDate);
+
+                        if (!string.Equals(MachineLine, "All", StringComparison.OrdinalIgnoreCase))
+                        {
+                            command.Parameters.AddWithValue("@MachineCode", MachineLine);
+                        }
 
                         using (SqlDataReader reader = command.ExecuteReader())
                         {
@@ -117,30 +128,36 @@ namespace MonitoringSystem.Pages.LossTimeReport
         // DIUBAH: Label bulan menjadi nama bulan standar
         private void PrepareChartData()
         {
-            MonthLabels = Enumerable.Range(1, 12)
+
+
+            var allMonths = Enumerable.Range(1, 12)
                 .Select(i => CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(i))
                 .ToList();
-
+            MonthLabels = allMonths.Skip(3).Concat(allMonths.Take(3)).ToList();
             var datasets = new List<object>();
             var backgroundColors = new[] { "#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF", "#FF9F40", "#C9CBCF" };
             int colorIndex = 0;
 
             foreach (var category in AllCategories)
             {
-                if (ReportData.MonthlyLosses[category].Values.Sum() > 0)
+                var rotatedData = ReportData.MonthlyLosses[category]
+                   .OrderBy(kvp => (kvp.Key + 9) % 12)  // geser index bulan
+                   .Select(v => Math.Round(v.Value / 60.0, 1))
+                   .ToArray();
+
+                datasets.Add(new
                 {
-                    datasets.Add(new
-                    {
-                        label = category,
-                        data = ReportData.MonthlyLosses[category].Values.Select(v => Math.Round(v / 60.0, 1)).ToArray(),
-                        backgroundColor = backgroundColors[colorIndex % backgroundColors.Length],
-                        stack = "loss"
-                    });
-                    colorIndex++;
-                }
+                    label = category,
+                    data = rotatedData,
+                    backgroundColor = backgroundColors[colorIndex % backgroundColors.Length],
+                    stack = "loss"
+                });
+                colorIndex++;
             }
-            ChartDataJson = JsonSerializer.Serialize(new { labels = MonthLabels, datasets });
-        }
+        
+
+        ChartDataJson = JsonSerializer.Serialize(new { labels = MonthLabels, datasets });
+    }
 
         private void InitializeEmptyData()
         {

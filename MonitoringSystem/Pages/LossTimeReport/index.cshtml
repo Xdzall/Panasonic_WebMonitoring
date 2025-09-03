@@ -41,10 +41,11 @@
         <div class="row g-3 align-items-center justify-content-center">
             <div class="col-12">
                 @* Bagian filter header tetap sama dengan nilai default *@
-                <div class="row g-3 align-items-center justify-content-between flex-wrap">
-                    <div class="col-auto">
+                <div class="d-flex justify-content-between align-items-center">
                         <form method="post" class="mb-3">
-                                    <div class="d-flex align-items-center gap-3">
+                              <div class="form-group d-flex align-items-center gap-3 flex-wrap">
+                                    <div class="d-flex gap-3 align-items-center">
+
                                         <label for="SelectedYear" class="form-label fw-bold mb-0">Pilih Tahun Laporan:</label>
                                         <select asp-for="SelectedYear" class="form-select" style="width: 150px;">
                                                                     @for (int year = DateTime.Today.Year; year >= 2020; year--)
@@ -52,13 +53,26 @@
                                                     <option value="@year">@year</option>
                                                                     }
                                         </select>
-                                        <button type="submit" class="btn btn-sm btn-primary">Tampilkan</button>
                                     </div>
+                                     <div class="d-flex gap-3 align-items-center">
+                                         <label class="fw-bold fs-6">Machine Line</label>
+                                         <select class="form-select border-dark filter-control" id="MachineLine" name="MachineLine" asp-for="MachineLine">
+                                            <option value="All">All</option>
+                                            <option value="MCH1-01">CU</option>
+                                            <option value="MCH1-02">CS</option>
+                                         </select>
+                                     </div>
+                                    <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-sm btn-primary">Tampilkan</button>
+                                    </div>
+                                       
+                                    
+                              </div>
                         </form>
-                    </div>
-                    
+                 
+                  </div>
 
-                <div class="row mt-4" id="chartDiv">
+                  <div class="row mt-4" id="chartDiv">
                     <canvas id="timeLossChart" width="100%" height="25%"></canvas>
                 </div>
             </div>
