@@ -3,25 +3,24 @@
 @{
     ViewData["Title"] = "Production Quality";
 
-    var TotalPlan = Model.GetProductionPlan();
-    var DefectQuantity = Model.GetTotalDefect();
-    var DefectRatio = 100;
-    if (DefectQuantity > 0)
-    {
-        DefectRatio = (1 - (DefectQuantity / TotalPlan)) * 100;
-    }
+    // var TotalPlan = Model.GetProductionPlan();
+    // var DefectQuantity = Model.GetTotalDefect();
+    // var DefectRatio = 100;
+    // if (DefectQuantity > 0)
+    // {
+    //     DefectRatio = (1 - (DefectQuantity / TotalPlan)) * 100;
+    // }
 }
 
 <div class="row mx-3">
     <div class="col-2 rounded" style="border: 1px solid rgb(61, 121, 176);">
         <form method="post" class="m-2">
             <div class="row m-2">
-                <button type="submit" class="btn text-white fs-5 fw-bold" style="background-color:rgb(61, 121, 176);">LINE CU</button>
+                <button type="submit" class="btn text-white fs-5 fw-bold" style="background-color:rgb(61, 121, 176);" name="MachineCode" value="MCH1-01">LINE CU</button>
             </div>
             <div class="row m-2">
-                <button type="submit" class="btn btn-outline-secondary fs-5 fw-bold">LINE CS</button>
+                <button type="submit" class="btn btn-outline-secondary fs-5 fw-bold" name="MachineCode" value="MCH1-02">LINE CS</button>
             </div>
-            <input type="hidden" id="machine" name="Machine" />
         </form>
     </div>
 
@@ -40,7 +39,7 @@
                     <div class="card-header text-white fw-bold py-2 rounded-2" style="text-align: center; background-color: rgb(61, 121, 176);">DEFECT QUANTITY</div>
                 </div>
                 <div class="row">
-                    <div class="btn btn-outline-secondary fs-5 fw-semibold">@DefectQuantity</div>
+                    <div class="btn btn-outline-secondary fs-5 fw-semibold">@Model.DefectQuantity</div>
                 </div>
             </div>
             <div class="col justify-content-center py-1 ms-2">
@@ -48,7 +47,7 @@
                     <div class="card-header text-white fw-bold py-2 rounded-2" style="text-align: center; background-color: rgb(61, 121, 176);">DEFECT RATIO</div>
                 </div>
                 <div class="row">
-                    <div class="btn btn-outline-secondary fs-5 fw-semibold">@DefectRatio %</div>
+                    <div class="btn btn-outline-secondary fs-5 fw-semibold">@Model.DefectRatio %</div>
                 </div>
             </div>
             <div class="col justify-content-center py-1 mx-2">
@@ -56,7 +55,7 @@
                     <div class="card-header text-white fw-bold py-2 rounded-2" style="text-align: center; background-color: rgb(61, 121, 176);">TOTAL OUTPUT</div>
                 </div>
                 <div class="row">
-                    <div class="btn btn-outline-secondary fs-5 fw-semibold">@TotalPlan</div>
+                    <div class="btn btn-outline-secondary fs-5 fw-semibold">@Model.TotalPlan</div>
                 </div>
             </div>
         </div>
