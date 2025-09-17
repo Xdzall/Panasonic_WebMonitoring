@@ -440,15 +440,15 @@
                                 type: 'line', label: 'Rasio Plan (%)', data: ratioPlanData,
                                 borderColor: 'rgba(255, 69, 0, 1)', backgroundColor: 'rgba(255, 69, 0, 0.2)',
                                 tension: 0.1, yAxisID: 'y1'
-                            }, {
+                                }, {
+                                            label: 'Plan', data: planData, backgroundColor: '#9ECAD6',
+                                            borderColor: '#9ECAD6', barThickness: 17, stack: 'Plan', yAxisID: 'y'
+                                },{
                                     label: 'Normal', data: normalData, backgroundColor: '#640D5F',
                                     borderColor: '#640D5F', barThickness: 17, stack: 'Actual', yAxisID: 'y'
                             }, {
                                 label: 'Overtime', data: overtimeData, backgroundColor: '#FF6384',
                                 borderColor: '#FF6384', barThickness: 17, stack: 'Actual', yAxisID: 'y'
-                            }, {
-                                        label: 'Plan', data: planData, backgroundColor: '#9ECAD6',
-                                        borderColor: '#9ECAD6', barThickness: 17, stack: 'Plan', yAxisID: 'y'
                             }]
                         },
                         options: {
