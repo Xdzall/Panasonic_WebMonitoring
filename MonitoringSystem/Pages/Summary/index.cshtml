@@ -30,6 +30,13 @@
     int workingDaysInRange = 0;
     double pph_CU_02 = 0, pph_CS_02 = 0;
     double pph_CU_03 = 0, pph_CS_03 = 0;
+
+    long PlanCUShift_01_Base = 0;
+    long PlanCSShift_01_Base = 0;
+
+    long PlanCUShift_02_Base = 0;
+    long PlanCSShift_02_Base = 0;
+
     #endregion
 
 
@@ -43,15 +50,33 @@
         workingDaysInRange++;
 
         var now = DateTime.Now;
-
         #region Shift 1 Calculations
         // 1. Definisi waktu (Disamakan dengan Production Report)
         var StartWorkingTimeShift_01 = new TimeSpan(7, 5, 0);
         var EndWorkingTimeShift_01 = new TimeSpan(15, 55, 0);
         var StartDateTimeShift_01 = day + StartWorkingTimeShift_01;
         var EndDateTimeShift_01 = day + EndWorkingTimeShift_01;
+
+        // ✅ Ambil plan sesuai waktu shift 1
+        var planDataShift_01 = Model.GetPlanFromTargetUnit(StartDateTimeShift_01, EndDateTimeShift_01);
         var listRestTimeShift_01 = Model.GetRestTime(dayType);
         var totalNetWorkingMinutes_01 = (EndWorkingTimeShift_01 - StartWorkingTimeShift_01).TotalMinutes - listRestTimeShift_01.Sum(r => (r.EndTime - r.StartTime).TotalMinutes);
+
+        //base plan shift 1
+        var planCU_01 = Convert.ToInt64(
+        planDataShift_01.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0);
+
+        var planCS_01 = Convert.ToInt64(
+            planDataShift_01.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0);
+
+        // plan tetap
+        PlanCUShift_01_Range += planCU_01;
+        PlanCSShift_01_Range += planCS_01;
+
+        // simpan sebagai pembanding
+        PlanCUShift_01_Base += planCU_01;
+        PlanCSShift_01_Base += planCS_01;
+
 
         // 2. Ambil data aktual DULU
         var actualDataShift_01 = Model.GetActualData(StartDateTimeShift_01, EndDateTimeShift_01);
@@ -71,7 +96,8 @@
         // 5. Setelah diperiksa, BARU tambahkan ke total
         WorkingTimeElapsed_01_Range += workingTimeElapsedForDay_01;
 
-        PlanCUShift_01_Range += (long)(workingTimeElapsedForDay_01 * ((totalNetWorkingMinutes_01 > 0) ? (double)(Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0) / (totalNetWorkingMinutes_01 * workingDaysInRange) : 0));
+        // PlanCUShift_01_Range += (long)(workingTimeElapsedForDay_01 * ((totalNetWorkingMinutes_01 > 0) ? (double)(Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0) / (totalNetWorkingMinutes_01 * workingDaysInRange) : 0));
+        // PlanCUShift_01_Range += Convert.ToInt64(planDataShift_01.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0);
         TotalActualCUShift_01_Range += actualDataShift_01.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0;
         TotalLossTimeCUShift_01_Range += Model.CalculateTotalLossTime("MCH1-01", StartDateTimeShift_01, EndDateTimeShift_01, listRestTimeShift_01);
         TotalDefectCUShift_01_Qty_Range += totalDefectShift_01.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.DefectQty ?? 0;
@@ -81,7 +107,8 @@
         if (modelDataCU_01.Any() && ModelStartTimeCUShift_01 == null) { ModelStartTimeCUShift_01 = modelDataCU_01.First().StartTime; }
         if (modelDataCU_01.Any()) { ModelEndTimeCUShift_01 = modelDataCU_01.Last().EndTime; }
 
-        PlanCSShift_01_Range += (long)(workingTimeElapsedForDay_01 * ((totalNetWorkingMinutes_01 > 0) ? (double)(Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0) / (totalNetWorkingMinutes_01 * workingDaysInRange) : 0));
+        // PlanCSShift_01_Range += (long)(workingTimeElapsedForDay_01 * ((totalNetWorkingMinutes_01 > 0) ? (double)(Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0) / (totalNetWorkingMinutes_01 * workingDaysInRange) : 0));
+        // PlanCSShift_01_Range += Convert.ToInt64(planDataShift_01.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0);
         TotalActualCSShift_01_Range += actualDataShift_01.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0;
         TotalLossTimeCSShift_01_Range += Model.CalculateTotalLossTime("MCH1-02", StartDateTimeShift_01, EndDateTimeShift_01, listRestTimeShift_01);
         TotalDefectCSShift_01_Qty_Range += totalDefectShift_01.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.DefectQty ?? 0;
@@ -98,6 +125,27 @@
         var EndWorkingTimeShift_02 = new TimeSpan(23, 15, 0);
         var StartDateTimeShift_02 = day + StartWorkingTimeShift_02;
         var EndDateTimeShift_02 = day + EndWorkingTimeShift_02;
+
+        // ✅ Plan khusus shift 2
+        var planDataShift_02 = Model.GetPlanFromTargetUnit(StartDateTimeShift_02, EndDateTimeShift_02);
+        var rawPlanCU_02 = Convert.ToInt64(
+        planDataShift_02.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0);
+
+        var rawPlanCS_02 = Convert.ToInt64(
+            planDataShift_02.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0);
+
+        // 🔥 SHIFT 2 = SHIFT 2 - SHIFT 1
+        var finalPlanCU_02 = Math.Max(0, rawPlanCU_02 - PlanCUShift_01_Base);
+        var finalPlanCS_02 = Math.Max(0, rawPlanCS_02 - PlanCSShift_01_Base);
+
+        PlanCUShift_02_Range += finalPlanCU_02;
+        PlanCSShift_02_Range += finalPlanCS_02;
+
+        // simpan untuk pembanding shift 3
+        PlanCUShift_02_Base += finalPlanCU_02;
+        PlanCSShift_02_Base += finalPlanCS_02;
+
+
         var listRestTimeShift_02 = Model.GetRestTime(dayType);
         var totalNetWorkingMinutes_02 = (EndWorkingTimeShift_02 - StartWorkingTimeShift_02).TotalMinutes - listRestTimeShift_02.Sum(r => (r.EndTime - r.StartTime).TotalMinutes);
 
@@ -119,7 +167,8 @@
         // 5. Setelah diperiksa, BARU tambahkan ke total
         WorkingTimeElapsed_02_Range += workingTimeElapsedForDay_02;
 
-        PlanCUShift_02_Range += (long)(workingTimeElapsedForDay_02 * ((totalNetWorkingMinutes_02 > 0) ? (double)(Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0) / (totalNetWorkingMinutes_02 * workingDaysInRange) : 0));
+        // PlanCUShift_02_Range += (long)(workingTimeElapsedForDay_02 * ((totalNetWorkingMinutes_02 > 0) ? (double)(Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0) / (totalNetWorkingMinutes_02 * workingDaysInRange) : 0));
+        // PlanCUShift_02_Range += Convert.ToInt64(planDataShift_02.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0);
         TotalActualCUShift_02_Range += actualDataShift_02.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0;
         TotalLossTimeCUShift_02_Range += Model.CalculateTotalLossTime("MCH1-01", StartDateTimeShift_02, EndDateTimeShift_02, listRestTimeShift_02);
         TotalDefectCUShift_02_Qty_Range += totalDefectShift_02.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.DefectQty ?? 0;
@@ -129,7 +178,8 @@
         if (modelDataCU_02.Any() && ModelStartTimeCUShift_02 == null) { ModelStartTimeCUShift_02 = modelDataCU_02.First().StartTime; }
         if (modelDataCU_02.Any()) { ModelEndTimeCUShift_02 = modelDataCU_02.Last().EndTime; }
 
-        PlanCSShift_02_Range += (long)(workingTimeElapsedForDay_02 * ((totalNetWorkingMinutes_02 > 0) ? (double)(Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0) / (totalNetWorkingMinutes_02 * workingDaysInRange) : 0));
+        // PlanCSShift_02_Range += (long)(workingTimeElapsedForDay_02 * ((totalNetWorkingMinutes_02 > 0) ? (double)(Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0) / (totalNetWorkingMinutes_02 * workingDaysInRange) : 0));
+        // PlanCSShift_02_Range += Convert.ToInt64(planDataShift_02.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0);
         TotalActualCSShift_02_Range += actualDataShift_02.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0;
         TotalLossTimeCSShift_02_Range += Model.CalculateTotalLossTime("MCH1-02", StartDateTimeShift_02, EndDateTimeShift_02, listRestTimeShift_02);
         TotalDefectCSShift_02_Qty_Range += totalDefectShift_02.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.DefectQty ?? 0;
@@ -146,6 +196,23 @@
         var EndWorkingTimeShift_03 = new TimeSpan(7, 0, 0);
         var StartDateTimeShift_03 = day + StartWorkingTimeShift_03;
         var EndDateTimeShift_03 = day.AddDays(1) + EndWorkingTimeShift_03;
+
+        // ✅ Plan khusus shift 3
+        var planDataShift_03 = Model.GetPlanFromTargetUnit(StartDateTimeShift_03, EndDateTimeShift_03);
+        var rawPlanCU_03 = Convert.ToInt64(
+        planDataShift_03.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0);
+
+        var rawPlanCS_03 = Convert.ToInt64(
+            planDataShift_03.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0);
+
+        // 🔥 SHIFT 3 = SHIFT 3 - SHIFT 2
+        var finalPlanCU_03 = Math.Max(0, rawPlanCU_03 - PlanCUShift_02_Base);
+        var finalPlanCS_03 = Math.Max(0, rawPlanCS_03 - PlanCSShift_02_Base);
+
+        PlanCUShift_03_Range += finalPlanCU_03;
+        PlanCSShift_03_Range += finalPlanCS_03;
+
+
         var listRestTimeShift_03 = Model.GetRestTime(dayType);
         var totalNetWorkingMinutes_03 = (EndDateTimeShift_03 - StartDateTimeShift_03).TotalMinutes;
 
@@ -167,7 +234,8 @@
         // 5. Setelah diperiksa, BARU tambahkan ke total
         WorkingTimeElapsed_03_Range += workingTimeElapsedForDay_03;
 
-        PlanCUShift_03_Range += (long)(workingTimeElapsedForDay_03 * ((totalNetWorkingMinutes_03 > 0) ? (double)(Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0) / (totalNetWorkingMinutes_03 * workingDaysInRange) : 0));
+        // PlanCUShift_03_Range += (long)(workingTimeElapsedForDay_03 * ((totalNetWorkingMinutes_03 > 0) ? (double)(Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0) / (totalNetWorkingMinutes_03 * workingDaysInRange) : 0));
+        // PlanCUShift_03_Range += Convert.ToInt64(planDataShift_03.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0);
         TotalActualCUShift_03_Range += actualDataShift_03.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0;
         TotalLossTimeCUShift_03_Range += Model.CalculateTotalLossTime("MCH1-01", StartDateTimeShift_03, EndDateTimeShift_03, listRestTimeShift_03);
         TotalDefectCUShift_03_Qty_Range += totalDefectShift_03.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.DefectQty ?? 0;
@@ -177,7 +245,8 @@
         if (modelDataCU_03.Any() && ModelStartTimeCUShift_03 == null) { ModelStartTimeCUShift_03 = modelDataCU_03.First().StartTime; }
         if (modelDataCU_03.Any()) { ModelEndTimeCUShift_03 = modelDataCU_03.Last().EndTime; }
 
-        PlanCSShift_03_Range += (long)(workingTimeElapsedForDay_03 * ((totalNetWorkingMinutes_03 > 0) ? (double)(Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0) / (totalNetWorkingMinutes_03 * workingDaysInRange) : 0));
+        // PlanCSShift_03_Range += (long)(workingTimeElapsedForDay_03 * ((totalNetWorkingMinutes_03 > 0) ? (double)(Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0) / (totalNetWorkingMinutes_03 * workingDaysInRange) : 0));
+        // PlanCSShift_03_Range += Convert.ToInt64(planDataShift_03.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0);
         TotalActualCSShift_03_Range += actualDataShift_03.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0;
         TotalLossTimeCSShift_03_Range += Model.CalculateTotalLossTime("MCH1-02", StartDateTimeShift_03, EndDateTimeShift_03, listRestTimeShift_03);
         TotalDefectCSShift_03_Qty_Range += totalDefectShift_03.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.DefectQty ?? 0;
@@ -194,14 +263,17 @@
     // ==========================================================================================
 
     #region Shift 1 Final Calculations
-    var DailyPlanCUShift_01 = (Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0);
+    // var DailyPlanCUShift_01 = (Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0);
+    var dailyPlanData = Model.GetDailyPlanData(Model.StartSelectedDate, Model.EndSelectedDate.AddDays(1));
+    var DailyPlanCUShift_01 = dailyPlanData.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0;
     var DiffCUShift_01 = TotalActualCUShift_01_Range - PlanCUShift_01_Range;
     var OprRatioCUShift_01 = (WorkingTimeElapsed_01_Range > 0) ? Math.Round(((WorkingTimeElapsed_01_Range - TotalLossTimeCUShift_01_Range) / WorkingTimeElapsed_01_Range) * 100, 2) : 100.0;
     var WorkEffCUShift_01 = (PlanCUShift_01_Range > 0) ? Math.Round(((double)TotalActualCUShift_01_Range / PlanCUShift_01_Range) * 100, 2) : 0;
     var DefectRatioCUShift_01 = (TotalActualCUShift_01_Range + TotalDefectCUShift_01_Qty_Range > 0) ? (1 - ((double)TotalDefectCUShift_01_Qty_Range / (TotalActualCUShift_01_Range + TotalDefectCUShift_01_Qty_Range))) * 100 : 100.0;
     var TotalEffCUShift_01 = Math.Round((OprRatioCUShift_01 / 100) * (WorkEffCUShift_01 / 100) * (DefectRatioCUShift_01 / 100) * 100, 2);
 
-    var DailyPlanCSShift_01 = (Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0);
+    // var DailyPlanCSShift_01 = (Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0);
+    var DailyPlanCSShift_01 = dailyPlanData.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0;
     var DiffCSShift_01 = TotalActualCSShift_01_Range - PlanCSShift_01_Range;
     var OprRatioCSShift_01 = (WorkingTimeElapsed_01_Range > 0) ? Math.Round(((WorkingTimeElapsed_01_Range - TotalLossTimeCSShift_01_Range) / WorkingTimeElapsed_01_Range) * 100, 2) : 100.0;
     var WorkEffCSShift_01 = (PlanCSShift_01_Range > 0) ? Math.Round(((double)TotalActualCSShift_01_Range / PlanCSShift_01_Range) * 100, 2) : 0;
@@ -229,14 +301,16 @@
     #endregion
 
     #region Shift 2 Final Calculations
-    var DailyPlanCUShift_02 = (Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0);
+    // var DailyPlanCUShift_02 = (Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0);
+    var DailyPlanCUShift_02 = dailyPlanData.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0;
     var DiffCUShift_02 = TotalActualCUShift_02_Range - PlanCUShift_02_Range;
     var OprRatioCUShift_02 = (WorkingTimeElapsed_02_Range > 0) ? Math.Round(((WorkingTimeElapsed_02_Range - TotalLossTimeCUShift_02_Range) / WorkingTimeElapsed_02_Range) * 100, 2) : 100.0;
     var WorkEffCUShift_02 = (PlanCUShift_02_Range > 0) ? Math.Round(((double)TotalActualCUShift_02_Range / PlanCUShift_02_Range) * 100, 2) : 0;
     var DefectRatioCUShift_02 = (TotalActualCUShift_02_Range + TotalDefectCUShift_02_Qty_Range > 0) ? (1 - ((double)TotalDefectCUShift_02_Qty_Range / (TotalActualCUShift_02_Range + TotalDefectCUShift_02_Qty_Range))) * 100 : 100.0;
     var TotalEffCUShift_02 = Math.Round((OprRatioCUShift_02 / 100) * (WorkEffCUShift_02 / 100) * (DefectRatioCUShift_02 / 100) * 100, 2);
 
-    var DailyPlanCSShift_02 = (Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0);
+    // var DailyPlanCSShift_02 = (Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0);
+    var DailyPlanCSShift_02 = dailyPlanData.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0;
     var DiffCSShift_02 = TotalActualCSShift_02_Range - PlanCSShift_02_Range;
     var OprRatioCSShift_02 = (WorkingTimeElapsed_02_Range > 0) ? Math.Round(((WorkingTimeElapsed_02_Range - TotalLossTimeCSShift_02_Range) / WorkingTimeElapsed_02_Range) * 100, 2) : 100.0;
     var WorkEffCSShift_02 = (PlanCSShift_02_Range > 0) ? Math.Round(((double)TotalActualCSShift_02_Range / PlanCSShift_02_Range) * 100, 2) : 0;
@@ -262,14 +336,16 @@
     #endregion
 
     #region Shift 3 Final Calculations
-    var DailyPlanCUShift_03 = (Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0);
+    // var DailyPlanCUShift_03 = (Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0);
+    var DailyPlanCUShift_03 = dailyPlanData.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0;
     var DiffCUShift_03 = TotalActualCUShift_03_Range - PlanCUShift_03_Range;
     var OprRatioCUShift_03 = (WorkingTimeElapsed_03_Range > 0) ? Math.Round(((WorkingTimeElapsed_03_Range - TotalLossTimeCUShift_03_Range) / WorkingTimeElapsed_03_Range) * 100, 2) : 100.0;
     var WorkEffCUShift_03 = (PlanCUShift_03_Range > 0) ? Math.Round(((double)TotalActualCUShift_03_Range / PlanCUShift_03_Range) * 100, 2) : 0;
     var DefectRatioCUShift_03 = (TotalActualCUShift_03_Range + TotalDefectCUShift_03_Qty_Range > 0) ? (1 - ((double)TotalDefectCUShift_03_Qty_Range / (TotalActualCUShift_03_Range + TotalDefectCUShift_03_Qty_Range))) * 100 : 100.0;
     var TotalEffCUShift_03 = Math.Round((OprRatioCUShift_03 / 100) * (WorkEffCUShift_03 / 100) * (DefectRatioCUShift_03 / 100) * 100, 2);
 
-    var DailyPlanCSShift_03 = (Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0);
+    // var DailyPlanCSShift_03 = (Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0);
+    var DailyPlanCSShift_03 = dailyPlanData.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0;
     var DiffCSShift_03 = TotalActualCSShift_03_Range - PlanCSShift_03_Range;
     var OprRatioCSShift_03 = (WorkingTimeElapsed_03_Range > 0) ? Math.Round(((WorkingTimeElapsed_03_Range - TotalLossTimeCSShift_03_Range) / WorkingTimeElapsed_03_Range) * 100, 2) : 100.0;
     var WorkEffCSShift_03 = (PlanCSShift_03_Range > 0) ? Math.Round(((double)TotalActualCSShift_03_Range / PlanCSShift_03_Range) * 100, 2) : 0;
@@ -362,7 +438,7 @@
                         <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);">Model End Time</th>
                         <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);">Opr. Ratio (%)</th>
                         <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);">Work Eff. (%)</th>
-                        <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);">Defect Ratio (%)</th>
+                        <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);">Pass Through Ratio (%)</th>
                         <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);">Total Eff. (%)</th>
                         <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);">P/H/H</th>
                         <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);"># of Model Change</th>
@@ -428,7 +504,7 @@
                         <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);">Model End Time</th>
                         <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);">Opr. Ratio (%)</th>
                         <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);">Work Eff. (%)</th>
-                        <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);">Defect Ratio (%)</th>
+                        <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);">Pass Through Ratio (%)</th>
                         <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);">Total Eff. (%)</th>
                         <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);">P/H/H</th>
                         <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);"># of Model Change</th>
@@ -494,7 +570,7 @@
                         <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);">Model End Time</th>
                         <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);">Opr. Ratio (%)</th>
                         <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);">Work Eff. (%)</th>
-                        <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);">Defect Ratio (%)</th>
+                        <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);">Pass Through Ratio (%)</th>
                         <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);">Total Eff. (%)</th>
                         <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);">P/H/H</th>
                         <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);"># of Model Change</th>
@@ -557,7 +633,7 @@
                         <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);">Work Time (min)</th>
                         <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);">Opr. Ratio (%)</th>
                         <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);">Work Eff. (%)</th>
-                        <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);">Defect Ratio (%)</th>
+                        <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);">Pass Through Ratio (%)</th>
                         <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);">Total Eff. (%)</th>
                         <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);"># of Model Change</th>
                         <th class="text-white fw-medium border-end" style="background-color: rgb(61, 121, 176);">Model Chg Time (min)</th>
@@ -566,7 +642,7 @@
                 <tbody>
                     <tr>
                         <th class="border fs-5 fw-medium" scope="row">Total CU</th>
-                        <td class="border fs-5 fw-medium">@((Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0))</td>
+                        <td class="border fs-5 fw-medium">@((Model.DailyPlanData.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0))</td>
                         <td class="border fs-5 fw-medium">@PlanCU_Overall</td>
                         <td class="border fs-5 fw-medium">@TotalActualCU_Overall</td>
                         <td class="border fs-5 fw-medium @(DiffCU_Overall < 0 ? "text-danger" : "")">@DiffCU_Overall</td>
@@ -599,7 +675,7 @@
                     </tr>
                     <tr>
                         <th class="border fs-5 fw-medium" scope="row">Total CS</th>
-                        <td class="border fs-5 fw-medium">@((Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0))</td>
+                        <td class="border fs-5 fw-medium">@((Model.DailyPlanData.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0))</td>
                         <td class="border fs-5 fw-medium">@PlanCS_Overall</td>
                         <td class="border fs-5 fw-medium">@TotalActualCS_Overall</td>
                         <td class="border fs-5 fw-medium @(DiffCS_Overall < 0 ? "text-danger" : "")">@DiffCS_Overall</td>

@@ -45,6 +45,9 @@
 
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn fw-bold fs-6 text-white" style="background-color: rgb(61, 121, 176);">Search</button>
+                        <button type="submit" asp-page-handler="ExportExcel" class="btn fw-bold fs-6 text-white" style="background-color: #198754;">
+                            <i class="fas fa-file-excel"></i> Export CSV
+                        </button>
                         <button type="submit" asp-page-handler="Reset" class="btn fw-bold fs-6 text-white" style="background-color: rgb(176, 61, 61);">Reset</button>
                     </div>
                 </div>
@@ -82,13 +85,14 @@
                                 <tr>
                                     <th>No.</th>
                                     <th>Date</th>
-                                    <th>Loss Time</th>
+                                    @* <th>Loss Time</th> *@
                                     <th>Category</th>
                                     <th>Start Time</th>
                                     <th>End Time</th>
-                                    <th>Duration (Seconds)</th>
+                                    <th>Duration</th>
                                     <th>Location</th>
                                     <th>Shift</th>
+                                    <th>Detailed</th>
                                 </tr>
                             </thead>
                             <tbody id="lossTimeTableBody">
@@ -97,13 +101,21 @@
                                     <tr>
                                         <td>@item.Index</td>
                                         <td>@item.Data.Date.ToString("dd-MM-yyyy")</td>
-                                        <td>@item.Data.LossTime</td>
+                                        @* <td>@item.Data.LossTime</td> *@
                                         <td>@item.Data.Category</td>
                                         <td>@item.Data.Start.ToString(@"hh\:mm\:ss")</td>
                                         <td>@item.Data.End.ToString(@"hh\:mm\:ss")</td>
                                         <td>@item.Data.Duration</td>
                                         <td>@item.Data.Location</td>
                                         <td>@item.Data.Shift</td>
+                                        <td>
+                                            <button type="button" class="btn btn-sm btn-info text-white"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#detailedReasonModal"
+                                                    data-reason="@item.Data.DetailedReason">
+                                                View
+                                            </button>
+                                        </td>
                                     </tr>
                                 }
                             </tbody>
@@ -257,8 +269,23 @@
         </div>
     </div>
 </div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<div class="modal fade" id="detailedReasonModal" tabindex="-1" aria-labelledby="detailedReasonModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailedReasonModalLabel">Detailed Reason</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="detailedReasonText"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="~/js/chart.umd.min.js"></script>
 <script>
     // Convert chart data from seconds to minutes
     // Get chart data (already converted to minutes in the C# code)
@@ -291,33 +318,33 @@
             }
 
             // Filter out the "Other" category to have only 4 categories as requested
-            const categories = chartData.labels.filter(label => label !== "Other");
-            const shift1Data = chartData.shift1Data.filter((_, index) => chartData.labels[index] !== "Other");
-            const shift2Data = chartData.shift2Data.filter((_, index) => chartData.labels[index] !== "Other");
-            const shift3Data = chartData.shift3Data.filter((_, index) => chartData.labels[index] !== "Other");
+            @* const categories = chartData.labels.filter(label => label !== "Other"); *@
+            @* const shift1Data = chartData.shift1Data.filter((_, index) => chartData.labels[index] !== "Other"); *@
+            @* const shift2Data = chartData.shift2Data.filter((_, index) => chartData.labels[index] !== "Other"); *@
+            @* const shift3Data = chartData.shift3Data.filter((_, index) => chartData.labels[index] !== "Other"); *@
 
             const lossTimeChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: categories,
+                    labels: chartData.labels,
                     datasets: [
                         {
                             label: 'Shift 1',
-                            data: shift1Data,
+                            data: chartData.shift1Data,
                             backgroundColor: 'rgba(255, 99, 132, 0.7)',
                             borderColor: 'rgba(255, 99, 132, 1)',
                             borderWidth: 1
                         },
                         {
                             label: 'Shift 2',
-                            data: shift2Data,
+                            data: chartData.shift2Data,
                             backgroundColor: 'rgba(54, 162, 235, 0.7)',
                             borderColor: 'rgba(54, 162, 235, 1)',
                             borderWidth: 1
                         },
                         {
                             label: 'Shift 3',
-                            data: shift3Data,
+                            data: chartData.shift3Data,
                             backgroundColor: 'rgba(75, 192, 192, 0.7)',
                             borderColor: 'rgba(75, 192, 192, 1)',
                             borderWidth: 1
@@ -363,4 +390,22 @@
             console.error("Error creating chart:", error);
         }
     });
+    if (detailedReasonModal) {
+        detailedReasonModal.addEventListener('show.bs.modal', function (event) {
+            // Tombol yang memicu modal
+            var button = event.relatedTarget;
+            // Ekstrak info dari atribut data-reason
+            var reason = button.getAttribute('data-reason');
+
+            // Dapatkan elemen <p> di dalam modal body
+            var modalBodyText = detailedReasonModal.querySelector('.modal-body p#detailedReasonText');
+
+            // Perbarui konten modal
+            if (reason && reason.trim() !== '') {
+                modalBodyText.textContent = reason;
+            } else {
+                modalBodyText.textContent = 'No detailed reason provided.';
+            }
+        });
+    }
 </script>

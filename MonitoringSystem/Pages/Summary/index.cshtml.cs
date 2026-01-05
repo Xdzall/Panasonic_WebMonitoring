@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Data.SqlClient;
 using System.Data;
@@ -6,7 +6,14 @@ using System.Data;
 namespace MonitoringSystem.Pages.Summary
 {
     // Kelas Data Mentah
-    public class RawOeeData { public DateTime SDate { get; set; } public string MachineCode { get; set; } public string ProductName { get; set; } public int SUT { get; set; } public int NoOfOperator { get; set; } }
+    public class RawOeeData { public DateTime SDate { get; set; } public string MachineCode { get; set; } public string ProductName { get; set; } public int SUT { get; set; } public int NoOfOperator { get; set; } public decimal TargetUnit { get; set; } }
+
+    public class DailyPlanQty
+    {
+        public decimal Quantity { get; set; }
+        public string MachineCode { get; set; }
+    }
+
     public class RawNgData { public DateTime SDate { get; set; } public string MachineCode { get; set; } }
     public class RawRestTimeData { public string DayType { get; set; } public TimeSpan StartTime { get; set; } public TimeSpan EndTime { get; set; } }
     public class RawLossTimeData { public DateTime Date { get; set; } public TimeSpan StartTime { get; set; } public TimeSpan EndTime { get; set; } public string MachineCode { get; set; } }
@@ -19,6 +26,7 @@ namespace MonitoringSystem.Pages.Summary
         // Properti publik untuk menampung semua data mentah
         public List<RawOeeData> RawOeeData { get; private set; }
         public List<RawNgData> RawNgData { get; private set; }
+        public List<DailyPlanQty> DailyPlanData { get; private set; }
         public List<PlanQty> PlanData { get; private set; }
         public List<RawRestTimeData> RawRestTimeData { get; private set; }
         public List<RawLossTimeData> RawLossTimeData { get; private set; } // PENAMBAHAN BARU
@@ -31,6 +39,7 @@ namespace MonitoringSystem.Pages.Summary
             PlanData = new List<PlanQty>();
             RawRestTimeData = new List<RawRestTimeData>();
             RawLossTimeData = new List<RawLossTimeData>(); // PENAMBAHAN BARU
+            DailyPlanData = new List<DailyPlanQty>();
         }
 
         [BindProperty] public DateTime StartSelectedDate { get; set; } = DateTime.Today;
@@ -44,9 +53,9 @@ namespace MonitoringSystem.Pages.Summary
         private void LoadRawDataForDateRange()
         {
             var globalStartTime = StartSelectedDate.Date;
-            var globalEndTime = EndSelectedDate.Date.AddDays(1);
+            var globalEndTime = EndSelectedDate.Date.AddDays(1).AddHours(7);
 
-            // Kosongkan list data setiap kali method ini dipanggil untuk menghindari duplikasi
+            // Kosongkan list agar tidak double
             RawOeeData.Clear();
             RawNgData.Clear();
             PlanData.Clear();
@@ -59,11 +68,17 @@ namespace MonitoringSystem.Pages.Summary
                 {
                     connection.Open();
 
-                    // Query 1: OEE Data (Sudah diperbarui dengan NoOfOperator)
+                    // 🔹 Query 1: Ambil data OEE + Target langsung dari OEESN
                     string oeeSql = @"
-                SELECT OEESN.SDate, OEESN.MachineCode, md.ProductName, md.SUT, OEESN.NoOfOperator 
-                FROM OEESN 
-                JOIN MasterData md ON OEESN.Product_Id = md.Product_Id 
+                SELECT 
+                    OEESN.SDate,
+                    OEESN.MachineCode,
+                    md.ProductName,
+                    md.SUT,
+                    OEESN.NoOfOperator,
+                    ISNULL(OEESN.TargetUnit, 0) AS TargetUnit
+                FROM OEESN
+                JOIN MasterData md ON OEESN.Product_Id = md.Product_Id
                 WHERE OEESN.SDate >= @StartTime AND OEESN.SDate < @EndTime";
 
                     using (SqlCommand cmd = new SqlCommand(oeeSql, connection))
@@ -80,14 +95,14 @@ namespace MonitoringSystem.Pages.Summary
                                     MachineCode = reader.GetString(1),
                                     ProductName = reader.GetString(2),
                                     SUT = reader.GetInt32(3),
-                                    // Pembacaan data yang aman, jika kolom NULL, akan diisi 0
-                                    NoOfOperator = reader.IsDBNull(4) ? 0 : reader.GetInt32(4)
+                                    NoOfOperator = reader.IsDBNull(4) ? 0 : reader.GetInt32(4),
+                                    TargetUnit = reader.IsDBNull(5) ? 0 : Convert.ToDecimal(reader.GetValue(5))
                                 });
                             }
-                        } // Reader untuk OEE data otomatis tertutup di sini
+                        }
                     }
 
-                    // Query 2: NG Data
+                    // 🔹 Query 2: NG Data
                     string ngSql = @"SELECT SDate, MachineCode FROM NG_RPTS WHERE SDate >= @StartTime AND SDate < @EndTime";
                     using (SqlCommand cmd = new SqlCommand(ngSql, connection))
                     {
@@ -95,56 +110,122 @@ namespace MonitoringSystem.Pages.Summary
                         cmd.Parameters.AddWithValue("@EndTime", globalEndTime);
                         using (SqlDataReader reader = cmd.ExecuteReader())
                         {
-                            while (reader.Read()) RawNgData.Add(new RawNgData { SDate = reader.GetDateTime(0), MachineCode = reader.GetString(1) });
+                            while (reader.Read())
+                                RawNgData.Add(new RawNgData
+                                {
+                                    SDate = reader.GetDateTime(0),
+                                    MachineCode = reader.GetString(1)
+                                });
                         }
                     }
 
-                    // Query 3: Plan Data
-                    string planSql = @"SELECT SUM(Quantity) as Quantity, ProductionRecords.MachineCode FROM ProductionRecords JOIN ProductionPlan ON ProductionRecords.PlanId = ProductionPlan.Id WHERE ProductionPlan.CurrentDate >= @StartTime AND ProductionPlan.CurrentDate < @EndTime GROUP BY ProductionRecords.MachineCode;";
-                    using (SqlCommand cmd = new SqlCommand(planSql, connection))
-                    {
-                        cmd.Parameters.AddWithValue("@StartTime", globalStartTime);
-                        cmd.Parameters.AddWithValue("@EndTime", globalEndTime);
-                        using (SqlDataReader reader = cmd.ExecuteReader())
-                        {
-                            while (reader.Read()) PlanData.Add(new PlanQty { Quantity = reader.GetInt32(0), MachineCode = reader.GetString(1) });
-                        }
-                    }
-
-                    // Query 4: Rest Time
+                    // 🔹 Query 3: Waktu Istirahat
                     string restTimeSql = @"SELECT DayType, StartTime, EndTime FROM RestTime";
                     using (SqlCommand cmd = new SqlCommand(restTimeSql, connection))
                     {
                         using (SqlDataReader reader = cmd.ExecuteReader())
                         {
-                            while (reader.Read()) RawRestTimeData.Add(new RawRestTimeData { DayType = reader.GetString(0), StartTime = reader.GetTimeSpan(1), EndTime = reader.GetTimeSpan(2) });
+                            while (reader.Read())
+                            {
+                                RawRestTimeData.Add(new RawRestTimeData
+                                {
+                                    DayType = reader.GetString(0),
+                                    StartTime = reader.GetTimeSpan(1),
+                                    EndTime = reader.GetTimeSpan(2)
+                                });
+                            }
                         }
                     }
 
-                    // Query 5: Loss Time Data
-                    string lossTimeSql = @"SELECT Date, Time, EndDateTime, MachineCode FROM AssemblyLossTime WHERE Date >= @StartTime AND Date < @EndTime";
+                    // 🔹 Query 4: Loss Time
+                    string lossTimeSql = @"SELECT Date, Time, EndDateTime, MachineCode 
+                                   FROM AssemblyLossTime 
+                                   WHERE Date >= @StartTime AND Date < @EndTime";
                     using (SqlCommand cmd = new SqlCommand(lossTimeSql, connection))
                     {
                         cmd.Parameters.AddWithValue("@StartTime", globalStartTime);
                         cmd.Parameters.AddWithValue("@EndTime", globalEndTime);
                         using (SqlDataReader reader = cmd.ExecuteReader())
                         {
-                            while (reader.Read()) RawLossTimeData.Add(new RawLossTimeData { Date = reader.GetDateTime(0), StartTime = reader.GetTimeSpan(1), EndTime = reader.GetTimeSpan(2), MachineCode = reader.GetString(3) });
+                            while (reader.Read())
+                            {
+                                RawLossTimeData.Add(new RawLossTimeData
+                                {
+                                    Date = reader.GetDateTime(0),
+                                    StartTime = reader.GetTimeSpan(1),
+                                    EndTime = reader.GetTimeSpan(2),
+                                    MachineCode = reader.GetString(3)
+                                });
+                            }
                         }
                     }
+
+                    // 🔹 Query 5: Daily Plan dari tabel ProductionRecords + ProductionPlan
+                    string dailyPlanSql = @"
+                        SELECT 
+                            CAST(SUM(pr.Quantity) AS DECIMAL(10,0)) AS Quantity,
+                            pr.MachineCode
+                        FROM ProductionRecords pr
+                        JOIN ProductionPlan pp ON pr.PlanId = pp.Id
+                        WHERE CAST(pp.CurrentDate AS DATE) >= @StartTime
+                          AND CAST(pp.CurrentDate AS DATE) < @EndTime
+                        GROUP BY pr.MachineCode;
+                    ";
+
+                    using (SqlCommand cmd = new SqlCommand(dailyPlanSql, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@StartTime", globalStartTime);
+                        cmd.Parameters.AddWithValue("@EndTime", globalEndTime);
+
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                DailyPlanData.Add(new DailyPlanQty
+                                {
+                                    MachineCode = reader.GetString(1),
+                                    Quantity = reader.IsDBNull(0) ? 0 : Convert.ToDecimal(reader.GetValue(0))
+                                });
+                            }
+                        }
+                    }
+
+
+                    // ✅ Debug Log
+                    Console.WriteLine($"[DEBUG] Loaded {RawOeeData.Count} OEE rows");
+                    Console.WriteLine($"[DEBUG] Total TargetUnit: {RawOeeData.Sum(x => x.TargetUnit)}");
                 }
             }
             catch (Exception ex)
             {
                 errorMessage = "Gagal memuat data mentah dari database: " + ex.Message;
-                Console.WriteLine("TERJADI ERROR DI LoadRawDataForDateRange: " + ex.ToString());
+                Console.WriteLine("❌ ERROR di LoadRawDataForDateRange(): " + ex.ToString());
             }
         }
+
 
         // --- Metode Perhitungan ---
 
         public List<RestTime> GetRestTime(string dayTipe) => RawRestTimeData.Where(r => r.DayType == dayTipe).Select(r => new RestTime { StartTime = r.StartTime, EndTime = r.EndTime }).ToList();
         public List<ActualQty> GetActualData(TimeSpan startTime, TimeSpan endTime) => RawOeeData.Where(d => d.SDate.TimeOfDay >= startTime && d.SDate.TimeOfDay < endTime).GroupBy(d => d.MachineCode).Select(g => new ActualQty { MachineCode = g.Key, Quantity = g.Count() }).ToList();
+        public List<PlanQty> GetPlanFromTargetUnit(DateTime startTime, DateTime endTime)
+        {
+            return RawOeeData
+                .Where(d => d.SDate >= startTime && d.SDate < endTime)
+                .GroupBy(d => d.MachineCode)
+                .Select(g =>
+                {
+                    var latest = g.OrderByDescending(d => d.SDate).FirstOrDefault();
+                    return new PlanQty
+                    {
+                        MachineCode = g.Key,
+                        Quantity = latest?.TargetUnit ?? 0 // Ambil nilai TargetUnit terbaru
+                    };
+                })
+                .ToList();
+        }
+
+
         public List<SUTModel> GetSUTModel(TimeSpan startTime, TimeSpan endTime) => RawOeeData.Where(d => d.SDate.TimeOfDay >= startTime && d.SDate.TimeOfDay < endTime).OrderByDescending(d => d.SDate).GroupBy(d => d.MachineCode).Select(g => new SUTModel { MachineCode = g.Key, SUT = g.First().SUT }).ToList();
         public List<TotalDefect> GetTotalDefect(TimeSpan startTime, TimeSpan endTime) => RawNgData.Where(d => d.SDate.TimeOfDay >= startTime && d.SDate.TimeOfDay < endTime).GroupBy(d => d.MachineCode).Select(g => new TotalDefect { MachineCode = g.Key, DefectQty = g.Count() }).ToList();
         public int GetTotalChangeModel(string machineCode, TimeSpan startTime, TimeSpan endTime) => RawOeeData.Where(d => d.MachineCode == machineCode && d.SDate.TimeOfDay >= startTime && d.SDate.TimeOfDay < endTime).Select(d => d.ProductName).Distinct().Count();
@@ -162,6 +243,19 @@ namespace MonitoringSystem.Pages.Summary
                 .Sum(lt => (lt.EndTime - lt.StartTime).TotalSeconds);
 
             return (int)totalLossSeconds / 60; // Kembalikan dalam menit
+        }
+
+        public List<DailyPlanQty> GetDailyPlanData(DateTime startTime, DateTime endTime)
+        {
+            return DailyPlanData
+                .Where(d => d != null)
+                .GroupBy(d => d.MachineCode)
+                .Select(g => new DailyPlanQty
+                {
+                    MachineCode = g.Key,
+                    Quantity = g.Sum(x => x.Quantity)
+                })
+                .ToList();
         }
 
         // --- Metode Helper ---
@@ -431,7 +525,7 @@ namespace MonitoringSystem.Pages.Summary
             return Math.Max(0, grossDurationMinutes - restMinutesElapsed);
         }
 
-        public class PlanQty { public int Quantity { get; set; } public string MachineCode { get; set; } }
+        public class PlanQty { public decimal Quantity { get; set; } public string MachineCode { get; set; } }
         public class ActualQty { public int Quantity { get; set; } public string MachineCode { get; set; } }
         public class SUTModel { public int SUT { get; set; } public string MachineCode { get; set; } }
         public class RestTime { public TimeSpan StartTime { get; set; } public TimeSpan EndTime { get; set; } }

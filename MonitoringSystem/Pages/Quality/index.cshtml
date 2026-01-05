@@ -1,229 +1,368 @@
 ﻿@page
 @model MonitoringSystem.Pages.Quality.QualityModel
 @{
-    ViewData["Title"] = "Production Quality";
+    ViewData["Title"] = "Pass Through Ratio";
 }
 
-<form method="post">
+<style>
+    :root {
+        --panasonic-blue: rgb(61, 121, 176);
+        --bg-light: #ffffff;
+        --text-dark: #333333;
+        --border-radius: 5px;
+    }
 
-    <div class="row mx-3">
-        <div class="col-2 rounded" style="border: 1px solid rgb(61, 121, 176);">
-    <div class="row m-2">
-        <button type="submit"
-                class="@(Model.MachineCode == "MCH1-01" ? "btn text-white fs-5 fw-bold" : "btn btn-outline-secondary fs-5 fw-bold")"
-                style="@(Model.MachineCode == "MCH1-01" ? "background-color:rgb(61, 121, 176);" : "")"
-                name="MachineCode" value="MCH1-01">
-            LINE CU
-        </button>
-    </div>
-    <div class="row m-2">
-        <button type="submit"
-                class="@(Model.MachineCode == "MCH1-02" ? "btn text-white fs-5 fw-bold" : "btn btn-outline-secondary fs-5 fw-bold")"
-                style="@(Model.MachineCode == "MCH1-02" ? "background-color:rgb(61, 121, 176);" : "")"
-                name="MachineCode" value="MCH1-02">
-            LINE CS
-        </button>
+    body {
+        background-color: var(--bg-light);
+        color: var(--text-dark);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .dashboard-container {
+        padding: 10px;
+    }
+
+    .grid-border {
+        border: 1px solid var(--panasonic-blue);
+        padding: 8px;
+        background: #ffffff;
+        border-radius: var(--border-radius);
+        margin-bottom: 10px;
+    }
+
+    .fill-height {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .section-title {
+        color: var(--panasonic-blue);
+        font-weight: 900;
+        text-align: center;
+        text-transform: uppercase;
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+        border-bottom: 2px solid var(--panasonic-blue);
+        padding-bottom: 5px;
+    }
+
+    .btn-custom-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .btn-blue-active {
+        background-color: var(--panasonic-blue);
+        color: white;
+        font-weight: bold;
+        border: 1px solid var(--panasonic-blue);
+        width: 100%;
+        border-radius: var(--border-radius);
+        padding: 10px;
+    }
+
+    .btn-outline-inactive {
+        background-color: white;
+        color: #6c757d;
+        font-weight: bold;
+        border: 2px solid #6c757d;
+        width: 100%;
+        border-radius: var(--border-radius);
+        padding: 10px;
+    }
+
+        .btn-outline-inactive:hover {
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+    .kpi-box {
+        text-align: center;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #dee2e6;
+        border-radius: var(--border-radius);
+        overflow: hidden;
+    }
+
+    .kpi-header {
+        background-color: var(--panasonic-blue);
+        color: white;
+        font-weight: bold;
+        padding: 8px;
+        font-size: 1rem;
+        text-transform: uppercase;
+    }
+
+    .kpi-value {
+        font-size: 1.8rem;
+        font-weight: bold;
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-dark);
+        background-color: #fff;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1050;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.4);
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 500px;
+        border-radius: 8px;
+    }
+
+    .close-button {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+</style>
+
+<div id="targetModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h4 class="fw-bold" style="color: var(--panasonic-blue);">Update Target Ratio</h4>
+        <hr />
+        <form method="post" asp-page-handler="UpdateTargetRatio">
+            <div class="form-group">
+                <label for="target-input" class="fw-semibold">New Target Ratio (%)</label>
+                <input type="number" step="0.01" class="form-control" id="target-input" asp-for="NewTargetRatio" required placeholder="1.5">
+            </div>
+            <input type="hidden" name="MachineCode" value="@Model.MachineCode" />
+            <input type="hidden" name="StartDate" value="@Model.StartDate" />
+            <input type="hidden" name="EndDate" value="@Model.EndDate" />
+            <input type="hidden" name="Station" value="@Model.Station" />
+            <button type="submit" class="btn btn-primary mt-3 fw-bold" style="background-color: var(--panasonic-blue); border:none;">Save Target</button>
+        </form>
     </div>
 </div>
-        <div class="col ms-2">
-            <div class="row rounded p-2" style="border: 1px solid rgb(61, 121, 176);">
-                <div class="col justify-content-center py-1 ms-2">
-                    <div class="row mb-2">
-                        <div class="card-header text-white fw-bold py-2 rounded-2" style="text-align: center; background-color: rgb(61, 121, 176);">TARGET RATIO</div>
-                    </div>
-                    <div class="row">
-                        <div id="openModalButton" class="btn btn-outline-secondary fs-5 fw-semibold">1.00 %</div>
-                    </div>
-                </div>
-                <div class="col justify-content-center py-1 ms-2">
-                    <div class="row mb-2">
-                        <div class="card-header text-white fw-bold py-2 rounded-2" style="text-align: center; background-color: rgb(61, 121, 176);">DEFECT QUANTITY</div>
-                    </div>
-                    <div class="row">
-                        <div class="btn btn-outline-secondary fs-5 fw-semibold">@Model.DefectQuantity</div>
-                    </div>
-                </div>
-                <div class="col justify-content-center py-1 ms-2">
-                    <div class="row mb-2">
-                        <div class="card-header text-white fw-bold py-2 rounded-2" style="text-align: center; background-color: rgb(61, 121, 176);">DEFECT RATIO</div>
-                    </div>
-                    <div class="row">
-                        <div class="btn btn-outline-secondary fs-5 fw-semibold">@String.Format("{0:0.00}", Model.DefectRatio) %</div>
-                    </div>
-                </div>
-                <div class="col justify-content-center py-1 mx-2">
-                    <div class="row mb-2">
-                        <div class="card-header text-white fw-bold py-2 rounded-2" style="text-align: center; background-color: rgb(61, 121, 176);">TOTAL OUTPUT</div>
-                    </div>
-                    <div class="row">
-                        <div class="btn btn-outline-secondary fs-5 fw-semibold">@Model.TotalPlan</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <div class="row mx-3 my-2">
-        <div class="col-2 rounded" style="border: 1px solid rgb(61, 121, 176);">
-            <div class="row m-2">
-                <span class="btn text-white fs-5 fw-bold" style="background-color:rgb(61, 121, 176); display:inline-block; text-align:center;">STATION</span>
-            </div>
-            <div class="row m-2">
-                <button type="submit" class="btn btn-outline-secondary fs-5 fw-bold">PREPARING</button>
-            </div>
-            <div class="row m-2">
-                <button type="submit" class="btn btn-outline-secondary fs-5 fw-bold">GAS LEAK</button>
-            </div>
-            <div class="row m-2">
-                <button type="submit" class="btn btn-outline-secondary fs-5 fw-bold">INNER</button>
-            </div>
-            <div class="row m-2">
-                <button type="submit" class="btn btn-outline-secondary fs-5 fw-bold">RUNNING</button>
-            </div>
-            <div class="row m-2">
-                <button type="submit" class="btn btn-outline-secondary fs-5 fw-bold">FINAL</button>
-            </div>
-            <div class="row m-2">
-                <button type="submit" class="btn btn-outline-secondary fs-5 fw-bold">DETAIL</button>
-            </div>
-            <input type="hidden" id="station" name="Station" />
-        </div>
-        <div class="col ms-2">
-            <div class="row rounded p-2 align-content-xl-center" style="border: 1px solid rgb(61, 121, 176);">
-                <label class="fs-2 text-center fw-bolder" style="color: rgb(61, 121, 176);">DAILY DEFECT</label>
-                @{
-                    var dateDisplay = Model.StartDate == Model.EndDate
-                        ? DateTime.Parse(Model.StartDate).ToString("dd MMM yyyy")
-                        : $"{DateTime.Parse(Model.StartDate).ToString("dd MMM yyyy")} - {DateTime.Parse(Model.EndDate).ToString("dd MMM yyyy")}";
-                }
-<label class="fs-4 text-center fw-bold" style="color: rgb(61, 121, 176);">@dateDisplay</label>
-                <div class="d-flex justify-content-center">
-                    <canvas class="my-4 container-fluid" width="680" id="bar"></canvas>
+<div class="container-fluid dashboard-container">
+    <form method="post">
+        <input type="hidden" id="selectedMachineCode" name="MachineCode" value="@Model.MachineCode" />
+
+        <div class="row g-3">
+            <div class="col-md-2">
+                <div class="grid-border">
+                    <div class="btn-custom-group">
+                        <button type="submit" onclick="document.getElementById('selectedMachineCode').value='MCH1-01'"
+                                class="@(Model.MachineCode == "MCH1-01" ? "btn-blue-active" : "btn-outline-inactive")">
+                            LINE CU
+                        </button>
+
+                        <button type="submit" onclick="document.getElementById('selectedMachineCode').value='MCH1-02'"
+                                class="@(Model.MachineCode == "MCH1-02" ? "btn-blue-active" : "btn-outline-inactive")">
+                            LINE CS
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid-border">
+                    <div class="section-title" style="font-size:1rem;">STATION</div>
+                    <div class="btn-custom-group">
+                        @if (Model.MachineCode == "MCH1-01")
+                        {
+                            <button type="submit" name="Station" value="" class="@(string.IsNullOrEmpty(Model.Station) ? "btn-blue-active" : "btn-outline-inactive")">ALL STATION</button>
+                            <button type="submit" name="Station" value="PREPARING" class="@(Model.Station == "PREPARING" ? "btn-blue-active" : "btn-outline-inactive")">PREPARING</button>
+                            <button type="submit" name="Station" value="GAS LEAK" class="@(Model.Station == "GAS LEAK" ? "btn-blue-active" : "btn-outline-inactive")">GAS LEAK</button>
+                            <button type="submit" name="Station" value="STARTING - RUNNING" class="@(Model.Station == "STARTING - RUNNING" ? "btn-blue-active" : "btn-outline-inactive")">RUNNING</button>
+                            <button type="submit" name="Station" value="INNER" class="@(Model.Station == "INNER" ? "btn-blue-active" : "btn-outline-inactive")">INNER</button>
+                            <button type="submit" name="Station" value="FINAL" class="@(Model.Station == "FINAL" ? "btn-blue-active" : "btn-outline-inactive")">FINAL</button>
+                            <button type="submit" name="Station" value="DETAIL" class="@(Model.Station == "DETAIL" ? "btn-blue-active" : "btn-outline-inactive")">DETAIL</button>
+                        }
+                        else
+                        {
+                            <button type="submit" name="Station" value="" class="@(string.IsNullOrEmpty(Model.Station) ? "btn-blue-active" : "btn-outline-inactive")">ALL STATION</button>
+                            <button type="submit" name="Station" value="Chassis" class="@(Model.Station == "Chassis" ? "btn-blue-active" : "btn-outline-inactive")">CHASSIS</button>
+                            <button type="submit" name="Station" value="Preparing" class="@(Model.Station == "Preparing" ? "btn-blue-active" : "btn-outline-inactive")">PREPARING</button>
+                            <button type="submit" name="Station" value="Running" class="@(Model.Station == "Running" ? "btn-blue-active" : "btn-outline-inactive")">RUNNING</button>
+                            <button type="submit" name="Station" value="Final" class="@(Model.Station == "Final" ? "btn-blue-active" : "btn-outline-inactive")">FINAL</button>
+                        }
+                    </div>
+                </div>
+
+                <div class="grid-border">
+                    <div class="section-title" style="font-size:1rem;">DAILY FILTER</div>
+                    <div class="mb-2">
+                        <label class="fw-bold text-muted" style="font-size:0.8rem;">START DATE</label>
+                        <input class="form-control" type="date" asp-for="StartDate">
+                    </div>
+                    <div class="mb-2">
+                        <label class="fw-bold text-muted" style="font-size:0.8rem;">END DATE</label>
+                        <input class="form-control" type="date" asp-for="EndDate">
+                    </div>
+                    <button type="submit" class="btn btn-blue-active">APPLY FILTER</button>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <div class="row mx-3 my-2">
-        <div class="col-2 rounded" style="border: 1px solid rgb(61, 121, 176);">
-            <div class="row m-2">
-                <span class="btn text-white fs-5 fw-bold" style="background-color:rgb(61, 121, 176); display:inline-block; text-align:center;">DAILY</span>
-            </div>
-            <div class="row m-2">
-                <input class="form-control" type="date" asp-for="StartDate">
-            </div>
-            <div class="row m-2">
-                <input class="form-control" type="date" asp-for="EndDate">
-            </div>
-            <div class="row m-2">
-                <button type="submit" class="btn btn-primary fw-bold">Apply Filter</button>
-            </div>
-        </div>
+            <div class="col-md-10">
 
-        <div class="col ms-2">
-            <div class="row rounded p-2" style="border: 1px solid rgb(61, 121, 176);">
-                <label class="fs-3 fw-bolder" style="color: rgb(61, 121, 176);">DEFECT PROBLEM</label>
-                <div class="d-flex justify-content-center">
-                    <canvas class="my-4 container-fluid" width="530" height="280" id="piea"></canvas>
+                <div class="row g-2 mb-3">
+                    <div class="col-md-3">
+                        <div class="kpi-box">
+                            <div class="kpi-header">TARGET RATIO</div>
+                            <div class="kpi-value" id="openModalButton" style="cursor: pointer; color: var(--panasonic-blue);">
+                                @String.Format("{0:0.00}", Model.CurrentTargetRatio) %
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="kpi-box">
+                            <div class="kpi-header">DEFECT QUANTITY</div>
+                            <div class="kpi-value">@Model.DefectQuantity</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="kpi-box">
+                            <div class="kpi-header">Pass Through Ratio</div>
+                            @{
+                                var ratioColor = "var(--text-dark)";
+                                if (Model.DefectRatio <= (100 - Model.CurrentTargetRatio)) { ratioColor = "red"; }
+                            }
+                            <div class="kpi-value" style="color: @ratioColor">
+                                @String.Format("{0:0.00}", Model.DefectRatio) %
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="kpi-box">
+                            <div class="kpi-header">TOTAL OUTPUT</div>
+                            <div class="kpi-value">@Model.TotalPlan</div>
+                        </div>
+                    </div>
                 </div>
-                <button class="btn text-white mb-2" style="background-color: rgb(61, 121, 176);">Detail</button>
-            </div>
-        </div>
-        <div class="col ms-2">
-            <div class="row rounded p-2" style="border: 1px solid rgb(61, 121, 176);">
-                <label class="fs-3 fw-bolder" style="color: rgb(61, 121, 176);">DEFECT BY MODEL</label>
-                <div class="d-flex justify-content-center">
-                    <canvas class="my-4 container-fluid" width="530" height="280" id="pieb"></canvas>
+
+                <div class="row g-3 mb-3" style="height: 380px;">
+                    <div class="col-md-6">
+                        <div class="grid-border fill-height">
+                            <div class="section-title">DEFECT CLASSIFICATION (BY STATION)</div>
+                            <div class="flex-grow-1 d-flex justify-content-center align-items-center">
+                                <canvas id="pieb" style="max-height: 300px; max-width: 100%;"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="grid-border fill-height">
+                            <div class="section-title">DEFECT CAUSES</div>
+                            <div class="flex-grow-1 d-flex justify-content-center align-items-center">
+                                <canvas id="bar" style="max-height: 300px; width: 100%;"></canvas>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <button class="btn text-white mb-2" style="background-color: rgb(61, 121, 176);">Detail</button>
-            </div>
-        </div>
-    </div>
 
-    <div class="row mx-3 my-2">
-        <div class="col-2"></div> <div class="col ms-2">
-            <div class="row rounded p-2" style="border: 1px solid rgb(61, 121, 176);">
-                <label class="fs-2 text-center fw-bolder" style="color: rgb(61, 121, 176);">MONTHLY DEFECT</label>
-                <label class="fs-4 text-center fw-bold" style="color: rgb(61, 121, 176);">@(DateTime.Now.Date.ToString("MMMM yyyy"))</label>
-                <div class="d-flex justify-content-center">
-                    <canvas class="my-4 container-fluid" width="680" id="bara"></canvas>
+                @* <div class="row g-0"> *@
+                @*     <div class="col-12"> *@
+                @*         <div class="grid-border fill-height" style="height: 350px;"> *@
+                @*             <div class="section-title">MONTHLY DEFECT GRAPHICS @DateTime.Now.Year</div> *@
+                @*             <div class="flex-grow-1 d-flex justify-content-center"> *@
+                @*                 <canvas id="bara" style="width: 100%; height: 100%;"></canvas> *@
+                @*             </div> *@
+                @*         </div> *@
+                @*     </div> *@
+                @* </div> *@
+
+                <div class="row g-0">
+                    <div class="col-12">
+                        <div class="grid-border fill-height" style="height: 350px;">
+                            <div class="section-title">YEARLY DEFECT GRAPHICS @DateTime.Parse(Model.StartDate).Year</div>
+                            <div class="flex-grow-1 d-flex justify-content-center">
+                                <canvas id="bara" style="width: 100%; height: 100%;"></canvas>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
             </div>
         </div>
-    </div>
+    </form>
+</div>
 
-</form> <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+<script src="~/js/chart.umd.min.js"></script>
 <script>
-    // Kode JavaScript tidak perlu diubah
-    var dailyDefectLabels = @Html.Raw(Json.Serialize(Model.TopDailyDefects.Select(d => d.Cause)));
-    var dailyDefectData = @Html.Raw(Json.Serialize(Model.TopDailyDefects.Select(d => d.Quantity)));
+    const dailyDefectLabels = @Html.Raw(Json.Serialize(Model.TopDailyDefects.Select(d => d.Cause)));
+    const dailyDefectData = @Html.Raw(Json.Serialize(Model.TopDailyDefects.Select(d => d.Quantity)));
+    const defectProblemLabels = @Html.Raw(Json.Serialize(Model.DefectProblems.Select(d => d.Cause)));
+    const defectProblemData = @Html.Raw(Json.Serialize(Model.DefectProblems.Select(d => d.Quantity)));
+    const defectByModelLabels = @Html.Raw(Json.Serialize(Model.DefectsByModel.Select(d => d.ProductName)));
+    const defectByModelData = @Html.Raw(Json.Serialize(Model.DefectsByModel.Select(d => d.Quantity)));
+    const yearlyDefectsRaw = @Html.Raw(Json.Serialize(Model.YearlyDefects));
 
-    var defectProblemLabels = @Html.Raw(Json.Serialize(Model.DefectProblems.Select(d => d.Cause)));
-    var defectProblemData = @Html.Raw(Json.Serialize(Model.DefectProblems.Select(d => d.Quantity)));
+    const colorPalette = [
+         'rgba(255, 99, 132, 0.7)', 'rgba(54, 162, 235, 0.7)',
+         'rgba(255, 206, 86, 0.7)', 'rgba(75, 192, 192, 0.7)',
+         'rgba(153, 102, 255, 0.7)', 'rgba(255, 159, 64, 0.7)',
+         'rgba(255, 99, 255, 0.7)', 'rgba(99, 255, 132, 0.7)',
+         'rgba(132, 99, 255, 0.7)', 'rgba(235, 162, 54, 0.7)'
+    ];
 
-    var defectByModelLabels = @Html.Raw(Json.Serialize(Model.DefectsByModel.Select(d => d.ProductName)));
-    var defectByModelData = @Html.Raw(Json.Serialize(Model.DefectsByModel.Select(d => d.Quantity)));
+    const allCauses = [...new Set([...defectProblemLabels, ...yearlyDefectsRaw.map(d => d.cause)])];
+    const colorMap = {};
+    allCauses.forEach((cause, index) => {
+         colorMap[cause] = colorPalette[index % colorPalette.length];
+    });
+
+    Chart.defaults.color = '#666';
+    Chart.defaults.borderColor = '#ddd';
 
     const ctxBar = document.getElementById('bar');
     new Chart(ctxBar, {
         type: 'bar',
         data: {
             labels: dailyDefectLabels,
-            datasets: [
-                {
-                    data: dailyDefectData,
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 2
-                }
-            ]
-        },
-        options: {
-            responsive: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                x: {
-                    stacked: true,
-                    barPercentage: 0.7
-                },
-                y: {
-                    stacked: true,
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-
-    const ctxPieA = document.getElementById('piea');
-    new Chart(ctxPieA, {
-        type: 'pie',
-        data: {
-            labels: defectProblemLabels,
             datasets: [{
-                data: defectProblemData,
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.6)', 'rgba(54, 162, 235, 0.6)',
-                    'rgba(255, 206, 86, 0.6)', 'rgba(75, 192, 192, 0.6)',
-                    'rgba(153, 102, 255, 0.6)', 'rgba(255, 159, 64, 0.6)',
-                    'rgba(255, 99, 255, 0.6)', 'rgba(99, 255, 132, 0.6)',
-                ],
-                borderWidth: 2
+                label: 'Qty',
+                data: dailyDefectData,
+                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                borderWidth: 1
             }]
         },
-        options: {
-        responsive: false,
+            options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
         plugins: {
-            legend: {
-                display: false 
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: ctx => `Qty: ${ctx.parsed.x}`
+                }
+            }
+        },
+        scales: {
+            x: {
+                beginAtZero: true,
+                ticks: {
+                    precision: 0,
+                    stepSize: 1
+                }
             }
         }
     }
-});
+
+    });
 
     const ctxPieB = document.getElementById('pieb');
     new Chart(ctxPieB, {
@@ -232,64 +371,107 @@
             labels: defectByModelLabels,
             datasets: [{
                 data: defectByModelData,
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.6)',
-                    'rgba(54, 162, 235, 0.6)',
-                    'rgba(255, 206, 86, 0.6)',
-                    'rgba(75, 192, 192, 0.6)',
-                    'rgba(153, 102, 255, 0.6)',
-                    'rgba(255, 159, 64, 0.6)'
-                ],
-                borderWidth: 2
+                backgroundColor: colorPalette,
+                borderWidth: 1
             }]
         },
         options: {
-            responsive: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            }
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'right' } }
         }
+    });
+
+    // 3. Monthly Bar Chart
+    // const monthlyLabels = [];
+    // const today = new Date();
+    // const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    // for (let i = 1; i <= daysInMonth; i++) { monthlyLabels.push(i); }
+
+    // const monthlyDefectCauses = [...new Set(monthlyDefectsRaw.map(d => d.cause))];
+    // const monthlyDatasets = monthlyDefectCauses.map(cause => {
+    //     const dataForCause = monthlyLabels.map(day => {
+    //         const entry = monthlyDefectsRaw.find(d => d.day === day && d.cause === cause);
+    //         return entry ? entry.quantity : 0;
+    //     });
+    //     return {
+    //         label: cause,
+    //         data: dataForCause,
+    //         backgroundColor: colorMap[cause] || '#CCCCCC',
+    //     };
+    // });
+
+    // const ctxBarA = document.getElementById('bara');
+    // new Chart(ctxBarA, {
+    //     type: 'bar',
+    //     data: {
+    //         labels: monthlyLabels,
+    //         datasets: monthlyDatasets
+    //     },
+    //     options: {
+    //         responsive: true,
+    //         maintainAspectRatio: false,
+    //         plugins: { legend: { display: false } },
+    //         scales: {
+    //             x: { stacked: true },
+    //             y: { stacked: true, beginAtZero: true }
+    //         }
+    //     }
+    // });
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    const yearlyDefectCauses = [...new Set(yearlyDefectsRaw.map(d => d.cause))];
+
+    const yearlyDatasets = yearlyDefectCauses.map(cause => {
+
+        const dataForCause = monthNames.map((monthName, index) => {
+            const monthNumber = index + 1;
+
+            const entry = yearlyDefectsRaw.find(d => d.month === monthNumber && d.cause === cause);
+            return entry ? entry.quantity : 0;
+        });
+
+        return {
+            label: cause,
+            data: dataForCause,
+            backgroundColor: colorMap[cause] || '#CCCCCC',
+        };
     });
 
     const ctxBarA = document.getElementById('bara');
     new Chart(ctxBarA, {
         type: 'bar',
         data: {
-            labels: ['Day 1', 'Day 2', 'Day 3', ' Day 4', 'Day 5', 'Day 6', 'Day 7', 'Day 8', 'Day 9', 'Day 10'],
-            datasets: [
-                {
-                    data: [12, 19, 3, 5, 2, 3],
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 2
-                },
-                {
-                    data: [7, 12, 5, 8, 3, 6],
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 2
-                }
-            ]
+            labels: monthNames,
+            datasets: yearlyDatasets
         },
         options: {
-            responsive: false,
+            responsive: true,
+            maintainAspectRatio: false,
             plugins: {
-                legend: {
-                    display: false
+                legend: { display: false },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
                 }
             },
             scales: {
-                x: {
-                    stacked: true,
-                    barPercentage: 0.7
-                },
-                y: {
-                    stacked: true,
-                    beginAtZero: true
-                }
+                x: { stacked: true },
+                y: { stacked: true, beginAtZero: true }
             }
+        }
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        var modal = document.getElementById('targetModal');
+        var openModalButton = document.getElementById('openModalButton');
+        var closeButton = document.getElementsByClassName('close-button')[0];
+
+        openModalButton.onclick = function () { modal.style.display = 'block'; }
+        closeButton.onclick = function () { modal.style.display = 'none'; }
+        window.onclick = function (event) {
+            if (event.target == modal) { modal.style.display = 'none'; }
         }
     });
 </script>

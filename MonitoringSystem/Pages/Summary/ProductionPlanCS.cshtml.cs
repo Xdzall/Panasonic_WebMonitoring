@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Data.SqlClient;
 using System.Text.Json;
 
-namespace MonitoringSystem.Pages.Final
+namespace MonitoringSystem.Pages.Shared
 {
     public class ProductionPlanModel : PageModel
     {
@@ -485,7 +485,7 @@ namespace MonitoringSystem.Pages.Final
             public string? ModelName { get; set; }
             public int? Quantity { get; set; }
             public int? QtyHour { get; set; }
-            public Double? Hour { get; set; }
+            public double? Hour { get; set; }
             public string? Lot { get; set; }
             public string? Remark { get; set; }
         }

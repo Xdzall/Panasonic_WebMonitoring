@@ -4,8 +4,12 @@ using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
+using System.IO;
+using ClosedXML.Excel;
 using MonitoringSystem.Data;
+using System.Text.Json;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.Blazor;
+using System.Text;
 
 namespace MonitoringSystem.Pages.LossTime
 {
@@ -65,7 +69,8 @@ namespace MonitoringSystem.Pages.LossTime
             "Quality Trouble",
             "Machine Trouble",
             "Rework",
-            "Loss Awal Hari"
+            "Loss Awal Hari",
+            "Reason Not Fill"
         };
 
         private readonly List<(TimeSpan Start, TimeSpan End)> FixedBreakTimes = new List<(TimeSpan, TimeSpan)>
@@ -258,6 +263,7 @@ namespace MonitoringSystem.Pages.LossTime
                     {
                         LossTimeData.Clear();
 
+                        // perubahan menerima reason null
                         while (reader.Read())
                         {
                             TimeSpan startTime = reader.GetTimeSpan(reader.GetOrdinal("StartTime"));
@@ -268,17 +274,33 @@ namespace MonitoringSystem.Pages.LossTime
                                 continue;
                             }
 
+                            // Ambil semua index kolom dulu
+                            int idOrdinal = reader.GetOrdinal("Id");
+                            int dateOrdinal = reader.GetOrdinal("Date");
+                            int reasonOrdinal = reader.GetOrdinal("Reason");
+                            int lossTimeOrdinal = reader.GetOrdinal("LossTime");
+                            int machineCodeOrdinal = reader.GetOrdinal("MachineCode");
+                            int shiftOrdinal = reader.GetOrdinal("Shift");
+                            int detailedReasonOrdinal = reader.GetOrdinal("DetailedReason");
+
+                            // Baca kolom string dengan pengecekan NULL
+                            string reason = reader.IsDBNull(reasonOrdinal) ? string.Empty : reader.GetString(reasonOrdinal);
+                            string location = reader.IsDBNull(machineCodeOrdinal) ? string.Empty : reader.GetString(machineCodeOrdinal);
+                            string shift = reader.IsDBNull(shiftOrdinal) ? string.Empty : reader.GetString(shiftOrdinal);
+                            string detailedReason = reader.IsDBNull(detailedReasonOrdinal) ? null : reader.GetString(detailedReasonOrdinal);
+
                             LossTimeRecord record = new LossTimeRecord
                             {
-                                Nomor = reader.GetInt32(reader.GetOrdinal("Id")),
-                                Date = reader.GetDateTime(reader.GetOrdinal("Date")),
-                                LossTime = reader.GetString(reader.GetOrdinal("Reason")),
+                                Nomor = reader.IsDBNull(idOrdinal) ? 0 : reader.GetInt32(idOrdinal),
+                                Date = reader.IsDBNull(dateOrdinal) ? DateTime.MinValue : reader.GetDateTime(dateOrdinal),
+                                LossTime = reason, // Gunakan variabel yang sudah dicek
                                 Start = startTime,
                                 End = endTime,
-                                Duration = reader.GetInt32(reader.GetOrdinal("LossTime")),
-                                Location = reader.GetString(reader.GetOrdinal("MachineCode")),
-                                Shift = reader.GetString(reader.GetOrdinal("Shift")),
-                                Category = CategorizeReason(reader.GetString(reader.GetOrdinal("Reason")))
+                                Duration = reader.IsDBNull(lossTimeOrdinal) ? 0 : reader.GetInt32(lossTimeOrdinal),
+                                Location = location, // Gunakan variabel yang sudah dicek
+                                Shift = shift,     // Gunakan variabel yang sudah dicek
+                                Category = CategorizeReason(reason), // Gunakan variabel yang sudah dicek
+                                DetailedReason = detailedReason
                             };
 
                             LossTimeData.Add(record);
@@ -298,9 +320,9 @@ namespace MonitoringSystem.Pages.LossTime
                 CategorySummary[category] = 0;
             }
 
-            if (!CategorySummary.ContainsKey("Other"))
+            if (!CategorySummary.ContainsKey("Reason Not Fill"))
             {
-                CategorySummary["Other"] = 0;
+                CategorySummary["Reason Not Fill"] = 0;
             }
 
             string allDataQuery = BuildQueryBase();
@@ -324,8 +346,11 @@ namespace MonitoringSystem.Pages.LossTime
                                 continue;
                             }
 
-                            string reason = reader.GetString(reader.GetOrdinal("Reason"));
-                            int duration = reader.GetInt32(reader.GetOrdinal("LossTime"));
+                            int reasonOrdinal = reader.GetOrdinal("Reason");
+                            int lossTimeOrdinal = reader.GetOrdinal("LossTime");
+
+                            string reason = reader.IsDBNull(reasonOrdinal) ? string.Empty : reader.GetString(reasonOrdinal);
+                            int duration = reader.IsDBNull(lossTimeOrdinal) ? 0 : reader.GetInt32(lossTimeOrdinal);
                             string category = CategorizeReason(reason);
 
                             CategorySummary[category] += duration;
@@ -339,7 +364,7 @@ namespace MonitoringSystem.Pages.LossTime
         private string BuildQueryBase()
         {
             string query = @"
-                SELECT Id, Date, Reason, 
+                SELECT Id, Date, Reason, DetailedReason,
                        CAST(Time AS TIME) AS StartTime,
                        CAST(EndDateTime AS TIME) AS EndTime,
                        LossTime, MachineCode, 
@@ -451,7 +476,14 @@ namespace MonitoringSystem.Pages.LossTime
                                     continue;
                                 }
 
-                                string reason = reader.GetString(reader.GetOrdinal("Reason"));
+                                int reasonOrdinal = reader.GetOrdinal("Reason");
+                                int lossTimeOrdinal = reader.GetOrdinal("LossTime");
+                                int shiftOrdinal = reader.GetOrdinal("Shift");
+
+                                string reason = reader.IsDBNull(reasonOrdinal) ? string.Empty : reader.GetString(reasonOrdinal);
+                                int duration = reader.IsDBNull(lossTimeOrdinal) ? 0 : reader.GetInt32(lossTimeOrdinal);
+                                string shift = reader.IsDBNull(shiftOrdinal) ? string.Empty : reader.GetString(shiftOrdinal);
+
                                 LossTimeRecord record = new LossTimeRecord
                                 {
                                     LossTime = reason,
@@ -546,7 +578,7 @@ namespace MonitoringSystem.Pages.LossTime
             else if (reason.Contains("loss awal hari"))
                 return "Loss Awal Hari";
             else
-                return "Other";  // Default category
+                return "Reason Not Fill";  // Default category
         }
 
         public int GetTotalDurationAllCategories()
@@ -563,9 +595,119 @@ namespace MonitoringSystem.Pages.LossTime
         {
             return new List<int> { 10 };
         }
+
+        public IActionResult OnPostExportExcel()
+        {
+            LoadBreakTimeForToday();
+            var breakTimes = GetAllBreakTimes();
+            string query = BuildQueryBase();
+            query += " ORDER BY [Date] DESC, Time";
+
+            var exportData = new List<LossTimeRecord>();
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    AddQueryParameters(command);
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        int indexCounter = 1;
+                        while (reader.Read())
+                        {
+                            TimeSpan startTime = reader.GetTimeSpan(reader.GetOrdinal("StartTime"));
+                            TimeSpan endTime = reader.GetTimeSpan(reader.GetOrdinal("EndTime"));
+
+                            if (IsInBreakTime(startTime, endTime, breakTimes)) continue;
+
+                            int idOrdinal = reader.GetOrdinal("Id");
+                            int dateOrdinal = reader.GetOrdinal("Date");
+                            int reasonOrdinal = reader.GetOrdinal("Reason");
+                            int lossTimeOrdinal = reader.GetOrdinal("LossTime");
+                            int machineCodeOrdinal = reader.GetOrdinal("MachineCode");
+                            int shiftOrdinal = reader.GetOrdinal("Shift");
+                            int detailedReasonOrdinal = reader.GetOrdinal("DetailedReason");
+
+                            string reason = reader.IsDBNull(reasonOrdinal) ? string.Empty : reader.GetString(reasonOrdinal);
+                            string location = reader.IsDBNull(machineCodeOrdinal) ? string.Empty : reader.GetString(machineCodeOrdinal);
+                            string shift = reader.IsDBNull(shiftOrdinal) ? string.Empty : reader.GetString(shiftOrdinal);
+                            string detailedReason = reader.IsDBNull(detailedReasonOrdinal) ? "" : reader.GetString(detailedReasonOrdinal);
+
+                            exportData.Add(new LossTimeRecord
+                            {
+                                Nomor = indexCounter++,
+                                Date = reader.IsDBNull(dateOrdinal) ? DateTime.MinValue : reader.GetDateTime(dateOrdinal),
+                                Category = CategorizeReason(reason),
+                                Start = startTime,
+                                End = endTime,
+                                Duration = reader.IsDBNull(lossTimeOrdinal) ? 0 : reader.GetInt32(lossTimeOrdinal),
+                                Location = location,
+                                Shift = shift,
+                                DetailedReason = detailedReason
+                            });
+                        }
+                    }
+                }
+            }
+
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("Loss Time Data");
+
+                worksheet.Cell(1, 1).Value = "No";
+                worksheet.Cell(1, 2).Value = "Date";
+                worksheet.Cell(1, 3).Value = "Category";
+                worksheet.Cell(1, 4).Value = "Start Time";
+                worksheet.Cell(1, 5).Value = "End Time";
+                worksheet.Cell(1, 6).Value = "Duration (Sec)";
+                worksheet.Cell(1, 7).Value = "Location";
+                worksheet.Cell(1, 8).Value = "Shift";
+                worksheet.Cell(1, 9).Value = "Detailed Reason";
+
+                var headerRange = worksheet.Range("A1:I1");
+                headerRange.Style.Font.Bold = true;
+                headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
+                headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                headerRange.Style.Border.BottomBorder = XLBorderStyleValues.Thick;
+
+                int row = 2;
+                foreach (var item in exportData)
+                {
+                    worksheet.Cell(row, 1).Value = item.Nomor;
+                    worksheet.Cell(row, 2).Value = item.Date;
+                    worksheet.Cell(row, 3).Value = item.Category;
+                    worksheet.Cell(row, 4).Value = item.Start.ToString(@"hh\:mm\:ss");
+                    worksheet.Cell(row, 5).Value = item.End.ToString(@"hh\:mm\:ss");
+                    worksheet.Cell(row, 6).Value = item.Duration;
+                    worksheet.Cell(row, 7).Value = item.Location;
+                    worksheet.Cell(row, 8).Value = item.Shift;
+                    worksheet.Cell(row, 9).Value = item.DetailedReason;
+
+                    if (item.Duration > 60)
+                    {
+                        worksheet.Cell(row, 6).Style.Font.FontColor = XLColor.Red;
+                        worksheet.Cell(row, 6).Style.Font.Bold = true;
+                    }
+
+                    row++;
+                }
+
+                worksheet.Columns().AdjustToContents();
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    var content = stream.ToArray();
+                    string fileName = $"LossTime_{StartSelectedDate:yyyyMMdd}-{EndSelectedDate:yyyyMMdd}.xlsx"; // Ekstensi .xlsx
+
+                    return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+                }
+            }
+        }
     }
 
-    public class LossTimeRecord
+public class LossTimeRecord
     {
         public int Nomor { get; set; }
         public DateTime Date { get; set; }
@@ -576,5 +718,6 @@ namespace MonitoringSystem.Pages.LossTime
         public string Location { get; set; }
         public string Shift { get; set; }
         public string Category { get; set; }
+        public string DetailedReason { get; set; }
     }
 }

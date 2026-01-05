@@ -7,6 +7,7 @@ using System;
 using System.Linq;
 using System.Text.Json;
 using MonitoringSystem.Data;
+using System.Drawing;
 
 namespace MonitoringSystem.Pages.LossTimeReport
 {
@@ -28,12 +29,17 @@ namespace MonitoringSystem.Pages.LossTimeReport
         {
             public Dictionary<string, Dictionary<int, int>> MonthlyLosses { get; set; } = new Dictionary<string, Dictionary<int, int>>();
             public Dictionary<int, int> TotalLossByMonth { get; set; } = new Dictionary<int, int>();
+            public Dictionary<int, int> FixedLossByMonth { get; set; } = new Dictionary<int, int>();
         }
 
         public LossReportData ReportData { get; set; } = new LossReportData();
         public string ChartDataJson { get; set; } = "{}";
         public List<string> MonthLabels { get; set; } = new List<string>();
-
+        public List<double> ActualLossByMonth { get; set; } = new List<double>();
+        public List<double> ActualWtByMonth { get; set; } = new List<double>();
+        public List<string> TotalLossVsTotalWtPresentage { get; set; } = new List<string>();
+        public List<string> ActualLossVsActualWtPresentage { get; set; } = new List<string>();
+        public List<double> TotalWorkingTimeByMonth { get; set; } = new List<double>();
         public List<string> AllCategories { get; set; } = new List<string>
         {
             "Change Model", "Material Shortage External", "MP Adjustment",
@@ -48,12 +54,14 @@ namespace MonitoringSystem.Pages.LossTimeReport
         {
             try
             {
-                // Tentukan periode dari 1 Januari hingga 31 Desember dari tahun yang dipilih
-                DateTime startDate = new DateTime(SelectedYear, 1, 1);
-                DateTime endDate = new DateTime(SelectedYear, 12, 31);
+                //rentang berdasarkan TAHUN FISKAL(April -Maret)
+                DateTime fisicalStartDate = new DateTime(SelectedYear, 4, 1);
+                DateTime fisicalEndDate = fisicalStartDate.AddYears(1).AddDays(-1);
 
-                LoadData(startDate, endDate);
-                PrepareChartData();
+                LoadData(fisicalStartDate, fisicalEndDate);
+                CalculateTotalWorkingTime(fisicalStartDate);
+                PrepareChartData(fisicalStartDate);
+                CalculateDeriveMetrics();
             }
             catch (Exception ex)
             {
@@ -69,15 +77,88 @@ namespace MonitoringSystem.Pages.LossTimeReport
             return Page();
         }
 
+        private void CalculateTotalWorkingTime(DateTime fisicalStartDate)
+        {
+            TotalWorkingTimeByMonth = new List<double>();
+            var holidays = GetHolidays(fisicalStartDate.Year, fisicalStartDate.Year + 1);
+            DateTime today = DateTime.Today;
+
+            for (int i = 0; i < 12; i++)
+            {
+                DateTime currentMonthStart = fisicalStartDate.AddMonths(i);
+
+                if (currentMonthStart.Year > today.Year || (currentMonthStart.Year == today.Year && currentMonthStart.Month > today.Month))
+                {
+                TotalWorkingTimeByMonth.Add(0);
+                continue;
+                }
+                int workDays = 0;
+                int daysToCount;
+                
+                if (currentMonthStart.Year == today.Year && currentMonthStart.Month == today.Month)
+                {
+                    daysToCount = today.Day;
+                }
+                else
+                {
+                    daysToCount = DateTime.DaysInMonth(currentMonthStart.Year, currentMonthStart.Month);
+                }
+
+                for (int day =1; day <= daysToCount; day++)
+                {
+                    DateTime currentDate = new DateTime(currentMonthStart.Year, currentMonthStart.Month, day);
+                    if (currentDate.DayOfWeek != DayOfWeek.Saturday &&
+                        currentDate.DayOfWeek != DayOfWeek.Sunday &&
+                        !holidays.Contains(currentDate.Date))
+                    {
+                        workDays++;
+                    }
+                }
+                TotalWorkingTimeByMonth.Add(workDays * 473);
+            }
+        }
+
+        private void CalculateDeriveMetrics()
+        {
+            for (int i = 0; i < 12; i++)
+            {
+                double totalLoss = SecondsToMinutes(ReportData.TotalLossByMonth[i]);
+                double fixedLoss = SecondsToMinutes(ReportData.FixedLossByMonth[i]);
+                double totalWt = TotalWorkingTimeByMonth[i];
+
+                double actualLoss = totalLoss - fixedLoss;
+                double actualWt = totalWt - fixedLoss;
+
+                ActualLossByMonth.Add(actualLoss > 0 ? actualLoss : 0);
+                ActualWtByMonth.Add(actualWt > 0 ? actualWt : 0);
+
+                TotalLossVsTotalWtPresentage.Add(totalWt > 0 ? (totalLoss / totalWt).ToString("P1") : "0%");
+                ActualLossVsActualWtPresentage.Add(actualWt > 0 ? (actualLoss / actualWt).ToString("P1") : "0%");
+            }
+        }
+
+        private HashSet<DateTime>GetHolidays(int startYear, int endYear)
+        {
+            var holidays = new HashSet<DateTime>();
+            for (int year = startYear; year <= endYear; year++)
+            {
+                holidays.Add(new DateTime(year, 1, 1));
+                holidays.Add(new DateTime(year, 5, 1));
+                holidays.Add(new DateTime(year, 8, 17));
+                holidays.Add(new DateTime(year, 12, 25));
+                //tambahkan hari libur lainnya jika ada
+            }
+            return holidays;
+        }
+
         // DIUBAH: Logika pengelompokan data
         private void LoadData(DateTime startDate, DateTime endDate)
         {
             InitializeEmptyData();
 
             string query = @"
-                SELECT [Date], [Reason], [LossTime], [MachineCode]
-                FROM AssemblyLossTime 
-                WHERE [Date] >= @StartDate AND [Date] <= @EndDate";
+                SELECT [Date], [Reason], [LossTime] FROM AssemblyLossTime 
+                WHERE [Date] >= @StartDate AND [Date] < @EndDate";
 
             if (!string.Equals(MachineLine, "All", StringComparison.OrdinalIgnoreCase))
             {
@@ -92,7 +173,7 @@ namespace MonitoringSystem.Pages.LossTimeReport
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
                         command.Parameters.AddWithValue("@StartDate", startDate);
-                        command.Parameters.AddWithValue("@EndDate", endDate);
+                        command.Parameters.AddWithValue("@EndDate", endDate.AddDays(1)); // Include the last day
 
                         if (!string.Equals(MachineLine, "All", StringComparison.OrdinalIgnoreCase))
                         {
@@ -107,13 +188,19 @@ namespace MonitoringSystem.Pages.LossTimeReport
                                 string reason = reader.GetString(1);
                                 int lossDuration = reader.GetInt32(2);
 
-                                // LOGIKA BARU: Indeks bulan didapat langsung dari nomor bulan (Jan=0, Feb=1, dst.)
-                                int monthIndex = date.Month - 1;
+                                int monthIndex = ((date.Year - startDate.Year) * 12) + date.Month - startDate.Month;
 
-                                string category = CategorizeReason(reason);
+                                if (monthIndex >= 0 && monthIndex < 12)
+                                {
+                                    string category = CategorizeReason(reason);
+                                    ReportData.MonthlyLosses[category][monthIndex] += lossDuration;
+                                    ReportData.TotalLossByMonth[monthIndex] += lossDuration;
 
-                                ReportData.MonthlyLosses[category][monthIndex] += lossDuration;
-                                ReportData.TotalLossByMonth[monthIndex] += lossDuration;
+                                    if (category == "Loss Awal Hari")
+                                    {
+                                        ReportData.FixedLossByMonth[monthIndex] += lossDuration;
+                                    }
+                                }
                             }
                         }
                     }
@@ -126,38 +213,34 @@ namespace MonitoringSystem.Pages.LossTimeReport
         }
 
         // DIUBAH: Label bulan menjadi nama bulan standar
-        private void PrepareChartData()
+        private void PrepareChartData(DateTime fiscalStartDate)
         {
-
-
-            var allMonths = Enumerable.Range(1, 12)
-                .Select(i => CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(i))
+            MonthLabels = Enumerable.Range(0, 12)
+                .Select(i => fiscalStartDate.AddMonths(i).ToString("MMMM", CultureInfo.CurrentCulture))
                 .ToList();
-            MonthLabels = allMonths.Skip(3).Concat(allMonths.Take(3)).ToList();
+
             var datasets = new List<object>();
             var backgroundColors = new[] { "#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF", "#FF9F40", "#C9CBCF" };
             int colorIndex = 0;
 
             foreach (var category in AllCategories)
             {
-                var rotatedData = ReportData.MonthlyLosses[category]
-                   .OrderBy(kvp => (kvp.Key + 9) % 12)  // geser index bulan
-                   .Select(v => Math.Round(v.Value / 60.0, 1))
-                   .ToArray();
+                var data = ReportData.MonthlyLosses[category]
+                .Select(kvp => Math.Ceiling(kvp.Value / 60.0))
+                .ToArray();
 
                 datasets.Add(new
                 {
                     label = category,
-                    data = rotatedData,
+                    data = data,
                     backgroundColor = backgroundColors[colorIndex % backgroundColors.Length],
                     stack = "loss"
                 });
                 colorIndex++;
             }
-        
 
-        ChartDataJson = JsonSerializer.Serialize(new { labels = MonthLabels, datasets });
-    }
+            ChartDataJson = JsonSerializer.Serialize(new { labels = MonthLabels, datasets });
+        }
 
         private void InitializeEmptyData()
         {
@@ -165,14 +248,17 @@ namespace MonitoringSystem.Pages.LossTimeReport
             foreach (var category in AllCategories)
             {
                 ReportData.MonthlyLosses[category] = new Dictionary<int, int>();
-                for (int i = 0; i < 12; i++)
-                {
-                    ReportData.MonthlyLosses[category][i] = 0;
-                }
+                for (int i = 0; i < 12; i++) ReportData.MonthlyLosses[category][i] = 0;
             }
+
+            // PERBAIKAN: Menambahkan inisialisasi untuk semua dictionary sebelum digunakan
+            ReportData.TotalLossByMonth = new Dictionary<int, int>();
+            ReportData.FixedLossByMonth = new Dictionary<int, int>();
+
             for (int i = 0; i < 12; i++)
             {
                 ReportData.TotalLossByMonth[i] = 0;
+                ReportData.FixedLossByMonth[i] = 0;
             }
         }
 
@@ -193,7 +279,7 @@ namespace MonitoringSystem.Pages.LossTimeReport
 
         public double SecondsToMinutes(int seconds)
         {
-            return Math.Round(seconds / 60.0, 1);
+            return Math.Ceiling(seconds / 60.0);
         }
     }
 }

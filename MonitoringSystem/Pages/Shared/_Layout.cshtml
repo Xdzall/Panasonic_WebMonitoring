@@ -13,10 +13,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - MonitoringSystem</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link href="~/css/Sidebar.css" rel="stylesheet" />
-    <link href="~/css/Navbar.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/Sidebar.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/Navbar.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/lib/fontawesome/css/all.min.css" />
     <script src="~/lib/chartjs/dist/chart.umd.js"></script>
+    <link rel="stylesheet" href="~/css/sweetalert2.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/MonitoringSystem.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site-identity.css" asp-append-version="true" />
@@ -34,25 +35,21 @@
                 <li class="nav-item mb-1">
                     <a class="fw-semibold  px-4" href="~/">
                         <i class="fa-solid fa-house"></i>
-                        Home
                     </a>    
                 </li>
                 <li class="nav-item mb-1">
                     <a class="fw-semibold  px-4" href="~/Summary/ProductionPlanCU">
                         <i class="fa-solid fa-clipboard-list "></i>
-                        Production Plan CU
                     </a>
                 </li>
                 <li class="nav-item mb-1">
                     <a class="fw-semibold  px-4" href="~/Summary/ProductionPlanCS">
                         <i class="fa-solid fa-clipboard-list"></i>
-                        Production Plan CS
                     </a>
                 </li>
                 <li class="nav-item mb-1">
                     <a href="#" data-bs-toggle="modal" data-bs-target="#breakTimeFilterModal" class="sidebar-link fw-semibold  px-4">
                         <i class="fa-solid fa-clock"></i>
-                        Break Time Filter
                     </a>
                 </li>
             </ul>
@@ -96,28 +93,29 @@
                 <span class="ms-3">@layoutMenu</span>
             </div>
             <div class="p-2" style="min-height: 100%">
-                <div class="d-flex justify-content-between align-items-center sticky-top p-2 bg-white rounded-3 shadow-sm mb-2">
-                    <div class="nav-menu d-flex align-items-center">
+                <div class="d-flex justify-content-between align-items-center sticky-top p-2 bg-white rounded-3">
+                    <div class="nav-menu d-flex align-items-center position-relative">
+
+                        <div class="nav-highlighter" id="navHighlighter"></div>
                         <h5 class="align-middle ms-2 fw-semibold">@ViewData["Title"]</h5>
                         <div class="ms-4 vr"></div>
-                        <a class="ms-4 nav-link text-dark fw-semibold" href="~/Summary/index">
+
+                        <a class="ms-4 nav-link text-dark fw-semibold nav-item-link" href="~/Summary/index">
                             Summary
                         </a>
-                        <a class="ms-4 nav-link text-dark fw-semibold" href="~/Perfomance/index">
+                        <a class="ms-4 nav-link text-dark fw-semibold nav-item-link" href="~/Perfomance/index">
                             Performance
                         </a>
-                        <a class="ms-4 nav-link text-dark fw-semibold" href="~/Quality/index ">
+                        <a class="ms-4 nav-link text-dark fw-semibold nav-item-link" href="~/Quality/index ">
                             Quality
                         </a>
-                        <a class="ms-4 nav-link text-dark fw-semibold" href="~/LossTime/index ">
+                        <a class="ms-4 nav-link text-dark fw-semibold nav-item-link" href="~/LossTime/index ">
                             Loss Time
                         </a>
-
-                        <a class="ms-4 nav-link text-dark fw-semibold" href="~/LossTimeReport/index">
+                        <a class="ms-4 nav-link text-dark fw-semibold nav-item-link" href="~/LossTimeReport/index">
                             Loss Time Report
                         </a>
-
-                        <a class="ms-4 nav-link text-dark fw-semibold" href="~/ProductionReport/index ">
+                        <a class="ms-4 nav-link text-dark fw-semibold nav-item-link" href="~/ProductionReport/index ">
                             Production Report
                         </a>
                     </div>
@@ -187,42 +185,31 @@
     <script src="~/js/identity-scripts.js" asp-append-version="true"></script>
     <script>
     document.addEventListener("DOMContentLoaded", function () {
-        // Hanya jalankan skrip ini jika kita berada di halaman Summary
         const shift1Checkbox = document.getElementById("shift1Checkbox");
         if (shift1Checkbox) {
-            // Ambil elemen checkbox
             const shift2Checkbox = document.getElementById("shift2Checkbox");
             const shift3Checkbox = document.getElementById("shift3Checkbox");
 
-            // Ambil elemen tabel dari halaman index.cshtml
             const shift1Table = document.getElementById("Shift1Table");
             const shift2Table = document.getElementById("Shift2Table");
             const shift3Table = document.getElementById("Shift3Table");
-            // Tabel Overall akan selalu terlihat, jadi tidak perlu diatur
 
-            // Fungsi untuk memperbarui visibilitas tabel
             function updateTableVisibility() {
                 const showShift1 = shift1Checkbox.checked;
                 const showShift2 = shift2Checkbox.checked;
                 const showShift3 = shift3Checkbox.checked;
 
-                // Cek apakah ada checkbox yang dicentang
                 const anyChecked = showShift1 || showShift2 || showShift3;
 
-                // Logika untuk menampilkan/menyembunyikan tabel
-                // Jika tidak ada yang dicentang, tampilkan semua.
-                // Jika ada yang dicentang, tampilkan hanya yang sesuai.
                 if (shift1Table) shift1Table.style.display = showShift1 || !anyChecked ? "" : "none";
                 if (shift2Table) shift2Table.style.display = showShift2 || !anyChecked ? "" : "none";
                 if (shift3Table) shift3Table.style.display = showShift3 || !anyChecked ? "" : "none";
             }
 
-            // Tambahkan event listener ke setiap checkbox
             shift1Checkbox.addEventListener("change", updateTableVisibility);
             shift2Checkbox.addEventListener("change", updateTableVisibility);
             shift3Checkbox.addEventListener("change", updateTableVisibility);
 
-            // Panggil fungsi sekali saat halaman dimuat untuk mengatur status awal
             updateTableVisibility();
         }
     });
@@ -247,14 +234,17 @@
                 $(".refreshDateTime").load(location.href + " .refreshDateTime");
             }, 3000);
         });
-        $(document).ready(function () {
+        // $(document).ready(function () {
+        //     setInterval(function () {
+        //         $(".refreshDailyData").load(location.href + " .refreshDailyData");
+        //     }, 3000);
+        // });
+        $(document).ready(function () {    
+            const url = new URL(window.location.href);
+            const machineCode = url.searchParams.get("machineCode") || "MCH1-01";
+
             setInterval(function () {
-                $(".refreshDailyData").load(location.href + " .refreshDailyData");
-            }, 3000);
-        });
-        $(document).ready(function () {
-            setInterval(function () {
-                $(".refreshHourlyAchievement").load(location.href + " .refreshHourlyAchievement");
+                $(".refreshHourlyAchievement").load(`/Performance?machineCode=${machineCode} .refreshHourlyAchievement`);
             }, 3000);
         });
         // $(document).ready(function () {
@@ -264,6 +254,61 @@
         // });
     </script>
     @await RenderSectionAsync("Scripts", required: false)
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const highlighter = document.getElementById("navHighlighter");
+            const links = document.querySelectorAll(".nav-item-link");
+            const currentPath = window.location.pathname.toLowerCase();
+            let activeLink = null;
+
+            function moveHighlighter(element) {
+                if (!element) {
+                    highlighter.style.opacity = "0";
+                    return;
+                }
+
+                const left = element.offsetLeft;
+                const width = element.offsetWidth;
+
+                highlighter.style.opacity = "1";
+                highlighter.style.width = `${width}px`;
+                highlighter.style.left = `${left}px`;
+
+                links.forEach(link => link.classList.remove("active-text"));
+                element.classList.add("active-text");
+            }
+
+            links.forEach(link => {
+                const linkHref = link.getAttribute("href").replace("~", "").toLowerCase().trim();
+                if (currentPath.includes(linkHref) && linkHref !== "/") {
+                    activeLink = link;
+                } else if (currentPath === "/" && (linkHref === "/" || linkHref === "/home")) {
+                    activeLink = link;
+                }
+            });
+
+            if (activeLink) {
+                setTimeout(() => moveHighlighter(activeLink), 50);
+            }
+
+            links.forEach(link => {
+                link.addEventListener("mouseenter", function () {
+                    moveHighlighter(this);
+                });
+            });
+
+            const navContainer = document.querySelector(".nav-menu");
+            navContainer.addEventListener("mouseleave", function () {
+                if (activeLink) {
+                    moveHighlighter(activeLink);
+                } else {
+                    highlighter.style.opacity = "0";
+                    links.forEach(link => link.classList.remove("active-text"));
+                }
+            });
+        });
+    </script>
 </body>
 </html>
 

@@ -18,6 +18,7 @@ namespace MonitoringSystem.Pages.ProductionReport
         public List<string> ChartLabels { get; private set; } = new List<string>();
         public List<decimal> NormalData { get; private set; } = new List<decimal>();
         public List<decimal> OvertimeData { get; private set; } = new List<decimal>();
+        public List<int> OriginalPlanData { get; private set; } = new List<int>();
         public List<int> PlanData { get; private set; } = new List<int>();
 
         //public List<int> EstimateData { get; private set; } = new List<int>();
@@ -27,9 +28,17 @@ namespace MonitoringSystem.Pages.ProductionReport
         public List<int> OvertimeMinutes { get; private set; } = new List<int>();
         public List<int> DailyLossTime { get; private set; } = new List<int>();
 
-        private class DailyData { public int Day { get; set; } public decimal LastNormalReading { get; set; } = 0; public decimal LastOvertimeReading { get; set; } = 0; public int Plan { get; set; } = 0; 
-        //public int Estimate { get; set; } = 0; 
-        public int NoOfOperator { get; set; } = 0; public int OtOperatorCount { get; set; } = 0; public TimeSpan LastOtTime { get; set; } = TimeSpan.Zero; }
+        private class DailyData {
+        public int Day { get; set; } 
+        public decimal LastNormalReading { get; set; } = 0;
+        public decimal LastOvertimeReading { get; set; } = 0;
+        public int Plan { get; set; } = 0;
+        public int OriginalPlan { get; set; } = 0;
+        public int NoOfOperator { get; set; } = 0;
+        public int OtOperatorCount { get; set; } = 0;
+        public TimeSpan LastOtTime { get; set; } = TimeSpan.Zero;
+        }
+
         public class RestTime { public int Duration { get; set; } public TimeSpan StartTime { get; set; } public TimeSpan EndTime { get; set; } }
 
         public IndexModel(IWebHostEnvironment webHostEnvironment, IConfiguration configuration)
@@ -118,13 +127,22 @@ namespace MonitoringSystem.Pages.ProductionReport
 
             var planCsvPath = Path.Combine(_webHostEnvironment.WebRootPath, "data", machineType, "plan", "csv", $"{monthName}_{TargetYear}_plan.csv");
             var planXlsxPath = Path.Combine(_webHostEnvironment.WebRootPath, "data", machineType, "plan", "xlsx", $"{monthName}_{TargetYear}_plan.xlsx");
-            //var estimateCsvPath = Path.Combine(_webHostEnvironment.WebRootPath, "data", machineType, "estimate", "csv", $"{monthName}_{TargetYear}_estimate.csv");
-            //var estimateXlsxPath = Path.Combine(_webHostEnvironment.WebRootPath, "data", machineType, "estimate", "xlsx", $"{monthName}_{TargetYear}_estimate.xlsx");
+            var originalPlanCsvPath = Path.Combine(_webHostEnvironment.WebRootPath, "data", machineType, "plan", "csv", $"{monthName}_{TargetYear}_original_plan.csv");
+            var originalPlanXlsxPath = Path.Combine(_webHostEnvironment.WebRootPath, "data", machineType, "plan", "xlsx", $"{monthName}_{TargetYear}_original_plan.xlsx");
 
             Directory.CreateDirectory(Path.GetDirectoryName(planCsvPath));
             Directory.CreateDirectory(Path.GetDirectoryName(planXlsxPath));
             //Directory.CreateDirectory(Path.GetDirectoryName(estimateCsvPath));
             //Directory.CreateDirectory(Path.GetDirectoryName(estimateXlsxPath));
+
+            if (!System.IO.File.Exists(originalPlanCsvPath))
+            {
+                WriteCsvFile(originalPlanCsvPath, dataInMemory);
+            }
+            if (!System.IO.File.Exists(originalPlanXlsxPath))
+            {
+                WriteXlsxFile(originalPlanXlsxPath, dataInMemory);
+            }
 
             WriteCsvFile(planCsvPath, dataInMemory);
             WriteXlsxFile(planXlsxPath, dataInMemory);
@@ -273,8 +291,15 @@ namespace MonitoringSystem.Pages.ProductionReport
             var combinedData = Enumerable.Range(1, this.DaysInMonth).Select(day => new DailyData { Day = day }).ToList();
             var planFilePath = Path.Combine(_webHostEnvironment.WebRootPath, "data", machineType, "plan", "csv", $"{monthName}_{SelectedYear}_plan.csv");
             if (System.IO.File.Exists(planFilePath)) { var planValues = ReadDataFromCsv(planFilePath, this.DaysInMonth); for (int i = 0; i < planValues.Count; i++) { combinedData[i].Plan = planValues[i]; } }
-            //var estimateFilePath = Path.Combine(_webHostEnvironment.WebRootPath, "data", machineType, "estimate", "csv", $"{monthName}_{SelectedYear}_estimate.csv");
-            //if (System.IO.File.Exists(estimateFilePath)) { var estimateValues = ReadDataFromCsv(estimateFilePath, this.DaysInMonth); for (int i = 0; i < estimateValues.Count; i++) { combinedData[i].Estimate = estimateValues[i]; } }
+            var originalPlanFilePath = Path.Combine(_webHostEnvironment.WebRootPath, "data", machineType, "plan", "csv", $"{monthName}_{SelectedYear}_original_plan.csv");
+            if (System.IO.File.Exists(originalPlanFilePath))
+            {
+                var originalPlanValues = ReadDataFromCsv(originalPlanFilePath, this.DaysInMonth);
+                for (int i = 0; i < originalPlanValues.Count; i++)
+                {
+                    combinedData[i].OriginalPlan = originalPlanValues[i];
+                }
+            }
 
             string shiftsForSql = SelectedShifts.Any() ? string.Join(",", SelectedShifts.Select(s => $"'{s}'")) : "'0'";
             var sql = $@"
@@ -352,8 +377,9 @@ namespace MonitoringSystem.Pages.ProductionReport
 
             foreach (var data in combinedData)
             {
-                ChartLabels.Add(data.Day.ToString()); PlanData.Add(data.Plan); 
-                //EstimateData.Add(data.Estimate); 
+                ChartLabels.Add(data.Day.ToString());
+                PlanData.Add(data.Plan);
+                OriginalPlanData.Add(data.OriginalPlan);
                 NormalData.Add(data.LastNormalReading);
                 var overtimeValue = data.LastOvertimeReading - data.LastNormalReading;
                 OvertimeData.Add(overtimeValue > 0 ? overtimeValue : 0);

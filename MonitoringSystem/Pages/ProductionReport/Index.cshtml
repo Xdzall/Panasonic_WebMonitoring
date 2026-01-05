@@ -7,11 +7,9 @@
 
 <div id="reportContainer">
     @{
-        // --- BLOK PERHITUNGAN P/H/H BULANAN ---
         decimal monthlyTotalActual = Model.NormalData.Sum() + Model.OvertimeData.Sum();
         double totalProductiveManMinutes = 0;
 
-        // Mengambil jumlah hari terkecil dari semua list untuk menghindari error
         int calculationDays = new[] { Model.DaysInMonth, Model.NoOfDirectWorkers.Count, Model.DailyWorkTime.Count, Model.DailyLossTime.Count }.Min();
 
         for (int i = 0; i < calculationDays; i++)
@@ -19,7 +17,6 @@
             double dailyNetMinutes = Model.DailyWorkTime[i] - Model.DailyLossTime[i];
             if (dailyNetMinutes > 0 && Model.NoOfDirectWorkers[i] > 0)
             {
-                // Akumulasi Menit Kerja Produktif x Jumlah Pekerja per Hari
                 totalProductiveManMinutes += Model.NoOfDirectWorkers[i] * dailyNetMinutes;
             }
         }
@@ -28,7 +25,6 @@
         double monthlyPph = 0;
         if (monthlyTotalActual > 0 && totalProductiveManHours > 0)
         {
-            // PPH = Total Produksi / Total Jam Kerja Semua Pekerja
             monthlyPph = Math.Round((double)monthlyTotalActual / totalProductiveManHours, 2);
         }
     }
@@ -361,17 +357,16 @@
 </style>
 
 @section Scripts {
-    @* PERBAIKAN: Memuat semua library dari folder lokal ~/js/ *@
         <script src="~/js/chart.umd.min.js"></script>
         <script src="~/js/jspdf.umd.min.js"></script>
         <script src="~/js/jspdf.plugin.autotable.js"></script>
 
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                // --- CHART SCRIPT ---
                 const normalData = @Html.Raw(Json.Serialize(Model.NormalData));
                 const overtimeData = @Html.Raw(Json.Serialize(Model.OvertimeData));
                 const planData = @Html.Raw(Json.Serialize(Model.PlanData));
+                const originalPlanData = @Html.Raw(Json.Serialize(Model.OriginalPlanData));
                 const chartLabels = @Html.Raw(Json.Serialize(Model.ChartLabels));
                 const isCurrentMonth = @Html.Raw(Json.Serialize(Model.IsCurrentMonthView));
                 const today = new Date().getDate();
@@ -441,14 +436,26 @@
                                 borderColor: 'rgba(255, 69, 0, 1)', backgroundColor: 'rgba(255, 69, 0, 0.2)',
                                 tension: 0.1, yAxisID: 'y1'
                                 }, {
+
+                                // type: 'line',
+                                label: 'Original Plan',
+                                data: originalPlanData,
+                                borderColor: '#67C090',
+                                backgroundColor: '#67C090',
+                                // tension: 0.1,
+                                barThickness: 15,
+                                stack: 'OriginalPlan',
+                                yAxisID: 'y'
+                            }, {
+
                                             label: 'Plan', data: planData, backgroundColor: '#9ECAD6',
-                                            borderColor: '#9ECAD6', barThickness: 17, stack: 'Plan', yAxisID: 'y'
+                                            borderColor: '#9ECAD6', barThickness: 15, stack: 'Plan', yAxisID: 'y'
                                 },{
                                     label: 'Normal', data: normalData, backgroundColor: '#640D5F',
-                                    borderColor: '#640D5F', barThickness: 17, stack: 'Actual', yAxisID: 'y'
+                                    borderColor: '#640D5F', barThickness: 15, stack: 'Actual', yAxisID: 'y'
                             }, {
                                 label: 'Overtime', data: overtimeData, backgroundColor: '#FF6384',
-                                borderColor: '#FF6384', barThickness: 17, stack: 'Actual', yAxisID: 'y'
+                                borderColor: '#FF6384', barThickness: 15, stack: 'Actual', yAxisID: 'y'
                             }]
                         },
                         options: {
@@ -481,7 +488,6 @@
                     });
                 }
 
-                // --- TABLE ROW TOGGLE SCRIPT ---
                 const toggleHeader = document.getElementById('toggleExtraRows');
                 if (toggleHeader) {
                     toggleHeader.addEventListener('click', function () {
@@ -496,7 +502,6 @@
                     });
                 }
 
-                // --- PDF DOWNLOAD SCRIPT ---
                 const downloadPdfButton = document.getElementById('downloadPdfButton');
                 if (downloadPdfButton) {
                     downloadPdfButton.addEventListener('click', function () {
@@ -506,7 +511,6 @@
 
                         setTimeout(() => {
                             try {
-                                // Cek jika library sudah ter-load
                                 if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
                                     throw new Error("jsPDF library not loaded. Pastikan file jspdf.umd.min.js ada di folder ~/js/.");
                                 }
@@ -517,7 +521,6 @@
                                     throw new Error("jspdf-autotable plugin not loaded. Pastikan file jspdf.plugin.autotable.js ada di folder ~/js/.");
                                 }
 
-                                    // --- Mengambil data tambahan dari halaman ---
                                 const totalActual = document.getElementById('totalActualValue').innerText;
                                 const totalPlan = document.getElementById('totalPlanValue').innerText;
                                 const totalPhh = document.getElementById('totalPhhValue').innerText;
@@ -526,23 +529,20 @@
                                 const selectedYear = document.getElementById('SelectedYear').value;
                                 const pageWidth = doc.internal.pageSize.getWidth();
 
-                                // --- Menambahkan Judul dan Info Tambahan ke PDF ---
                                 doc.setFontSize(18);
                                 doc.text('Production Report', 40, 50);
 
                                 doc.setFontSize(10);
-                                doc.setTextColor(100); // Warna abu-abu
+                                doc.setTextColor(100);
                                 doc.text(`Period: ${selectedMonth} ${selectedYear}`, 40, 70);
 
                                 doc.text(`Total Plan: ${totalPlan}`, pageWidth - 40, 70, { align: 'right' });
                                 doc.text(`Total Actual: ${totalActual}`, pageWidth - 40, 85, { align: 'right' });
                                 doc.text(`P/H/H: ${totalPhh}`, pageWidth - 40, 100, { align: 'right' });
-                                doc.setTextColor(0); // Kembalikan ke warna hitam
+                                doc.setTextColor(0); 
 
-                                // --- Menambahkan Chart ---
                                 const chartCanvas = document.getElementById('dayChart');
                                 const chartImgData = chartCanvas.toDataURL('image/png', 1.0);
-                                // Posisikan chart lebih ke bawah
                                 doc.addImage(chartImgData, 'PNG', 40, 110, 760, 220);
 
                                 const extraRows = document.querySelectorAll('.extra-row');
@@ -551,10 +551,9 @@
                                     extraRows.forEach(row => { row.style.display = 'table-row'; });
                                 }
 
-                                // --- Menambahkan Tabel ---
                                 doc.autoTable({
                                     html: '#productionTable',
-                                    startY: 340, // Posisikan tabel lebih ke bawah setelah chart
+                                    startY: 340,
                                     theme: 'grid',
                                     styles: { fontSize: 5, cellPadding: 2 },
                                     headStyles: { fillColor: [44, 62, 80], fontSize: 6 },
@@ -563,9 +562,7 @@
                                             data.cell.text = data.cell.raw.innerText;
                                         }
                                         if (data.cell.text && (data.cell.text[0] === 'Plan Forecast' || data.cell.text[0] === 'Actual')) {
-                                            // Jika ya, atur gaya perataan horizontal menjadi 'center'
                                             data.cell.styles.halign = 'center';
-                                            // (Opsional) Anda juga bisa membuatnya tebal agar terlihat seperti sub-header
                                             data.cell.styles.fontStyle = 'bold';
                                         }
                                     }

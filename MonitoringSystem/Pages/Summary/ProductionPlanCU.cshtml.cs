@@ -4,7 +4,7 @@ using Microsoft.Data.SqlClient;
 using System.Text.Json;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-namespace MonitoringSystem.Pages.Final
+namespace MonitoringSystem.Pages.Shared
 {
     public class ProductionPlanCUModel : PageModel
     {
@@ -560,7 +560,7 @@ namespace MonitoringSystem.Pages.Final
             public string? ModelName { get; set; }
             public int? Quantity { get; set; }
             public int? QtyHour { get; set; }
-            public Double? Hour { get; set; }
+            public double? Hour { get; set; }
             public string? Lot { get; set; }
             public string? Remark { get; set; }
         }

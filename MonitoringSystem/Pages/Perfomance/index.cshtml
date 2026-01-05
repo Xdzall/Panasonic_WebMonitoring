@@ -1,30 +1,38 @@
 ﻿@page
-@using MonitoringSystem.Pages.Perfomance
+@using MonitoringSystem.Pages.Performance
 @model MonitoringSystem.Pages.Performance.PerformanceModel
 @{
     ViewData["Title"] = "Performance";
 
-    // Extract key time values
     var currentTime = DateTime.Now.TimeOfDay;
     var currentDate = DateTime.Now.Date;
     var currentDay = DateTime.Today.DayOfWeek;
     var startWorkingTime = new TimeSpan(7, 0, 0);
     var endWorkingTime = Model.GetLastWorkingTime("MCH1-01");
 
-    // Get rest time periods based on day type
     var listRestTime = Model.GetRestTime(Model.DetermineTypeOfDay(currentDay));
 
-    // Calculate working time metrics
     var workingTimeData = CalculateWorkingTime(Model.SelectedDate, currentTime, startWorkingTime, endWorkingTime, listRestTime);
-    var workingTime = workingTimeData.WorkingTime;
-    var totalLossTime = Model.CalculateTotalLossTime(Model.assemblyTimes, listRestTime) / 60;
+    // var workingTime = workingTimeData.WorkingTime;
+    // var totalLossTime = Model.CalculateTotalLossTime(Model.assemblyTimes, listRestTime) / 60;
+
+    var totalDefect = Model.GetTotalDefectBySummaryLogic();
+    var workingTime = Model.GetWorkingTimeBySummaryLogic();
+    var totalLossTime = Model.GetLossTimeBySummaryLogic();
 
     // Initialize first assembly time record if needed
     InitializeFirstAssemblyTime();
 
-    // Calculate production metrics using hourly achievement data
+    // Ambil total plan langsung dari database (ProductionRecords)
+    var planProd = Model.GetProductionPlan();
+
+    // (Jika kamu masih ingin menghitung hourly plans untuk chart, tetap boleh)
     var hourlyPlans = CalculateAllHourlyPlans();
-    var planProd = hourlyPlans.Sum(); // Sum of all hourly plans
+
+
+    // Calculate production metrics using hourly achievement data
+    // var hourlyPlans = CalculateAllHourlyPlans();
+    // var planProd = hourlyPlans.Sum(); Sum of all hourly plans
    
     var totalPlanForCU = CalculateAllHourlyPlansForCU().Sum();  // Total plan untuk CU
     var totalPlanForCS = CalculateAllHourlyPlansForCS().Sum();  // Total plan untuk CS
@@ -34,8 +42,10 @@
     Model.SavePlanToDatabase(totalPlanForCU, "MCH1-01");
     Model.SavePlanToDatabase(totalPlanForCS, "MCH1-02");
 
-    var productionMetrics = CalculateProductionMetrics(Model.listProdAchieve, currentDate, currentTime, listRestTime, planProd);
-    var targetProd = productionMetrics.TargetProd;
+    var targetProd = Model.GetTargetFromOEESN();
+
+    // var productionMetrics = CalculateProductionMetrics(Model.listProdAchieve, currentDate, currentTime, listRestTime, planProd);
+    // var targetProd = productionMetrics.TargetProd;
 
     // Get production statistics
     var actualProd = Model.GetActualProduction();
@@ -43,11 +53,17 @@
     var planTaktTime = Model.GetPlanTaktTime();
 
     // Calculate efficiency metrics
+    var efficiencyValue = Model.GetEfficiencyFromOEESN();
+
     var efficiencyMetrics = CalculateEfficiencyMetrics(workingTime, totalLossTime, planTaktTime, actualProd);
 
     // Get defect data
-    var totalDefect = Model.GetTotalDefect();
-    var defectRatio = planProd > 0 ? (100 - ((totalDefect / planProd) * 100)) : 0;
+    // var totalDefect = Model.GetTotalDefect();
+    // var defectRatio = planProd > 0 ? (100 - ((totalDefect / planProd) * 100)) : 0;
+
+    var defectRatio = (Model.GetActualProduction() > 0)
+    ? Math.Round(100.0 - ((double)totalDefect / Model.GetActualProduction() * 100.0))
+    : 100.0;
 
     // Get hourly data for chart
     var actualData = Model.GetActualPerHour();
@@ -316,27 +332,32 @@
         return result;
     }
 
-    private EfficiencyData CalculateCumulativeEfficiency(List<Performance.PerformanceModel.ActualData> actualData, List<int> hourlyPlans, int totalWorkingTime, double totalLossTime, int planTaktTime)
+    private EfficiencyData CalculateCumulativeEfficiency(
+    List<Performance.PerformanceModel.ActualData> actualData,
+    List<int> hourlyPlans,
+    int workingTime,
+    double totalLossTime,
+    int planTaktTime)
     {
         var result = new EfficiencyData();
-        var cumulativeActual = 0;
-        var cumulativePlan = 0;
+        int cumulativeActual = 0;
 
-        // Add initial point
         result.Labels.Add("07:00");
         result.CumulativeEfficiency.Add(0);
 
-        for (int i = 1; i < actualData.Count && i <= hourlyPlans.Count; i++)
+        for (int i = 1; i < actualData.Count; i++)
         {
             cumulativeActual += actualData[i].Actual;
-            cumulativePlan += (i <= hourlyPlans.Count) ? hourlyPlans[i - 1] : 0;
 
-            // Calculate cumulative efficiency
-            double efficiency = 0;
-            if (cumulativePlan > 0)
-            {
-                efficiency = Math.Round((double)cumulativeActual / cumulativePlan * 100, 2);
-            }
+            double efficiency =
+                (cumulativeActual > 0 && workingTime > totalLossTime && planTaktTime > 0)
+                ? Math.Round(
+                    Math.Min(
+                        (cumulativeActual * planTaktTime) /
+                        ((workingTime - totalLossTime) * 60) * 100,
+                        120
+                    ), 2)
+                : 0;
 
             result.Labels.Add(actualData[i].EndTime);
             result.CumulativeEfficiency.Add(efficiency);
@@ -344,6 +365,7 @@
 
         return result;
     }
+
 
     private int CalculatePlanPerHour(string currentModel, string previousModel, TimeSpan startTime, TimeSpan endTime,
                                   TimeSpan currentTime, DateTime currentDate, int sut,
@@ -396,15 +418,14 @@
         <div class="row">
             <div class="col-5 d-flex gap-2 align-items-center">
                 <label class="fw-bold fs-5">LINE</label>
-                <select class="form-select border-dark border-2 text-black fs-5 fw-bold" name="MachineCode" id="MachineCode">
+                <select asp-for="MachineCode" class="form-select border-dark border-2 text-black fs-5 fw-bold" id="MachineCode">
                     <option value="MCH1-01">CU Line</option>
                     <option value="MCH1-02">CS Line</option>
                 </select>
             </div>
             <div class="col-5 d-flex gap-2 align-items-center">
                 <label class="fw-bold fs-5">DATE</label>
-                <input type="date" class="form-control border-dark border-2 text-black fs-5 fw-bold w-100"
-                       name="SelectedDate"
+                <input asp-for="SelectedDate" type="date" class="form-control border-dark border-2 text-black fs-5 fw-bold w-100"
                        value="@Model.SelectedDate.ToString("yyyy-MM-dd")" />
             </div>
             <div class="col align-items-center">
@@ -436,9 +457,14 @@
                         <td class="border fs-4 fw-bold w-50 py-3 @(differenceProd > 0 ? "" : "text-danger")" style="border: 1px solid rgb(61, 121, 176);">@differenceProd</td>
                     </tr>
                     <tr>
-                        <td colspan="2" class="text-white fs-4 fw-bold w-50 py-3" style="background-color:rgb(61, 121, 176);">EFFICIENCY</td>
-                        <td class="border fs-4 fw-bold w-50 py-3" style="border: 1px solid rgb(61, 121, 176);">@(efficiencyMetrics.EffProd > 0 ? efficiencyMetrics.EffProd : 0) %</td>
+                        <td colspan="2" class="text-white fs-4 fw-bold w-50 py-3" style="background-color:rgb(61, 121, 176);">
+                            EFFICIENCY
+                        </td>
+                        <td class="border fs-4 fw-bold w-50 py-3" style="border: 1px solid rgb(61, 121, 176);">
+                            @(efficiencyValue > 0 ? efficiencyValue : 0) %
+                        </td>
                     </tr>
+
                     <tr>
                         <td rowspan="2" class="text-white align-middle border border-end fs-4 fw-bold py-3" style="background-color: rgb(61, 121, 176);">TAKT TIME</td>
                         <td class="text-white fs-4 fw-bold py-3" style="background-color: rgb(61, 121, 176);">PLAN</td>
@@ -449,7 +475,7 @@
                         <td class="border fs-4 fw-bold py-3" style="border: 1px solid rgb(61, 121, 176);">@(efficiencyMetrics.ActTaktTime > 0 ? efficiencyMetrics.ActTaktTime : 0) s</td>
                     </tr>
                     <tr>
-                        <td colspan="2" class="text-white fs-4 fw-bold w-50 py-3" style="background-color: rgb(61, 121, 176);">DEFECT (%)</td>
+                        <td colspan="2" class="text-white fs-4 fw-bold w-50 py-3" style="background-color: rgb(61, 121, 176);">PASS THROUGH RATIO</td>
                         <td class="border fs-4 fw-bold w-50 py-3" style="border: 1px solid rgb(61, 121, 176);">@defectRatio %</td>
                     </tr>
                     <tr>
@@ -591,7 +617,11 @@
 
     async function fetchUpdatedChartData() {
         try {
-            const response = await fetch('?handler=UpdatedData');
+            const machineCode = document.getElementById('MachineCode').value;
+            const selectedDate = document.querySelector('input[name="SelectedDate"]').value;
+
+            // kirim parameter lewat query string
+            const response = await fetch(`?handler=UpdatedData&machineCode=${machineCode}&selectedDate=${selectedDate}`);
 
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);

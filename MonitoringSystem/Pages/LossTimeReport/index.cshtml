@@ -40,7 +40,6 @@
     <div class="container-fluid">
         <div class="row g-3 align-items-center justify-content-center">
             <div class="col-12">
-                @* Bagian filter header tetap sama dengan nilai default *@
                 <div class="d-flex justify-content-between align-items-center">
                         <form method="post" class="mb-3">
                               <div class="form-group d-flex align-items-center gap-3 flex-wrap">
@@ -255,9 +254,9 @@
             </tr>
             <tr class="table-group-divider">
                 <td class="fw-bold">Total Working Time</td>
-                @for (int i = 0; i < 12; i++)
+                @foreach (var workingTime in Model.TotalWorkingTimeByMonth)
                 {
-                    <td>0</td>
+                    <td>@workingTime.ToString("N0")</td>
                 }
             </tr>
             <tr>
@@ -269,30 +268,30 @@
             </tr>
              <tr>
                 <td class="fw-bold">Actual Loss = Total Loss - Fixed Loss</td>
-                @for (int i = 0; i < 12; i++)
+                @foreach (var actualLoss in Model.ActualLossByMonth)
                 {
-                    <td>0</td>
+                    <td>@actualLoss.ToString("F1")</td>
                 }
             </tr>
             <tr>
                 <td class="fw-bold">Actual WT = Total WT - Fixed Loss</td>
-                @for (int i = 0; i < 12; i++)
+                @foreach (var actualWt in Model.ActualWtByMonth)
                 {
-                    <td>0</td>
+                    <td>@actualWt.ToString("F1")</td>
                 }
             </tr>
             <tr>
                 <td class="fw-bold">Actual Loss vs Actual Working Time (%)</td>
-                @for (int i = 0; i < 12; i++)
+                @foreach (var presentage in Model.ActualLossVsActualWtPresentage)
                 {
-                    <td>0%</td>
+                    <td>@presentage</td>
                 }
             </tr>
             <tr>
                 <td class="fw-bold">Total Loss vs Total Working Time (%)</td>
-                @for (int i = 0; i < 12; i++)
+                @foreach (var presentage in Model.TotalLossVsTotalWtPresentage)
                 {
-                    <td>0%</td>
+                    <td>@presentage</td>
                 }
             </tr>
             <tr>
@@ -332,7 +331,6 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
         <script>
             document.addEventListener("DOMContentLoaded", function () {
-                // --- CHART SCRIPT ---
                 const timeLossCtx = document.getElementById('timeLossChart');
                 if (timeLossCtx) {
                     try {
@@ -405,13 +403,11 @@
                     }
                 }
 
-                // --- TABLE ROW TOGGLE SCRIPT ---
                 const toggleHeader = document.getElementById('toggleExtraRows');
                 if (toggleHeader) {
                     toggleHeader.addEventListener('click', function () {
                         const extraRows = document.querySelectorAll('.extra-row');
                         const toggleIcon = document.getElementById('toggleIcon');
-                        // Cek visibilitas baris pertama untuk menentukan status saat ini
                         const isVisible = extraRows[0] && extraRows[0].style.display !== 'none';
 
                         extraRows.forEach(row => {
