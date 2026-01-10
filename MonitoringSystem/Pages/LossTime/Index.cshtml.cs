@@ -45,7 +45,6 @@ namespace MonitoringSystem.Pages.LossTime
         [BindProperty]
         public int SelectedPageSize { get; set; } = 10;
 
-        // Properti untuk break time
         [BindProperty]
         public string AdditionalBreakTime1Start { get; set; } = "";
         [BindProperty]
@@ -263,7 +262,6 @@ namespace MonitoringSystem.Pages.LossTime
                     {
                         LossTimeData.Clear();
 
-                        // perubahan menerima reason null
                         while (reader.Read())
                         {
                             TimeSpan startTime = reader.GetTimeSpan(reader.GetOrdinal("StartTime"));
@@ -274,7 +272,6 @@ namespace MonitoringSystem.Pages.LossTime
                                 continue;
                             }
 
-                            // Ambil semua index kolom dulu
                             int idOrdinal = reader.GetOrdinal("Id");
                             int dateOrdinal = reader.GetOrdinal("Date");
                             int reasonOrdinal = reader.GetOrdinal("Reason");
@@ -283,7 +280,6 @@ namespace MonitoringSystem.Pages.LossTime
                             int shiftOrdinal = reader.GetOrdinal("Shift");
                             int detailedReasonOrdinal = reader.GetOrdinal("DetailedReason");
 
-                            // Baca kolom string dengan pengecekan NULL
                             string reason = reader.IsDBNull(reasonOrdinal) ? string.Empty : reader.GetString(reasonOrdinal);
                             string location = reader.IsDBNull(machineCodeOrdinal) ? string.Empty : reader.GetString(machineCodeOrdinal);
                             string shift = reader.IsDBNull(shiftOrdinal) ? string.Empty : reader.GetString(shiftOrdinal);
@@ -293,13 +289,13 @@ namespace MonitoringSystem.Pages.LossTime
                             {
                                 Nomor = reader.IsDBNull(idOrdinal) ? 0 : reader.GetInt32(idOrdinal),
                                 Date = reader.IsDBNull(dateOrdinal) ? DateTime.MinValue : reader.GetDateTime(dateOrdinal),
-                                LossTime = reason, // Gunakan variabel yang sudah dicek
+                                LossTime = reason,
                                 Start = startTime,
                                 End = endTime,
                                 Duration = reader.IsDBNull(lossTimeOrdinal) ? 0 : reader.GetInt32(lossTimeOrdinal),
-                                Location = location, // Gunakan variabel yang sudah dicek
-                                Shift = shift,     // Gunakan variabel yang sudah dicek
-                                Category = CategorizeReason(reason), // Gunakan variabel yang sudah dicek
+                                Location = location,
+                                Shift = shift,
+                                Category = CategorizeReason(reason),
                                 DetailedReason = detailedReason
                             };
 
@@ -437,7 +433,6 @@ namespace MonitoringSystem.Pages.LossTime
                             TimeSpan startTime = reader.GetTimeSpan(reader.GetOrdinal("StartTime"));
                             TimeSpan endTime = reader.GetTimeSpan(reader.GetOrdinal("EndTime"));
 
-                            // Only count records that are NOT in break time
                             if (!IsInBreakTime(startTime, endTime, breakTimes))
                             {
                                 count++;
@@ -578,7 +573,7 @@ namespace MonitoringSystem.Pages.LossTime
             else if (reason.Contains("loss awal hari"))
                 return "Loss Awal Hari";
             else
-                return "Reason Not Fill";  // Default category
+                return "Reason Not Fill";
         }
 
         public int GetTotalDurationAllCategories()

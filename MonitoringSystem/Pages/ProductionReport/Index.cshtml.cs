@@ -261,18 +261,18 @@ namespace MonitoringSystem.Pages.ProductionReport
                 }
                 else if (dayType != "WEEKEND")
                 {
-                    // Pilih jadwal istirahat berdasarkan hari
+
                     var breaksForThisDay = (dayType == "FRIDAY") ? this.FridayBreakTimes : this.RegularDayBreakTimes;
                     var definedBreaks = breaksForThisDay.Select(b => new RestTime { StartTime = b.Start, EndTime = b.End }).ToList();
 
                     if (currentDate.Date < DateTime.Now.Date)
                     {
-                        // Kalkulasi untuk satu hari penuh
+
                         int totalDuration = (int)(workDayEnd - workDayStart).TotalMinutes;
                         int totalRest = GetTotalRestTime(definedBreaks, workDayStart, workDayEnd, workDayEnd);
                         workTimeForThisDay = totalDuration - totalRest;
                     }
-                    else // Ini untuk hari ini (dinamis)
+                    else
                     {
                         var currentTime = DateTime.Now.TimeOfDay;
                         if (currentTime > workDayStart)
@@ -323,10 +323,8 @@ namespace MonitoringSystem.Pages.ProductionReport
                                 ReportDate,
                                 MAX(CASE WHEN Shift = 1 THEN TotalUnit END) as Shift1_EndReading,
                                 MAX(CASE WHEN Shift IN (2, 3) THEN TotalUnit END) as OT_EndReading,
-                                -- AWAL PERUBAHAN: Ambil NoOfOperator per periode shift
                                 MAX(CASE WHEN Shift = 1 THEN NoOfOperator END) as Shift1_Operators,
                                 MAX(CASE WHEN Shift IN (2, 3) THEN NoOfOperator END) as OT_Operators,
-                                -- AKHIR PERUBAHAN
                                 MAX(CASE WHEN Shift IN (2, 3) THEN NoOfOperator END) as OT_OperatorCount,
                                 MAX(CASE WHEN Shift IN (2, 3) THEN SDate END) as OT_LastSDate
                             FROM ShiftData
@@ -340,14 +338,12 @@ namespace MonitoringSystem.Pages.ProductionReport
                                 ELSE CASE WHEN '1' IN ({shiftsForSql}) THEN ISNULL(Shift1_EndReading, 0) ELSE 0 END
                             END as LastOvertimeReading,
         
-                            -- AWAL PERUBAHAN: Logika baru untuk NoOfOperator yang mengikuti filter shift
                             CASE
                                 WHEN CASE WHEN '1' IN ({shiftsForSql}) THEN ISNULL(Shift1_Operators, 0) ELSE 0 END >
                                      CASE WHEN '2' IN ({shiftsForSql}) OR '3' IN ({shiftsForSql}) THEN ISNULL(OT_Operators, 0) ELSE 0 END
                                 THEN CASE WHEN '1' IN ({shiftsForSql}) THEN ISNULL(Shift1_Operators, 0) ELSE 0 END
                                 ELSE CASE WHEN '2' IN ({shiftsForSql}) OR '3' IN ({shiftsForSql}) THEN ISNULL(OT_Operators, 0) ELSE 0 END
                             END as NoOfOperator,
-                            -- AKHIR PERUBAHAN
 
                             ISNULL(OT_OperatorCount, 0) as OtOperatorCount,
                             ISNULL(CAST(OT_LastSDate AS TIME), '00:00:00') as LastOtTime
@@ -395,13 +391,10 @@ namespace MonitoringSystem.Pages.ProductionReport
                 dailyLosses.TryGetValue(data.Day, out int totalSeconds);
                 DailyLossTime.Add(totalSeconds / 60);
 
-                // Aturan Bisnis: Jika tidak ada produksi Normal, maka Working Time dianggap 0.
                 for (int i = 0; i < this.DaysInMonth; i++)
                 {
-                    // Cek apakah ada data di list dan apakah nilai NormalData pada hari ke-i adalah 0
                     if (NormalData.Count > i && NormalData[i] == 0)
                     {
-                        // Jika ya, atur juga DailyWorkTime pada hari ke-i menjadi 0
                         if (DailyWorkTime.Count > i)
                         {
                             DailyWorkTime[i] = 0;
@@ -413,16 +406,16 @@ namespace MonitoringSystem.Pages.ProductionReport
 
         private readonly List<(TimeSpan Start, TimeSpan End)> RegularDayBreakTimes = new List<(TimeSpan, TimeSpan)>
         {
-            (new TimeSpan(9, 30, 0), new TimeSpan(9, 35, 0)),    // Istirahat 5 menit
-            (new TimeSpan(12, 0, 0), new TimeSpan(12, 45, 0)),   // Istirahat 45 menit
-            (new TimeSpan(14, 30, 0), new TimeSpan(14, 35, 0))   // Istirahat 5 menit
+            (new TimeSpan(9, 30, 0), new TimeSpan(9, 35, 0)),
+            (new TimeSpan(12, 0, 0), new TimeSpan(12, 45, 0)),
+            (new TimeSpan(14, 30, 0), new TimeSpan(14, 35, 0))
         };
 
         private readonly List<(TimeSpan Start, TimeSpan End)> FridayBreakTimes = new List<(TimeSpan, TimeSpan)>
         {
-            (new TimeSpan(9, 30, 0), new TimeSpan(9, 35, 0)),    // Istirahat 5 menit
-            (new TimeSpan(11, 50, 0), new TimeSpan(13, 15, 0)),  // Istirahat Sholat Jumat 85 menit
-            (new TimeSpan(14, 30, 0), new TimeSpan(14, 35, 0))   // Istirahat 5 menit
+            (new TimeSpan(9, 30, 0), new TimeSpan(9, 35, 0)),
+            (new TimeSpan(11, 50, 0), new TimeSpan(13, 15, 0)),
+            (new TimeSpan(14, 30, 0), new TimeSpan(14, 35, 0))
         };
         private bool IsInBreakTime(TimeSpan startTime, TimeSpan endTime, List<(TimeSpan Start, TimeSpan End)> breakTimes) { foreach (var (breakStart, breakEnd) in breakTimes) { if (startTime < breakEnd && endTime > breakStart) { return true; } } return false; }
         private Dictionary<int, int> GetDailyLossTimeTotals()
@@ -430,11 +423,9 @@ namespace MonitoringSystem.Pages.ProductionReport
             var dailyTotals = new Dictionary<int, int>();
 
             string shiftFilterSql = "";
-            // Hanya tambahkan filter jika tidak semua shift dipilih
             if (SelectedShifts.Any() && SelectedShifts.Count < 3)
             {
                 var shiftConditions = new List<string>();
-                // Logika CASE WHEN ini sekarang SAMA PERSIS dengan halaman Loss Time
                 string shiftCaseWhen = @"
             CASE 
                 WHEN (DATEPART(HOUR, Time) = 7 AND DATEPART(MINUTE, Time) >= 0) OR 
@@ -461,7 +452,7 @@ namespace MonitoringSystem.Pages.ProductionReport
             LossTime as Duration
         FROM AssemblyLossTime
         WHERE YEAR(Date) = @Year AND MONTH(Date) = @Month AND MachineCode = @Machine
-        {shiftFilterSql}"; // Filter yang sudah sinkron disisipkan di sini
+        {shiftFilterSql}";
 
             try
             {

@@ -20,22 +20,17 @@
     var workingTime = Model.GetWorkingTimeBySummaryLogic();
     var totalLossTime = Model.GetLossTimeBySummaryLogic();
 
-    // Initialize first assembly time record if needed
     InitializeFirstAssemblyTime();
 
-    // Ambil total plan langsung dari database (ProductionRecords)
     var planProd = Model.GetProductionPlan();
-
-    // (Jika kamu masih ingin menghitung hourly plans untuk chart, tetap boleh)
     var hourlyPlans = CalculateAllHourlyPlans();
 
 
-    // Calculate production metrics using hourly achievement data
     // var hourlyPlans = CalculateAllHourlyPlans();
     // var planProd = hourlyPlans.Sum(); Sum of all hourly plans
    
-    var totalPlanForCU = CalculateAllHourlyPlansForCU().Sum();  // Total plan untuk CU
-    var totalPlanForCS = CalculateAllHourlyPlansForCS().Sum();  // Total plan untuk CS
+    var totalPlanForCU = CalculateAllHourlyPlansForCU().Sum();
+    var totalPlanForCS = CalculateAllHourlyPlansForCS().Sum();
     System.Diagnostics.Debug.WriteLine($"totalPlanForCU: " + totalPlanForCU);
     System.Diagnostics.Debug.WriteLine($"totalPlanForCS: " + totalPlanForCS);
     // Simpan total plan ke database
@@ -46,18 +41,14 @@
 
     // var productionMetrics = CalculateProductionMetrics(Model.listProdAchieve, currentDate, currentTime, listRestTime, planProd);
     // var targetProd = productionMetrics.TargetProd;
-
-    // Get production statistics
     var actualProd = Model.GetActualProduction();
     var differenceProd = actualProd - targetProd;
     var planTaktTime = Model.GetPlanTaktTime();
 
-    // Calculate efficiency metrics
     var efficiencyValue = Model.GetEfficiencyFromOEESN();
 
     var efficiencyMetrics = CalculateEfficiencyMetrics(workingTime, totalLossTime, planTaktTime, actualProd);
 
-    // Get defect data
     // var totalDefect = Model.GetTotalDefect();
     // var defectRatio = planProd > 0 ? (100 - ((totalDefect / planProd) * 100)) : 0;
 
@@ -65,11 +56,9 @@
     ? Math.Round(100.0 - ((double)totalDefect / Model.GetActualProduction() * 100.0))
     : 100.0;
 
-    // Get hourly data for chart
     var actualData = Model.GetActualPerHour();
     var timeCounts = Model.listProdAchieve.GroupBy(item => item.Time).ToDictionary(group => group.Key, group => group.Count());
 
-    // Calculate cumulative efficiency data for chart
     var efficiencyData = CalculateCumulativeEfficiency(actualData, hourlyPlans, workingTime, totalLossTime, planTaktTime);
 }
 
@@ -104,21 +93,17 @@
     {
         var result = new WorkingTimeData();
 
-        // Calculate working duration
         TimeSpan workingDuration = selectedDate != DateTime.Now.Date
             ? endWorkingTime - startWorkingTime
             : currentTime - startWorkingTime;
 
-        // Set working time to 0 if before start time
         if (currentTime < startWorkingTime)
         {
             result.WorkingTime = 0;
         }
 
-        // Calculate total working minutes
         result.TotalWorkingTime = (int)workingDuration.TotalMinutes;
 
-        // Calculate total rest time
         result.TotalRestTime = listRestTime.Sum(rest =>
         {
             TimeSpan restStart = rest.StartTime < startWorkingTime ? startWorkingTime : rest.StartTime;
@@ -133,7 +118,6 @@
             return restStart < restEnd ? (int)(restEnd - restStart).TotalMinutes : 0;
         });
 
-        // Calculate actual working time
         result.WorkingTime = result.TotalWorkingTime - result.TotalRestTime;
 
         return result;
@@ -265,7 +249,6 @@
                 var endTime = listProdAchieve[i].EndTime;
                 var planSUT = 0;
 
-                // Calculate model-specific time ranges
                 var firstTime_Model = TimeSpan.Zero;
                 var lastTime_Model = TimeSpan.Zero;
                 var quantityPlan = 0;
@@ -277,7 +260,6 @@
                     quantityPlan = Model.GetModelPlan(currentModel);
                 }
 
-                // Calculate plan based on current date, time and model
                 if (Model.SelectedDate == currentDate)
                 {
                     if (currentTime >= startTime && currentTime <= endTime)
@@ -300,11 +282,9 @@
                         : Model.CalculatePlan(firstTime_Model, endTime, sut, listRestTime);
                 }
 
-                // Ensure plan doesn't exceed quantity plan
                 planSUT = Math.Min(planSUT, quantityPlan);
                 previousModel = currentModel;
 
-                // Update target production
                 result.TargetProd += planSUT;
                 result.TargetProd = Math.Min(result.TargetProd, planProd);
             }
@@ -317,18 +297,13 @@
     {
         var result = new EfficiencyMetrics();
 
-        // Operating ratio calculation
         result.OprRatio = Math.Round((((Convert.ToDouble(workingTime) - Convert.ToDouble(totalLossTime)) / Convert.ToDouble(workingTime)) * 100), 2);
 
-        // Work efficiency calculation
         result.WorkEff = Math.Round((((Convert.ToDouble(planTaktTime) / 60) * actualProd) / (Convert.ToDouble(workingTime) - Convert.ToDouble(totalLossTime))) * 100, 2);
 
-        // Production efficiency calculation
         result.EffProd = Math.Round(((result.OprRatio / 100) * (result.WorkEff / 100)) * 100, 2);
 
-        // Actual takt time calculation
         result.ActTaktTime = Math.Round((((Convert.ToDouble(workingTime) - Convert.ToDouble(totalLossTime)) / Convert.ToDouble(actualProd)) * 60), 2);
-
         return result;
     }
 
@@ -405,7 +380,6 @@
                 : Model.CalculatePlan(firstTimeModel, lastTimeModel, sut, listRestTime);
         }
 
-        // Ensure plan doesn't exceed quantity plan
         planPerHour = Math.Min(planPerHour, qtyPlan);
 
         return planPerHour > 0 ? planPerHour : 1;
@@ -413,7 +387,6 @@
 }
 
 <div class="row mx-3">
-    <!-- Filter Form -->
     <form method="post" asp-page-handler="OnPost" class="w-100 mb-3">
         <div class="row">
             <div class="col-5 d-flex gap-2 align-items-center">
@@ -434,9 +407,7 @@
         </div>
     </form>
 
-    <!-- Dashboard Content -->
     <div class="col-5">
-        <!-- Production Metrics Table -->
         <div class="text-center table-responsive card rounded rounded-2 p-0 m-0 @(Model.SelectedDate != DateTime.Now.Date ? "" : "refreshDailyData")" style="border: 1px solid rgb(61, 121, 176);">
             <table class="table rounded-2 border-2 overflow-hidden p-0 m-0">
                 <tbody>
@@ -620,7 +591,6 @@
             const machineCode = document.getElementById('MachineCode').value;
             const selectedDate = document.querySelector('input[name="SelectedDate"]').value;
 
-            // kirim parameter lewat query string
             const response = await fetch(`?handler=UpdatedData&machineCode=${machineCode}&selectedDate=${selectedDate}`);
 
             if (!response.ok) {

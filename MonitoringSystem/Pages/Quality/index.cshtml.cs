@@ -2,9 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Data.SqlClient;
 using System.Reflection.PortableExecutable;
-using System.Collections.Generic; // Tambahkan ini
-using System; // Tambahkan ini
-
+using System.Collections.Generic;
+using System;
 namespace MonitoringSystem.Pages.Quality
 {
     public class QualityModel : PageModel
@@ -138,7 +137,6 @@ namespace MonitoringSystem.Pages.Quality
                 {
                     connection.Open();
 
-                    // === GET TARGET RATIO (Dipindahkan ke atas agar selalu dieksekusi pertama) ===
                     string getTargetRatio = "SELECT TOP 1 Ratio FROM TargetRatioDefect.dbo.TargetRatio ORDER BY ID DESC";
                     using (SqlCommand command = new SqlCommand(getTargetRatio, connection))
                     {
@@ -193,7 +191,6 @@ namespace MonitoringSystem.Pages.Quality
                         }
                     }
 
-                    // =================== KODE YANG DIPERBAIKI ===================
                     string getTopDailyDefect = $@"
                     SELECT TOP 5
                         Cause,
@@ -208,7 +205,6 @@ namespace MonitoringSystem.Pages.Quality
                         Cause
                     ORDER BY
                         DefectCount DESC;";
-                    // ==========================================================
 
                     using (SqlCommand command = new SqlCommand(getTopDailyDefect, connection))
                     {
@@ -315,7 +311,6 @@ namespace MonitoringSystem.Pages.Quality
                     ORDER BY
                         DefectCount DESC;";
 
-                    // 1. Siapkan Dictionary untuk menampung hasil database sementara
                     var tempResults = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
                     using (SqlCommand command = new SqlCommand(getDefectsByModel, connection))
@@ -323,7 +318,7 @@ namespace MonitoringSystem.Pages.Quality
                         command.Parameters.AddWithValue("@MachineCode", MachineCode);
                         command.Parameters.AddWithValue("@StartDate", startDateParsed);
                         command.Parameters.AddWithValue("@EndDate", endDateParsed);
-                        addStationParameter(command); // Menggunakan action yang sudah Anda buat
+                        addStationParameter(command);
 
                         using (SqlDataReader reader = command.ExecuteReader())
                         {
@@ -340,13 +335,10 @@ namespace MonitoringSystem.Pages.Quality
                         }
                     }
 
-                    // 2. Tentukan Master List Station berdasarkan MachineCode
-                    // Ini memastikan nama station SELALU muncul di legend meskipun Qty 0
                     List<string> masterStations = new List<string>();
 
                     if (MachineCode == "MCH1-01")
                     {
-                        // Sesuaikan nama ini PERSIS dengan yang ada di database/tombol HTML Anda
                         masterStations = new List<string> {
                             "PREPARING",
                             "GAS LEAK",
@@ -366,24 +358,17 @@ namespace MonitoringSystem.Pages.Quality
                         };
                     }
 
-                    // 3. Gabungkan Master List dengan Hasil Database
-                    // Jika filter Station aktif (user memilih 1 station), kita hanya tampilkan itu.
-                    // Jika filter Station kosong (All Station), kita tampilkan semua list master.
-
                     if (string.IsNullOrEmpty(Station))
                     {
-                        // Logika untuk "ALL STATION": Loop semua master station
                         foreach (var st in masterStations)
                         {
                             DefectsByModel.Add(new DefectByModel
                             {
-                                ProductName = st, // Label Station
-                                // Ambil qty dari DB jika ada, jika tidak ada set 0
+                                ProductName = st,
                                 Quantity = tempResults.ContainsKey(st) ? tempResults[st] : 0
                             });
                         }
 
-                        // Opsional: Masukkan station lain yang mungkin ada di DB tapi tidak ada di master list (misal typo di DB)
                         foreach (var kvp in tempResults)
                         {
                             if (!masterStations.Contains(kvp.Key, StringComparer.OrdinalIgnoreCase))
@@ -394,7 +379,6 @@ namespace MonitoringSystem.Pages.Quality
                     }
                     else
                     {
-                        // Logika jika user memfilter station tertentu (tetap gunakan hasil murni DB)
                         foreach (var kvp in tempResults)
                         {
                             DefectsByModel.Add(new DefectByModel { ProductName = kvp.Key, Quantity = kvp.Value });
@@ -455,7 +439,7 @@ namespace MonitoringSystem.Pages.Quality
                     using (SqlCommand command = new SqlCommand(getYearlyDefects, connection))
                     {
                         command.Parameters.AddWithValue("@MachineCode", MachineCode);
-                        command.Parameters.AddWithValue("@StartDate", startDateParsed); // Menggunakan tahun dari input user
+                        command.Parameters.AddWithValue("@StartDate", startDateParsed);
                         addStationParameter(command);
 
                         using (SqlDataReader reader = command.ExecuteReader())
@@ -464,7 +448,7 @@ namespace MonitoringSystem.Pages.Quality
                             {
                                 YearlyDefects.Add(new YearlyDefectData
                                 {
-                                    Month = reader.GetInt32(0), // Kolom 0 sekarang adalah Bulan
+                                    Month = reader.GetInt32(0),
                                     Cause = reader.GetString(1),
                                     Quantity = reader.GetInt32(2)
                                 });
@@ -496,7 +480,7 @@ namespace MonitoringSystem.Pages.Quality
             public string? ProductName { get; set; }
             public int Quantity { get; set; }
         }
-        //public class MonthlyDefectData
+
         //{
         //    public int Day { get; set; }
         //    public string Cause { get; set; }
@@ -504,7 +488,7 @@ namespace MonitoringSystem.Pages.Quality
         //}
         public class YearlyDefectData
         {
-            public int Month { get; set; } // Ganti Day jadi Month
+            public int Month { get; set; }
             public string Cause { get; set; }
             public int Quantity { get; set; }
         }

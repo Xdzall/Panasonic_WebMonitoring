@@ -13,7 +13,6 @@ namespace MonitoringSystem.Pages.LossTimeReport
 {
     public class indexModel : PageModel
     {
-        // BARU: Properti untuk menampung tahun yang dipilih dari UI
         [BindProperty(SupportsGet = true)]
         public int SelectedYear { get; set; } = DateTime.Today.Year;
 
@@ -49,12 +48,10 @@ namespace MonitoringSystem.Pages.LossTimeReport
 
         public string connectionString = "Server=10.83.33.103;trusted_connection=false;Database=PROMOSYS;User Id=sa;Password=sa;Persist Security Info=False;Encrypt=False";
 
-        // DIUBAH: Logika utama untuk menentukan rentang berdasarkan TAHUN KALENDER
         public void OnGet()
         {
             try
             {
-                //rentang berdasarkan TAHUN FISKAL(April -Maret)
                 DateTime fisicalStartDate = new DateTime(SelectedYear, 4, 1);
                 DateTime fisicalEndDate = fisicalStartDate.AddYears(1).AddDays(-1);
 
@@ -72,7 +69,6 @@ namespace MonitoringSystem.Pages.LossTimeReport
 
         public IActionResult OnPost()
         {
-            // Handler untuk form submit, cukup panggil OnGet untuk reload data
             OnGet();
             return Page();
         }
@@ -146,12 +142,10 @@ namespace MonitoringSystem.Pages.LossTimeReport
                 holidays.Add(new DateTime(year, 5, 1));
                 holidays.Add(new DateTime(year, 8, 17));
                 holidays.Add(new DateTime(year, 12, 25));
-                //tambahkan hari libur lainnya jika ada
             }
             return holidays;
         }
 
-        // DIUBAH: Logika pengelompokan data
         private void LoadData(DateTime startDate, DateTime endDate)
         {
             InitializeEmptyData();
@@ -173,7 +167,7 @@ namespace MonitoringSystem.Pages.LossTimeReport
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
                         command.Parameters.AddWithValue("@StartDate", startDate);
-                        command.Parameters.AddWithValue("@EndDate", endDate.AddDays(1)); // Include the last day
+                        command.Parameters.AddWithValue("@EndDate", endDate.AddDays(1));
 
                         if (!string.Equals(MachineLine, "All", StringComparison.OrdinalIgnoreCase))
                         {
@@ -212,7 +206,6 @@ namespace MonitoringSystem.Pages.LossTimeReport
             }
         }
 
-        // DIUBAH: Label bulan menjadi nama bulan standar
         private void PrepareChartData(DateTime fiscalStartDate)
         {
             MonthLabels = Enumerable.Range(0, 12)
@@ -251,7 +244,6 @@ namespace MonitoringSystem.Pages.LossTimeReport
                 for (int i = 0; i < 12; i++) ReportData.MonthlyLosses[category][i] = 0;
             }
 
-            // PERBAIKAN: Menambahkan inisialisasi untuk semua dictionary sebelum digunakan
             ReportData.TotalLossByMonth = new Dictionary<int, int>();
             ReportData.FixedLossByMonth = new Dictionary<int, int>();
 

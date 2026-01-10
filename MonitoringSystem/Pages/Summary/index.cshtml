@@ -5,9 +5,6 @@
 @{
     ViewData["Title"] = "Production Summary";
 
-    // ==========================================================================================
-    // BAGIAN 1: INISIALISASI VARIABEL AKUMULATOR
-    // ==========================================================================================
     #region Initializing Accumulators
     // Akumulator Shift 1
     long PlanCUShift_01_Range = 0, TotalActualCUShift_01_Range = 0, TotalDefectCUShift_01_Qty_Range = 0, ModelChangesCUShift_01_Range = 0;
@@ -40,9 +37,6 @@
     #endregion
 
 
-    // ==========================================================================================
-    // BAGIAN 2: LOOPING DAN AKUMULASI DATA HARIAN
-    // ==========================================================================================
     for (var day = Model.StartSelectedDate.Date; day <= Model.EndSelectedDate.Date; day = day.AddDays(1))
     {
         var dayType = Model.DetermineTypeOfDay(day.DayOfWeek);
@@ -57,7 +51,6 @@
         var StartDateTimeShift_01 = day + StartWorkingTimeShift_01;
         var EndDateTimeShift_01 = day + EndWorkingTimeShift_01;
 
-        // ✅ Ambil plan sesuai waktu shift 1
         var planDataShift_01 = Model.GetPlanFromTargetUnit(StartDateTimeShift_01, EndDateTimeShift_01);
         var listRestTimeShift_01 = Model.GetRestTime(dayType);
         var totalNetWorkingMinutes_01 = (EndWorkingTimeShift_01 - StartWorkingTimeShift_01).TotalMinutes - listRestTimeShift_01.Sum(r => (r.EndTime - r.StartTime).TotalMinutes);
@@ -69,31 +62,24 @@
         var planCS_01 = Convert.ToInt64(
             planDataShift_01.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0);
 
-        // plan tetap
         PlanCUShift_01_Range += planCU_01;
         PlanCSShift_01_Range += planCS_01;
 
-        // simpan sebagai pembanding
         PlanCUShift_01_Base += planCU_01;
         PlanCSShift_01_Base += planCS_01;
 
-
-        // 2. Ambil data aktual DULU
         var actualDataShift_01 = Model.GetActualData(StartDateTimeShift_01, EndDateTimeShift_01);
         var totalDefectShift_01 = Model.GetTotalDefect(StartDateTimeShift_01, EndDateTimeShift_01);
 
-        // 3. Hitung waktu kerja yang berlalu
         var workingTimeElapsedForDay_01 = Model.CalculateSingleDayElapsedWorkingTime(day, StartWorkingTimeShift_01, EndWorkingTimeShift_01, listRestTimeShift_01);
 
-        // 4. Periksa produksi & terapkan aturan bisnis SEBELUM MENAMBAHKAN KE TOTAL
         var dailyActual_01 = (actualDataShift_01.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0) +
                              (actualDataShift_01.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0);
         if (dailyActual_01 == 0)
         {
-            workingTimeElapsedForDay_01 = 0; // Atur ulang jadi 0 jika tidak ada produksi
+            workingTimeElapsedForDay_01 = 0; 
         }
 
-        // 5. Setelah diperiksa, BARU tambahkan ke total
         WorkingTimeElapsed_01_Range += workingTimeElapsedForDay_01;
 
         // PlanCUShift_01_Range += (long)(workingTimeElapsedForDay_01 * ((totalNetWorkingMinutes_01 > 0) ? (double)(Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0) / (totalNetWorkingMinutes_01 * workingDaysInRange) : 0));
@@ -120,13 +106,11 @@
         #endregion
 
         #region Shift 2 Calculations
-        // 1. Definisi waktu
         var StartWorkingTimeShift_02 = new TimeSpan(16, 0, 0);
         var EndWorkingTimeShift_02 = new TimeSpan(23, 15, 0);
         var StartDateTimeShift_02 = day + StartWorkingTimeShift_02;
         var EndDateTimeShift_02 = day + EndWorkingTimeShift_02;
 
-        // ✅ Plan khusus shift 2
         var planDataShift_02 = Model.GetPlanFromTargetUnit(StartDateTimeShift_02, EndDateTimeShift_02);
         var rawPlanCU_02 = Convert.ToInt64(
         planDataShift_02.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0);
@@ -134,14 +118,12 @@
         var rawPlanCS_02 = Convert.ToInt64(
             planDataShift_02.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0);
 
-        // 🔥 SHIFT 2 = SHIFT 2 - SHIFT 1
         var finalPlanCU_02 = Math.Max(0, rawPlanCU_02 - PlanCUShift_01_Base);
         var finalPlanCS_02 = Math.Max(0, rawPlanCS_02 - PlanCSShift_01_Base);
 
         PlanCUShift_02_Range += finalPlanCU_02;
         PlanCSShift_02_Range += finalPlanCS_02;
 
-        // simpan untuk pembanding shift 3
         PlanCUShift_02_Base += finalPlanCU_02;
         PlanCSShift_02_Base += finalPlanCS_02;
 
@@ -149,14 +131,11 @@
         var listRestTimeShift_02 = Model.GetRestTime(dayType);
         var totalNetWorkingMinutes_02 = (EndWorkingTimeShift_02 - StartWorkingTimeShift_02).TotalMinutes - listRestTimeShift_02.Sum(r => (r.EndTime - r.StartTime).TotalMinutes);
 
-        // 2. Ambil data aktual DULU
         var actualDataShift_02 = Model.GetActualData(StartDateTimeShift_02, EndDateTimeShift_02);
         var totalDefectShift_02 = Model.GetTotalDefect(StartDateTimeShift_02, EndDateTimeShift_02);
 
-        // 3. Hitung waktu kerja yang berlalu
         var workingTimeElapsedForDay_02 = Model.CalculateSingleDayElapsedWorkingTime(day, StartWorkingTimeShift_02, EndWorkingTimeShift_02, listRestTimeShift_02);
 
-        // 4. Periksa produksi & terapkan aturan bisnis SEBELUM MENAMBAHKAN KE TOTAL
         var dailyActual_02 = (actualDataShift_02.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0) +
                              (actualDataShift_02.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0);
         if (dailyActual_02 == 0)
@@ -164,7 +143,6 @@
             workingTimeElapsedForDay_02 = 0;
         }
 
-        // 5. Setelah diperiksa, BARU tambahkan ke total
         WorkingTimeElapsed_02_Range += workingTimeElapsedForDay_02;
 
         // PlanCUShift_02_Range += (long)(workingTimeElapsedForDay_02 * ((totalNetWorkingMinutes_02 > 0) ? (double)(Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0) / (totalNetWorkingMinutes_02 * workingDaysInRange) : 0));
@@ -191,13 +169,11 @@
         #endregion
 
         #region Shift 3 Calculations
-        // 1. Definisi waktu
         var StartWorkingTimeShift_03 = new TimeSpan(23, 15, 0);
         var EndWorkingTimeShift_03 = new TimeSpan(7, 0, 0);
         var StartDateTimeShift_03 = day + StartWorkingTimeShift_03;
         var EndDateTimeShift_03 = day.AddDays(1) + EndWorkingTimeShift_03;
 
-        // ✅ Plan khusus shift 3
         var planDataShift_03 = Model.GetPlanFromTargetUnit(StartDateTimeShift_03, EndDateTimeShift_03);
         var rawPlanCU_03 = Convert.ToInt64(
         planDataShift_03.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0);
@@ -205,7 +181,6 @@
         var rawPlanCS_03 = Convert.ToInt64(
             planDataShift_03.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0);
 
-        // 🔥 SHIFT 3 = SHIFT 3 - SHIFT 2
         var finalPlanCU_03 = Math.Max(0, rawPlanCU_03 - PlanCUShift_02_Base);
         var finalPlanCS_03 = Math.Max(0, rawPlanCS_03 - PlanCSShift_02_Base);
 
@@ -216,14 +191,11 @@
         var listRestTimeShift_03 = Model.GetRestTime(dayType);
         var totalNetWorkingMinutes_03 = (EndDateTimeShift_03 - StartDateTimeShift_03).TotalMinutes;
 
-        // 2. Ambil data aktual DULU
         var actualDataShift_03 = Model.GetActualData(StartDateTimeShift_03, EndDateTimeShift_03);
         var totalDefectShift_03 = Model.GetTotalDefect(StartDateTimeShift_03, EndDateTimeShift_03);
 
-        // 3. Hitung waktu kerja yang berlalu
         var workingTimeElapsedForDay_03 = Model.CalculateOvernightShiftElapsedWorkingTime(day, StartWorkingTimeShift_03, EndWorkingTimeShift_03, listRestTimeShift_03);
 
-        // 4. Periksa produksi & terapkan aturan bisnis SEBELUM MENAMBAHKAN KE TOTAL
         var dailyActual_03 = (actualDataShift_03.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0) +
                              (actualDataShift_03.FirstOrDefault(p => p.MachineCode == "MCH1-02")?.Quantity ?? 0);
         if (dailyActual_03 == 0)
@@ -231,7 +203,6 @@
             workingTimeElapsedForDay_03 = 0;
         }
 
-        // 5. Setelah diperiksa, BARU tambahkan ke total
         WorkingTimeElapsed_03_Range += workingTimeElapsedForDay_03;
 
         // PlanCUShift_03_Range += (long)(workingTimeElapsedForDay_03 * ((totalNetWorkingMinutes_03 > 0) ? (double)(Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0) / (totalNetWorkingMinutes_03 * workingDaysInRange) : 0));
@@ -258,10 +229,6 @@
         #endregion
     }
 
-    // ==========================================================================================
-    // BAGIAN 3: KALKULASI FINAL DAN PERSIAPAN DISPLAY
-    // ==========================================================================================
-
     #region Shift 1 Final Calculations
     // var DailyPlanCUShift_01 = (Model.PlanData.FirstOrDefault(p => p.MachineCode == "MCH1-01")?.Quantity ?? 0);
     var dailyPlanData = Model.GetDailyPlanData(Model.StartSelectedDate, Model.EndSelectedDate.AddDays(1));
@@ -280,7 +247,6 @@
     var DefectRatioCSShift_01 = (TotalActualCSShift_01_Range + TotalDefectCSShift_01_Qty_Range > 0) ? (1 - ((double)TotalDefectCSShift_01_Qty_Range / (TotalActualCSShift_01_Range + TotalDefectCSShift_01_Qty_Range))) * 100 : 100.0;
     var TotalEffCSShift_01 = Math.Round((OprRatioCSShift_01 / 100) * (WorkEffCSShift_01 / 100) * (DefectRatioCSShift_01 / 100) * 100, 2);
 
-    // --- Perhitungan P/H/H untuk Shift 1 ---
     var workers_CU_01 = Model.GetAverageWorkersForPeriod("MCH1-01", Model.StartSelectedDate, Model.EndSelectedDate.AddDays(1));
     var netProductiveMinutes_CU_01 = WorkingTimeElapsed_01_Range - TotalLossTimeCUShift_01_Range;
     var netProductiveHours_CU_01 = netProductiveMinutes_CU_01 > 0 ? netProductiveMinutes_CU_01 / 60.0 : 0;
@@ -317,7 +283,6 @@
     var DefectRatioCSShift_02 = (TotalActualCSShift_02_Range + TotalDefectCSShift_02_Qty_Range > 0) ? (1 - ((double)TotalDefectCSShift_02_Qty_Range / (TotalActualCSShift_02_Range + TotalDefectCSShift_02_Qty_Range))) * 100 : 100.0;
     var TotalEffCSShift_02 = Math.Round((OprRatioCSShift_02 / 100) * (WorkEffCSShift_02 / 100) * (DefectRatioCSShift_02 / 100) * 100, 2);
 
-    // --- Perhitungan P/H/H untuk Shift 2 ---
     var workers_CU_02 = Model.GetAverageWorkersForPeriod("MCH1-01", Model.StartSelectedDate, Model.EndSelectedDate.AddDays(1));
     var netProductiveMinutes_CU_02 = WorkingTimeElapsed_02_Range - TotalLossTimeCUShift_02_Range;
     var netProductiveHours_CU_02 = netProductiveMinutes_CU_02 > 0 ? netProductiveMinutes_CU_02 / 60.0 : 0;

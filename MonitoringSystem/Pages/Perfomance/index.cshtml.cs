@@ -18,11 +18,10 @@ namespace MonitoringSystem.Pages.Performance
         public List<PlanQty> plansQty = new List<PlanQty>();
         public PerformanceModel(ApplicationDbContext context, IServiceProvider serviceProvider)
         {
-            _context = context;  // Dependency injection untuk ApplicationDbContext
-            _serviceProvider = serviceProvider;  // Dependency injection untuk IServiceProvider
+            _context = context;
+            _serviceProvider = serviceProvider;
         }
 
-        // Properti untuk menampung data HourlyPlanData
         public int TotalPlanForSummaryCU { get; set; }
         public int TotalPlanForSummaryCS { get; set; }
 

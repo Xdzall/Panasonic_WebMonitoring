@@ -309,11 +309,9 @@
     const productNames = @Html.Raw(Model.ProductNames);
     const productNameStrings = productNames.map(product => product.Name);
 
-    // Ambil semua elemen input dan dropdown
     const productInputs = document.querySelectorAll('.productInput');
     const dropdowns = document.querySelectorAll('.dropdown');
 
-    // Fungsi untuk menampilkan dropdown
     function showDropdown(input, dropdown, filteredNames) {
         dropdown.innerHTML = '';
         if (filteredNames.length > 0) {
@@ -332,19 +330,15 @@
         }
     }
 
-    // Event listener untuk setiap input
     productInputs.forEach((input, index) => {
-        // Ambil dropdown yang sesuai
         const dropdown = dropdowns[index];
 
-        // Menampilkan dropdown saat input diklik
         input.addEventListener('click', () => {
             const query = input.value.toLowerCase();
             const filteredNames = productNameStrings.filter(name => name.toLowerCase().includes(query));
             showDropdown(input, dropdown, filteredNames);
         });
 
-        // Menampilkan dropdown saat input diisi
         input.addEventListener('input', () => {
             const query = input.value.toLowerCase();
             const filteredNames = productNameStrings.filter(name => name.toLowerCase().includes(query));
@@ -352,7 +346,6 @@
         });
     });
 
-    // Event listener untuk menghilangkan dropdown ketika klik di luar
     document.addEventListener('click', (event) => {
         productInputs.forEach((input, index) => {
             const dropdown = dropdowns[index];

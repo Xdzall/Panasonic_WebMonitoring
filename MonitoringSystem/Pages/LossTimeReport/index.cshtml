@@ -3,34 +3,31 @@
 @{
     ViewData["Title"] = "Loss Time Report";
 
-    // Mendefinisikan mapping dari kategori data ke nama yang ditampilkan di tabel
     var categoryDisplayMapping = new Dictionary<string, string>
     {
         { "Loss Awal Hari", "Morning Assembly" },
-        // Asumsikan Break Time & Cleaning adalah kategori tetap, bukan dari data dinamis
-        // "Break Time (AM/PM)" -> Tidak ada di AllCategories
-        // "Cleaning" -> Tidak ada di AllCategories
-        // "General Assembly" -> Tidak ada di AllCategories
-        // "Company Activity" -> Tidak ada di AllCategories
-        // "Training Education" -> Tidak ada di AllCategories
-        // "Free Talking/QC Activity" -> Tidak ada di AllCategories
-        // "Stock Opname" -> Tidak ada di AllCategories
-        // "Trial Run" -> Tidak ada di AllCategories
-        // "Maintenance" -> Tidak ada di AllCategories
-        // "No Production (PSI)" -> Tidak ada di AllCategories
-        // "Set Repairing Loss" -> Tidak ada di AllCategories
-        // "GAWSE - External Bodies" -> Tidak ada di AllCategories
+        // "Break Time (AM/PM)"
+        // "Cleaning"
+        // "General Assembly"
+        // "Company Activity"
+        // "Training Education"
+        // "Free Talking/QC Activity"
+        // "Stock Opname"
+        // "Trial Run"
+        // "Maintenance"
+        // "No Production (PSI)"
+        // "Set Repairing Loss"
+        // "GAWSE - External Bodies"
         { "Material Shortage External", "Material Shortage External" },
         { "Change Model", "Model Change" },
-        // "Mold/Dies/Jig Change" -> Tidak ada di AllCategories
+        // "Mold/Dies/Jig Change"
         { "MP Adjustment", "Man Power Adjustment" },
         { "Material Shortage Internal", "Material Shortage Internal" },
         { "Material Shortage Inhouse", "Material Shortage Inhouse" },
         { "Quality Trouble", "Quality Trouble" },
         { "Rework", "Rework" },
         { "Machine Trouble", "Machine & Tools Trouble" }
-        // "Mold & Dies Trouble" -> Tidak ada di AllCategories
-        // "Other" sengaja tidak dimasukkan di sini karena tidak ada di layout baru
+        // "Mold & Dies Trouble"
     };
 }
 
