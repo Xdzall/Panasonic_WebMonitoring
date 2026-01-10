@@ -382,15 +382,13 @@
     });
     if (detailedReasonModal) {
         detailedReasonModal.addEventListener('show.bs.modal', function (event) {
-            // Tombol yang memicu modal
+
             var button = event.relatedTarget;
-            // Ekstrak info dari atribut data-reason
+
             var reason = button.getAttribute('data-reason');
 
-            // Dapatkan elemen <p> di dalam modal body
             var modalBodyText = detailedReasonModal.querySelector('.modal-body p#detailedReasonText');
 
-            // Perbarui konten modal
             if (reason && reason.trim() !== '') {
                 modalBodyText.textContent = reason;
             } else {

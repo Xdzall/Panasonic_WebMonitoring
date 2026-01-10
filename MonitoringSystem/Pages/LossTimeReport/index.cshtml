@@ -65,10 +65,41 @@
                                     
                               </div>
                         </form>
-                 
-                  </div>
+                    <div div class="col-auto ms-auto">
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">Upload</button>
+                        </div>
+                    </div>
+                 </div>
 
-                  <div class="row mt-4" id="chartDiv">
+                 <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+                     <div class="modal-dialog">
+                         <div class="modal-content">
+                             <div class="modal-header d-flex justify-content-betwen align-items-center">
+								<h5 class="modal-title" id="uploadModalLabel">Upload Loss Time BP</h5>
+								<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                             </div>
+                             <div class="modal-body">
+                                 <form method="post" enctype="multipart/form-data" asp-page-handler="Upload">
+                                         <div class="form-group mb-3">
+                                             <label for="UploadedFile" class="form-label">Choose File BP:</label>
+                                             <input type="file" id="UploadedFile" name="UploadedFile"class="form-control" required>
+                                         </div>
+                                         <div class="from-group mb-3">
+                                             <label for="TargetMachine" class="form-label">For Machine:</label>
+                                             <select>
+                                                <option value="MCH1-01">CU</option>
+											    <option value="MCH1-02">CS</option>
+                                            </select>
+                                         </div>
+									<button type="submit" class="btn btn-primary">Upload</button>
+                                 </form>
+                             </div>
+                         </div>
+                     </div>
+                 </div>
+
+                <div class="row mt-4" id="chartDiv">
                     <canvas id="timeLossChart" width="100%" height="25%"></canvas>
                 </div>
             </div>

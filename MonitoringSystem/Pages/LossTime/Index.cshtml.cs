@@ -68,7 +68,7 @@ namespace MonitoringSystem.Pages.LossTime
             "Quality Trouble",
             "Machine Trouble",
             "Rework",
-            "Loss Awal Hari",
+            "Morning Assembly",
             "Reason Not Fill"
         };
 
@@ -570,8 +570,8 @@ namespace MonitoringSystem.Pages.LossTime
                 return "Machine Trouble";
             else if (reason.Contains("rework"))
                 return "Rework";
-            else if (reason.Contains("loss awal hari"))
-                return "Loss Awal Hari";
+            else if (reason.Contains("morning assembly"))
+                return "Morning Assembly";
             else
                 return "Reason Not Fill";
         }
