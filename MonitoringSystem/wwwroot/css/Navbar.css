@@ -1,15 +1,15 @@
-﻿
+﻿/* 1. Style Link Default (Belum Aktif) */
 .nav-menu a {
-    color: #333;
+    color: #333; /* Gunakan warna gelap (hitam/abu) agar terlihat di background putih */
     text-decoration: none;
-/*    font-family: 'Nunito', sans-serif;*/
     border-radius: 10px;
-    padding: 13px 15px;
+    padding: 13px 15px; /* Sedikit saya perlebar paddingnya agar lebih rapi */
     position: relative;
-    z-index: 2;
-    transition: color 0.3s ease;
+    z-index: 2; /* Penting: agar teks di atas highlighter */
+    transition: color 0.3s ease; /* Transisi warna teks agar halus */
 }
 
+/* 2. Container Navbar */
 .nav-menu {
     position: relative;
     z-index: 1;
@@ -17,24 +17,27 @@
     align-items: center;
 }
 
+/* 3. Kotak Penanda (Highlighter) */
 .nav-highlighter {
     position: absolute;
-    height: 85%;
+    height: 85%; /* Sedikit lebih kecil dari full height agar manis */
     top: 50%;
-    transform: translateY(-50%);
+    transform: translateY(-50%); /* Menengahkan vertikal */
     left: 0;
-    background-color: rgb(61, 121, 176);
+    background-color: rgb(61, 121, 176); /* Biru */
     border-radius: 8px;
     transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     opacity: 0;
     pointer-events: none;
-    z-index: 0;
+    z-index: 0; /* Di belakang teks */
 }
 
+/* 4. Class Khusus Saat Link Aktif/Di-hover (Teks jadi Putih) */
 .nav-menu a.active-text {
     color: #fff !important;
 }
 
+/* Opsional: Hover mouse biasa */
 .nav-menu a:hover {
-    color: #fff;
+    color: #fff; /* Pencegahan agar saat hover sebentar warnanya langsung putih */
 }
