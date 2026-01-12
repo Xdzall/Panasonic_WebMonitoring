@@ -1,200 +1,152 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
 using System.Collections.Generic;
-using System.Globalization;
-using System;
+using System.Data;
+using System.IO;
 using System.Linq;
-using System.Text.Json;
+using System.Threading.Tasks;
+using OfficeOpenXml;
+using MonitoringSystem.Models;
 using MonitoringSystem.Data;
-using System.Drawing;
+using System;
 
 namespace MonitoringSystem.Pages.LossTimeReport
 {
     public class indexModel : PageModel
     {
-        [BindProperty(SupportsGet = true)]
-        public int SelectedYear { get; set; } = DateTime.Today.Year;
-
         private readonly ApplicationDbContext _context;
 
         public indexModel(ApplicationDbContext context)
         {
             _context = context;
         }
-        [BindProperty]
+
+        [BindProperty(SupportsGet = true)]
+        public int SelectedYear { get; set; } = DateTime.Today.Year;
+
+        // Filter Utama untuk Tampilan Chart
+        [BindProperty(SupportsGet = true)]
         public string MachineLine { get; set; } = "All";
-        public class LossReportData
-        {
-            public Dictionary<string, Dictionary<int, int>> MonthlyLosses { get; set; } = new Dictionary<string, Dictionary<int, int>>();
-            public Dictionary<int, int> TotalLossByMonth { get; set; } = new Dictionary<int, int>();
-            public Dictionary<int, int> FixedLossByMonth { get; set; } = new Dictionary<int, int>();
-        }
 
-        public LossReportData ReportData { get; set; } = new LossReportData();
+        // Property Khusus untuk Form Upload di dalam Pop-up
+        [BindProperty]
+        public string UploadMachineLine { get; set; }
+
+        [BindProperty]
+        public IFormFile UploadedExcel { get; set; }
+
         public string ChartDataJson { get; set; } = "{}";
-        public List<string> MonthLabels { get; set; } = new List<string>();
-        public List<double> ActualLossByMonth { get; set; } = new List<double>();
-        public List<double> ActualWtByMonth { get; set; } = new List<double>();
-        public List<string> TotalLossVsTotalWtPresentage { get; set; } = new List<string>();
-        public List<string> ActualLossVsActualWtPresentage { get; set; } = new List<string>();
-        public List<double> TotalWorkingTimeByMonth { get; set; } = new List<double>();
-        public List<string> AllCategories { get; set; } = new List<string>
-        {
-            "Change Model", "Material Shortage External", "MP Adjustment",
-            "Material Shortage Internal", "Material Shortage Inhouse", "Quality Trouble",
-            "Machine Trouble", "Rework", "Loss Awal Hari", "Other"
-        };
-
-        public string connectionString = "Server=10.83.33.103;trusted_connection=false;Database=PROMOSYS;User Id=sa;Password=sa;Persist Security Info=False;Encrypt=False";
 
         public void OnGet()
         {
-            try
-            {
-                DateTime fisicalStartDate = new DateTime(SelectedYear, 4, 1);
-                DateTime fisicalEndDate = fisicalStartDate.AddYears(1).AddDays(-1);
+            // --- STRUKTUR DATA 12 BULAN (FISCAL YEAR: APRIL - MARET) ---
+            string[] months = { "April", "May", "June", "July", "August", "September", "October", "November", "December", "January", "February", "March" };
+            double[] actualData = new double[12];
+            double[] planData = new double[12];
 
-                LoadData(fisicalStartDate, fisicalEndDate);
-                CalculateTotalWorkingTime(fisicalStartDate);
-                PrepareChartData(fisicalStartDate);
-                CalculateDeriveMetrics();
-            }
-            catch (Exception ex)
+            // 1. AMBIL DATA ACTUAL (Raw SQL)
+            // Jika MachineLine == "All", query akan menjumlahkan (SUM) data dari semua mesin
+            var actualsFromDb = GetMonthlyActualData(SelectedYear, MachineLine);
+
+            // Mapping hasil SQL ke Array Chart
+            foreach (var item in actualsFromDb)
             {
-                Console.WriteLine($"Error in OnGet: {ex.Message}");
-                InitializeEmptyData();
+                // Konversi Bulan Kalender (1-12) ke Index Array Fiskal (0-11)
+                // April(4) -> 0 ... Maret(3) -> 11
+                int arrayIndex = (item.Key - 4 + 12) % 12;
+                actualData[arrayIndex] = Math.Round(item.Value, 1);
             }
+
+            // 2. AMBIL DATA PLAN (EF Core)
+            var planQuery = _context.LossTimePlans.AsQueryable();
+
+            // Filter Tahun Fiskal
+            planQuery = planQuery.Where(x =>
+                (x.Year == SelectedYear && x.Month >= 4) ||
+                (x.Year == SelectedYear + 1 && x.Month <= 3)
+            );
+
+            // Filter Mesin untuk Plan
+            if (MachineLine != "All")
+            {
+                planQuery = planQuery.Where(x => x.MachineLine == MachineLine);
+            }
+            // Jika "All", kita tidak filter by MachineLine, otomatis EF akan men-SUM semua mesin yang ada
+
+            var plansFromDb = planQuery.ToList()
+                .GroupBy(x => x.Month)
+                .Select(g => new { Month = g.Key, Total = g.Sum(x => x.TargetMinutes) })
+                .ToList();
+
+            foreach (var item in plansFromDb)
+            {
+                int arrayIndex = (item.Month - 4 + 12) % 12;
+                planData[arrayIndex] = Math.Round(item.Total, 1);
+            }
+
+            // 3. Output JSON
+            var chartPayload = new
+            {
+                Labels = months,
+                ActualData = actualData,
+                PlanData = planData
+            };
+
+            ChartDataJson = System.Text.Json.JsonSerializer.Serialize(chartPayload);
         }
 
-        public IActionResult OnPost()
+        // --- QUERY SQL MANUAL (Perbaikan Logic 'All') ---
+        private Dictionary<int, double> GetMonthlyActualData(int fiscalYear, string line)
         {
-            OnGet();
-            return Page();
-        }
+            var result = new Dictionary<int, double>();
+            var connectionString = _context.Database.GetDbConnection().ConnectionString;
 
-        private void CalculateTotalWorkingTime(DateTime fisicalStartDate)
-        {
-            TotalWorkingTimeByMonth = new List<double>();
-            var holidays = GetHolidays(fisicalStartDate.Year, fisicalStartDate.Year + 1);
-            DateTime today = DateTime.Today;
+            DateTime startDate = new DateTime(fiscalYear, 4, 1);
+            DateTime endDate = new DateTime(fiscalYear + 1, 3, 31);
 
-            for (int i = 0; i < 12; i++)
-            {
-                DateTime currentMonthStart = fisicalStartDate.AddMonths(i);
-
-                if (currentMonthStart.Year > today.Year || (currentMonthStart.Year == today.Year && currentMonthStart.Month > today.Month))
-                {
-                TotalWorkingTimeByMonth.Add(0);
-                continue;
-                }
-                int workDays = 0;
-                int daysToCount;
-                
-                if (currentMonthStart.Year == today.Year && currentMonthStart.Month == today.Month)
-                {
-                    daysToCount = today.Day;
-                }
-                else
-                {
-                    daysToCount = DateTime.DaysInMonth(currentMonthStart.Year, currentMonthStart.Month);
-                }
-
-                for (int day =1; day <= daysToCount; day++)
-                {
-                    DateTime currentDate = new DateTime(currentMonthStart.Year, currentMonthStart.Month, day);
-                    if (currentDate.DayOfWeek != DayOfWeek.Saturday &&
-                        currentDate.DayOfWeek != DayOfWeek.Sunday &&
-                        !holidays.Contains(currentDate.Date))
-                    {
-                        workDays++;
-                    }
-                }
-                TotalWorkingTimeByMonth.Add(workDays * 473);
-            }
-        }
-
-        private void CalculateDeriveMetrics()
-        {
-            for (int i = 0; i < 12; i++)
-            {
-                double totalLoss = SecondsToMinutes(ReportData.TotalLossByMonth[i]);
-                double fixedLoss = SecondsToMinutes(ReportData.FixedLossByMonth[i]);
-                double totalWt = TotalWorkingTimeByMonth[i];
-
-                double actualLoss = totalLoss - fixedLoss;
-                double actualWt = totalWt - fixedLoss;
-
-                ActualLossByMonth.Add(actualLoss > 0 ? actualLoss : 0);
-                ActualWtByMonth.Add(actualWt > 0 ? actualWt : 0);
-
-                TotalLossVsTotalWtPresentage.Add(totalWt > 0 ? (totalLoss / totalWt).ToString("P1") : "0%");
-                ActualLossVsActualWtPresentage.Add(actualWt > 0 ? (actualLoss / actualWt).ToString("P1") : "0%");
-            }
-        }
-
-        private HashSet<DateTime>GetHolidays(int startYear, int endYear)
-        {
-            var holidays = new HashSet<DateTime>();
-            for (int year = startYear; year <= endYear; year++)
-            {
-                holidays.Add(new DateTime(year, 1, 1));
-                holidays.Add(new DateTime(year, 5, 1));
-                holidays.Add(new DateTime(year, 8, 17));
-                holidays.Add(new DateTime(year, 12, 25));
-            }
-            return holidays;
-        }
-
-        private void LoadData(DateTime startDate, DateTime endDate)
-        {
-            InitializeEmptyData();
-
+            // Query dasar: Ambil Bulan dan Sum Durasi
             string query = @"
-                SELECT [Date], [Reason], [LossTime] FROM AssemblyLossTime 
-                WHERE [Date] >= @StartDate AND [Date] < @EndDate";
+                SELECT 
+                    MONTH(Date) as MonthVal,
+                    SUM(LossTime) / 60.0 as TotalMinutes
+                FROM AssemblyLossTime
+                WHERE Date >= @Start AND Date <= @End
+            ";
 
-            if (!string.Equals(MachineLine, "All", StringComparison.OrdinalIgnoreCase))
+            // Tambahkan filter mesin JIKA user tidak memilih "All"
+            // Pastikan nilai 'line' (misal 'MCH1-01') SAMA PERSIS dengan isi kolom 'Line' di database Anda
+            if (line != "All")
             {
-                query += " AND [MachineCode] = @MachineCode";
+                query += " AND MachineCode = @MachineCode";
             }
+
+            query += " GROUP BY MONTH(Date)";
 
             try
             {
-                using (SqlConnection connection = new SqlConnection(connectionString))
+                using (var conn = new SqlConnection(connectionString))
                 {
-                    connection.Open();
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                    conn.Open();
+                    using (var cmd = new SqlCommand(query, conn))
                     {
-                        command.Parameters.AddWithValue("@StartDate", startDate);
-                        command.Parameters.AddWithValue("@EndDate", endDate.AddDays(1));
+                        cmd.Parameters.AddWithValue("@Start", startDate);
+                        cmd.Parameters.AddWithValue("@End", endDate);
 
-                        if (!string.Equals(MachineLine, "All", StringComparison.OrdinalIgnoreCase))
+                        if (line != "All")
                         {
-                            command.Parameters.AddWithValue("@MachineCode", MachineLine);
+                            cmd.Parameters.AddWithValue("@MachineCode", line);
                         }
 
-                        using (SqlDataReader reader = command.ExecuteReader())
+                        using (var reader = cmd.ExecuteReader())
                         {
                             while (reader.Read())
                             {
-                                DateTime date = reader.GetDateTime(0);
-                                string reason = reader.GetString(1);
-                                int lossDuration = reader.GetInt32(2);
-
-                                int monthIndex = ((date.Year - startDate.Year) * 12) + date.Month - startDate.Month;
-
-                                if (monthIndex >= 0 && monthIndex < 12)
-                                {
-                                    string category = CategorizeReason(reason);
-                                    ReportData.MonthlyLosses[category][monthIndex] += lossDuration;
-                                    ReportData.TotalLossByMonth[monthIndex] += lossDuration;
-
-                                    if (category == "Loss Awal Hari")
-                                    {
-                                        ReportData.FixedLossByMonth[monthIndex] += lossDuration;
-                                    }
-                                }
+                                int m = Convert.ToInt32(reader["MonthVal"]);
+                                double val = reader["TotalMinutes"] != DBNull.Value ? Convert.ToDouble(reader["TotalMinutes"]) : 0;
+                                result[m] = val;
                             }
                         }
                     }
@@ -202,76 +154,103 @@ namespace MonitoringSystem.Pages.LossTimeReport
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error loading data: {ex.Message}");
+                Console.WriteLine("SQL Error: " + ex.Message);
             }
+
+            return result;
         }
 
-        private void PrepareChartData(DateTime fiscalStartDate)
+        // --- IMPORT EXCEL (Melalui Pop-up) ---
+        public async Task<IActionResult> OnPostImportExcelAsync()
         {
-            MonthLabels = Enumerable.Range(0, 12)
-                .Select(i => fiscalStartDate.AddMonths(i).ToString("MMMM", CultureInfo.CurrentCulture))
-                .ToList();
-
-            var datasets = new List<object>();
-            var backgroundColors = new[] { "#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF", "#FF9F40", "#C9CBCF" };
-            int colorIndex = 0;
-
-            foreach (var category in AllCategories)
+            if (UploadedExcel == null || UploadedExcel.Length == 0)
             {
-                var data = ReportData.MonthlyLosses[category]
-                .Select(kvp => Math.Ceiling(kvp.Value / 60.0))
-                .ToArray();
+                TempData["Error"] = "File Excel belum dipilih.";
+                return RedirectToPage(new { SelectedYear, MachineLine });
+            }
 
-                datasets.Add(new
+            // Validasi: Machine Line harus dipilih di dalam Pop-up, tidak boleh "All" saat upload
+            if (UploadMachineLine == "All" || string.IsNullOrEmpty(UploadMachineLine))
+            {
+                TempData["Error"] = "Saat Upload, anda harus memilih Mesin Spesifik (CU atau CS) di dalam Pop-up.";
+                return RedirectToPage(new { SelectedYear, MachineLine });
+            }
+
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+            try
+            {
+                using (var stream = new MemoryStream())
                 {
-                    label = category,
-                    data = data,
-                    backgroundColor = backgroundColors[colorIndex % backgroundColors.Length],
-                    stack = "loss"
-                });
-                colorIndex++;
+                    await UploadedExcel.CopyToAsync(stream);
+                    using (var package = new ExcelPackage(stream))
+                    {
+                        var sheet = package.Workbook.Worksheets[0];
+                        int rowCount = sheet.Dimension.Rows;
+
+                        // Mapping Kolom Excel ke Bulan
+                        var monthColMap = new Dictionary<int, int> {
+                            { 4, 3 }, { 5, 5 }, { 6, 7 }, { 7, 9 }, { 8, 11 }, { 9, 13 },
+                            { 10, 15 }, { 11, 17 }, { 12, 19 }, { 1, 21 }, { 2, 23 }, { 3, 25 }
+                        };
+
+                        var newPlans = new List<LossTimePlan>();
+
+                        for (int row = 4; row <= rowCount; row++)
+                        {
+                            var catName = sheet.Cells[row, 2].Text?.Trim();
+                            if (string.IsNullOrEmpty(catName) || catName.ToLower().Contains("loss category")) continue;
+
+                            foreach (var map in monthColMap)
+                            {
+                                var valText = sheet.Cells[row, map.Value].Text;
+                                if (double.TryParse(valText, out double val) && val > 0)
+                                {
+                                    int dataYear = (map.Key >= 4) ? SelectedYear : SelectedYear + 1;
+
+                                    newPlans.Add(new LossTimePlan
+                                    {
+                                        Category = catName,
+                                        MachineLine = this.UploadMachineLine, // Gunakan pilihan dari Pop-up
+                                        Month = map.Key,
+                                        Year = dataYear,
+                                        TargetMinutes = val
+                                    });
+                                }
+                            }
+                        }
+
+                        // Hapus data lama (hanya untuk mesin yang dipilih di pop-up)
+                        var dataToDelete = _context.LossTimePlans
+                            .Where(x => x.MachineLine == this.UploadMachineLine &&
+                                        ((x.Year == SelectedYear && x.Month >= 4) ||
+                                         (x.Year == SelectedYear + 1 && x.Month <= 3)));
+
+                        _context.LossTimePlans.RemoveRange(dataToDelete);
+
+                        if (newPlans.Any())
+                        {
+                            _context.LossTimePlans.AddRange(newPlans);
+                            await _context.SaveChangesAsync();
+                            TempData["Success"] = $"Berhasil import Plan untuk {UploadMachineLine}.";
+                        }
+                    }
+                }
             }
-
-            ChartDataJson = JsonSerializer.Serialize(new { labels = MonthLabels, datasets });
-        }
-
-        private void InitializeEmptyData()
-        {
-            ReportData = new LossReportData();
-            foreach (var category in AllCategories)
+            catch (Exception ex)
             {
-                ReportData.MonthlyLosses[category] = new Dictionary<int, int>();
-                for (int i = 0; i < 12; i++) ReportData.MonthlyLosses[category][i] = 0;
+                TempData["Error"] = "Gagal Import: " + ex.Message;
             }
 
-            ReportData.TotalLossByMonth = new Dictionary<int, int>();
-            ReportData.FixedLossByMonth = new Dictionary<int, int>();
-
-            for (int i = 0; i < 12; i++)
-            {
-                ReportData.TotalLossByMonth[i] = 0;
-                ReportData.FixedLossByMonth[i] = 0;
-            }
+            return RedirectToPage(new { SelectedYear, MachineLine });
         }
 
-        private string CategorizeReason(string reason)
+        public IActionResult OnGetDownloadTemplate()
         {
-            reason = reason?.ToLower() ?? "";
-            if (reason.Contains("change model")) return "Change Model";
-            if (reason.Contains("material shortage external")) return "Material Shortage External";
-            if (reason.Contains("mp adjustment")) return "MP Adjustment";
-            if (reason.Contains("material shortage internal")) return "Material Shortage Internal";
-            if (reason.Contains("material shortage inhouse")) return "Material Shortage Inhouse";
-            if (reason.Contains("quality trouble")) return "Quality Trouble";
-            if (reason.Contains("machine trouble")) return "Machine Trouble";
-            if (reason.Contains("rework")) return "Rework";
-            if (reason.Contains("loss awal hari")) return "Loss Awal Hari";
-            return "Other";
-        }
-
-        public double SecondsToMinutes(int seconds)
-        {
-            return Math.Ceiling(seconds / 60.0);
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "data", "planlosstime", "Template BP Loss Time.xlsx");
+            if (!System.IO.File.Exists(filePath)) return NotFound("File template tidak ditemukan di server.");
+            var bytes = System.IO.File.ReadAllBytes(filePath);
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "LossTimePlan_Template.xlsx");
         }
     }
 }

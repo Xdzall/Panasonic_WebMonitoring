@@ -2,111 +2,208 @@
 @model MonitoringSystem.Pages.LossTimeReport.indexModel
 @{
     ViewData["Title"] = "Loss Time Report";
-
-    var categoryDisplayMapping = new Dictionary<string, string>
-    {
-        { "Loss Awal Hari", "Morning Assembly" },
-        // "Break Time (AM/PM)"
-        // "Cleaning"
-        // "General Assembly"
-        // "Company Activity"
-        // "Training Education"
-        // "Free Talking/QC Activity"
-        // "Stock Opname"
-        // "Trial Run"
-        // "Maintenance"
-        // "No Production (PSI)"
-        // "Set Repairing Loss"
-        // "GAWSE - External Bodies"
-        { "Material Shortage External", "Material Shortage External" },
-        { "Change Model", "Model Change" },
-        // "Mold/Dies/Jig Change"
-        { "MP Adjustment", "Man Power Adjustment" },
-        { "Material Shortage Internal", "Material Shortage Internal" },
-        { "Material Shortage Inhouse", "Material Shortage Inhouse" },
-        { "Quality Trouble", "Quality Trouble" },
-        { "Rework", "Rework" },
-        { "Machine Trouble", "Machine & Tools Trouble" }
-        // "Mold & Dies Trouble"
-    };
 }
 
-
-
-<div id="reportContainer">
-    <div class="container-fluid">
-        <div class="row g-3 align-items-center justify-content-center">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
-                        <form method="post" class="mb-3">
-                              <div class="form-group d-flex align-items-center gap-3 flex-wrap">
-                                    <div class="d-flex gap-3 align-items-center">
-
-                                        <label for="SelectedYear" class="form-label fw-bold mb-0">Pilih Tahun Laporan:</label>
-                                        <select asp-for="SelectedYear" class="form-select" style="width: 150px;">
-                                                                    @for (int year = DateTime.Today.Year; year >= 2020; year--)
-                                                                    {
-                                                    <option value="@year">@year</option>
-                                                                    }
-                                        </select>
-                                    </div>
-                                     <div class="d-flex gap-3 align-items-center">
-                                         <label class="fw-bold fs-6">Machine Line</label>
-                                         <select class="form-select border-dark filter-control" id="MachineLine" name="MachineLine" asp-for="MachineLine">
-                                            <option value="All">All</option>
-                                            <option value="MCH1-01">CU</option>
-                                            <option value="MCH1-02">CS</option>
-                                         </select>
-                                     </div>
-                                    <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-sm btn-primary">Tampilkan</button>
-                                    </div>
-                                       
-                                    
-                              </div>
-                        </form>
-                    <div div class="col-auto ms-auto">
-                        <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">Upload</button>
-                        </div>
-                    </div>
-                 </div>
-
-                 <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
-                     <div class="modal-dialog">
-                         <div class="modal-content">
-                             <div class="modal-header d-flex justify-content-betwen align-items-center">
-								<h5 class="modal-title" id="uploadModalLabel">Upload Loss Time BP</h5>
-								<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                             </div>
-                             <div class="modal-body">
-                                 <form method="post" enctype="multipart/form-data" asp-page-handler="Upload">
-                                         <div class="form-group mb-3">
-                                             <label for="UploadedFile" class="form-label">Choose File BP:</label>
-                                             <input type="file" id="UploadedFile" name="UploadedFile"class="form-control" required>
-                                         </div>
-                                         <div class="from-group mb-3">
-                                             <label for="TargetMachine" class="form-label">For Machine:</label>
-                                             <select>
-                                                <option value="MCH1-01">CU</option>
-											    <option value="MCH1-02">CS</option>
-                                            </select>
-                                         </div>
-									<button type="submit" class="btn btn-primary">Upload</button>
-                                 </form>
-                             </div>
-                         </div>
-                     </div>
-                 </div>
-
-                <div class="row" id="chartDiv">
-                    <canvas id="timeLossChart" width="100%" height="25%"></canvas>
+<div class="container-fluid mt-3">
+    <div class="row g-3 align-items-center justify-content-between flex-wrap mb-4">
+        <div class="col-auto">
+            <form method="get" id="filterForm" class="row g-3 align-items-end">
+                <div class="col-auto">
+                    <label class="form-label fw-bold small text-muted">Selected Year</label>
+                    <select class="form-select" id="SelectedYear" name="SelectedYear" asp-for="SelectedYear">
+                        @for (int i = DateTime.Now.Year; i >= 2000; i--)
+                        {
+                            <option value="@i">@i</option>
+                        }
+                    </select>
                 </div>
+                <div class="col-auto">
+                    <label class="form-label fw-bold small text-muted">Machine Line</label>
+                    <select name="MachineLine" class="form-select" asp-for="MachineLine">
+                        <option value="All">All Lines</option>
+                        <option value="MCH1-01">(CU)</option>
+                        <option value="MCH1-02">(CS)</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter"></i> Apply Filter
+                    </button>
+                </div>
+                <div class="col-auto">
+                    <button type="button" class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                        <i class="fas fa-file-excel me-2"></i> Manage Plan
+                    </button>
+                </div>
+
+                @*@if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i> @TempData["Error"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i> @TempData["Success"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }*@
+            </form>
+        </div>
+    </div>
+
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100">
+        @if (TempData["Error"] != null)
+        {
+            <div id="errorToast" class="toast align-items-center text-bg-danger border-0 shadow" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        @TempData["Error"]
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                            data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        }
+
+        @if (TempData["Success"] != null)
+        {
+            <div id="successToast" class="toast align-items-center text-bg-success border-0 shadow" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fas fa-check-circle me-2"></i>
+                        @TempData["Success"]
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                            data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="card shadow border-0">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-bold">
+                Actual vs Plan: @(Model.MachineLine == "All" ? "All Lines Combined" : Model.MachineLine)
+                (Apr @Model.SelectedYear - Mar @(Model.SelectedYear + 1))
+            </h5>
+        </div>
+        <div class="card-body">
+            @if (Model.ChartDataJson == "{}" || Model.ChartDataJson.Contains("\"ActualData\":[0,0,0,0,0,0,0,0,0,0,0,0]"))
+            {
+                <div class="alert alert-warning text-center">
+                    No data found for Fiscal Year @Model.SelectedYear. Please check if data exists in database.
+                </div>
+            }
+            <div style="height: 450px; width: 100%;">
+                <canvas id="monthlyLossChart"></canvas>
             </div>
         </div>
     </div>
 </div>
 
+<div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="uploadModalLabel"><i class="fas fa-file-upload"></i> Upload Plan Data</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" asp-page-handler="ImportExcel">
+                <div class="modal-body">
+                    <input type="hidden" name="SelectedYear" value="@Model.SelectedYear" />
+                    <input type="hidden" name="MachineLine" value="@Model.MachineLine" />
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">1. Select Target Machine for Plan</label>
+                        <select name="UploadMachineLine" class="form-select" required>
+                            <option value="MCH1-01">MCH1-01 (CU)</option>
+                            <option value="MCH1-02">MCH1-02 (CS)</option>
+                        </select>
+                        <div class="form-text text-muted">You must specify which machine this file belongs to.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">2. Choose Excel File</label>
+                        <input type="file" name="UploadedExcel" class="form-control" accept=".xlsx" required />
+                    </div>
+
+                    <hr />
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="small text-muted">Need the format?</span>
+                        <a asp-page-handler="DownloadTemplate" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-download"></i> Download Template
+                        </a>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-success">Import Plan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/chart.umd.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var chartData = @Html.Raw(Model.ChartDataJson);
+
+        var ctx = document.getElementById('monthlyLossChart').getContext('2d');
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: chartData.Labels,
+                datasets: [
+                    {
+                        label: 'Total Actual Loss (Min)',
+                        data: chartData.ActualData,
+                        backgroundColor: 'rgba(220, 53, 69, 0.8)',
+                        borderColor: 'rgba(220, 53, 69, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Total Plan (Min)',
+                        data: chartData.PlanData,
+                        backgroundColor: 'rgba(13, 110, 253, 0.8)',
+                        borderColor: 'rgba(13, 110, 253, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Duration (Minutes)' }
+                    }
+                }
+            }
+        });
+
+        const errorToast = document.getElementById("errorToast");
+        const successToast = document.getElementById("successToast");
+
+        if (errorToast) {
+            new bootstrap.Toast(errorToast, { delay: 5000 }).show();
+        }
+
+        if (successToast) {
+            new bootstrap.Toast(successToast, { delay: 3500 }).show();
+        }
+    });
+</script>
+
+
+@*
 <div class="table-responsive">
     <table class="table table-bordered text-center align-middle w-100" id="lossTimeTable">
         <thead class="table-dark">
@@ -354,100 +451,54 @@
         display: none;
     }
 </style>
+*@
+@* <script src="~/js/chart.umd.min.js"></script> *@
+@* <script> *@
+@*     document.addEventListener("DOMContentLoaded", function() { *@
+@*         // Data dari backend *@
+@*         var chartData = @Html.Raw(Model.ChartDataJson); *@
 
-@section Scripts {
-    <script src="~/js/chart.umd.min.js"></script>
-        <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                const timeLossCtx = document.getElementById('timeLossChart');
-                if (timeLossCtx) {
-                    try {
-                        const chartData = @Html.Raw(Model.ChartDataJson);
-                        new Chart(timeLossCtx, {
-                            type: 'bar',
-                            data: chartData,
-                            options: {
-                                devicePixelRatio: 3,
-                                responsive: true,
-                                animation: { duration: 500 },
-                                interaction: { mode: 'index', intersect: false },
-                                scales: {
-                                    x: { 
-                                        stacked: true,
-                                        title: {
-                                           display: true,
-                                           text: 'Period'
-                                         }
-                                    },
-                                    y: {
-                                        stacked: true,
-                                        type: 'linear',
-                                        display: true,
-                                        position: 'left',
-                                        title: { display: true, text: 'Loss Time (Minutes)' },
-                                        beginAtZero: true
-                                    },
-                                    y1: {
-                                        type: 'linear',
-                                        display: true,
-                                        position: 'right',
-                                        max: 120,
-                                        grid: { drawOnChartArea: false },
-                                        title: { display: true, text: 'Percentage (%)' },
-                                        ticks: { callback: (value) => value + '%' }
-                                    }
-                                },
-                                plugins: {
-                                    title: { display: true, text: 'Time Loss Progress' },
-                                    legend: {
-                                        position: 'top',
-                                    },
-                                    tooltip: {
-                                        callbacks: {
-                                            label: function (context) {
-                                                let label = context.dataset.label || '';
-                                                if (label) { label += ': '; }
-                                                if (context.parsed.y !== null) {
-                                                    label += context.dataset.yAxisID === 'y1' ? context.parsed.y.toFixed(2) + '%' : context.parsed.y.toFixed(1) + ' min';
-                                                }
-                                                return label;
-                                            },
-                                            footer: function(tooltipItems) {
-                                                let sum = 0;
-                                                tooltipItems.forEach(function(tooltipItem) {
-                                                    if (tooltipItem.dataset.yAxisID !== 'y1') {
-                                                        sum += tooltipItem.parsed.y;
-                                                    }
-                                                });
-                                                return 'Total: ' + sum.toFixed(1) + ' minutes';
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    } catch (e) {
-                        console.error("Failed to create chart:", e);
-                    }
-                }
-
-                const toggleHeader = document.getElementById('toggleExtraRows');
-                if (toggleHeader) {
-                    toggleHeader.addEventListener('click', function () {
-                        const extraRows = document.querySelectorAll('.extra-row');
-                        const toggleIcon = document.getElementById('toggleIcon');
-                        const isVisible = extraRows[0] && extraRows[0].style.display !== 'none';
-
-                        extraRows.forEach(row => {
-                            row.style.display = isVisible ? 'none' : 'table-row';
-                        });
-
-                        if (toggleIcon) {
-                            toggleIcon.classList.toggle('bi-chevron-down', isVisible);
-                            toggleIcon.classList.toggle('bi-chevron-up', !isVisible);
-                        }
-                    });
-                }
-            });
-        </script>
-}
+@*         var ctx = document.getElementById('lossTimeChart').getContext('2d'); *@
+@*         new Chart(ctx, { *@
+@*             type: 'bar', *@
+@*             data: { *@
+@*                 labels: chartData.Labels, *@
+@*                 datasets: [ *@
+@*                     { *@
+@*                         label: 'Actual Loss (Min)', *@
+@*                         data: chartData.ActualData, *@
+@*                         backgroundColor: 'rgba(220, 53, 69, 0.7)', // Merah *@
+@*                         borderColor: 'rgba(220, 53, 69, 1)', *@
+@*                         borderWidth: 1 *@
+@*                     }, *@
+@*                     { *@
+@*                         label: 'Plan Limit (Min)', *@
+@*                         data: chartData.PlanData, *@
+@*                         backgroundColor: 'rgba(13, 110, 253, 0.7)', // Biru *@
+@*                         borderColor: 'rgba(13, 110, 253, 1)', *@
+@*                         borderWidth: 1 *@
+@*                     } *@
+@*                 ] *@
+@*             }, *@
+@*             options: { *@
+@*                 responsive: true, *@
+@*                 maintainAspectRatio: false, *@
+@*                 scales: { *@
+@*                     y: { *@
+@*                         beginAtZero: true, *@
+@*                         title: { display: true, text: 'Duration (Minutes)' } *@
+@*                     }, *@
+@*                     x: { *@
+@*                         ticks: { autoSkip: false, maxRotation: 90, minRotation: 45 } *@
+@*                     } *@
+@*                 }, *@
+@*                 plugins: { *@
+@*                     tooltip: { *@
+@*                         mode: 'index', *@
+@*                         intersect: false *@
+@*                     } *@
+@*                 } *@
+@*             } *@
+@*         }); *@
+@*     }); *@
+@* </script> *@
