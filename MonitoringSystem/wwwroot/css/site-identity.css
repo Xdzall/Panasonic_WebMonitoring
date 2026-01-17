@@ -65,7 +65,7 @@
     .auth-body .custom-input {
         width: 100%;
         background: linear-gradient(135deg, rgba(120, 130, 150, 1.0) 0%, rgba(100, 110, 130, 1.0) 100%) !important;
-        border: 1.5px solid rgba(255, 255, 255, 0.5) !important;
+        border: 1.5px solid rgba(255,255,255,0.6) !important;
         border-radius: 8px !important;
         padding: 0.75rem 1rem !important;
         font-size: 15px !important;
@@ -76,26 +76,13 @@
         outline: none !important; /* ← DAN INI */
     }
 
-        .auth-body .custom-input:focus {
-            background: linear-gradient(135deg, rgba(130, 140, 160, 1.0) 0%, rgba(110, 120, 140, 1.0) 100%) !important;
-            border: 1.5px solid rgba(255, 255, 255, 0.7) !important;
-            outline: none !important; /* ← DAN INI */
-            box-shadow: none !important; /* ← DAN INI */
-        }
-
+       
         .auth-body .custom-input::placeholder {
             color: rgba(255, 255, 255, 0.5) !important;
         }
 
     /* Autofill untuk custom input di auth */
-    .auth-body input.custom-input:-webkit-autofill,
-    .auth-body input.custom-input:-webkit-autofill:hover,
-    .auth-body input.custom-input:-webkit-autofill:focus,
-    .auth-body input.custom-input:-webkit-autofill:active {
-        transition: background-color 5000s ease-in-out 0s !important;
-        -webkit-box-shadow: 0 0 0px 1000px rgba(120, 130, 150, 1.0) inset !important;
-        -webkit-text-fill-color: white !important;
-    }
+
 
     /* Label styling untuk auth */
     .auth-body .form-label {
@@ -451,4 +438,34 @@ body:not(.auth-body) {
     font-size: 28px;
     font-weight: bold;
     cursor: pointer;
+}
+/* === FIX DOUBLE PASSWORD EYE (BROWSER) === */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none;
+}
+
+input[type="password"]::-webkit-credentials-auto-fill-button {
+    visibility: hidden;
+    display: none !important;
+    pointer-events: none;
+}
+
+/* === FIX AUTOFILL PUTIH (BEST PRACTICE) === */
+.auth-body input.custom-input:-webkit-autofill,
+.auth-body input.custom-input:-webkit-autofill:hover,
+.auth-body input.custom-input:-webkit-autofill:focus,
+.auth-body input.custom-input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px rgba(110, 120, 140, 1) inset !important;
+    box-shadow: 0 0 0 1000px rgba(110, 120, 140, 1) inset !important;
+    -webkit-text-fill-color: #ffffff !important;
+    caret-color: #ffffff !important;
+    border: 1.5px solid rgba(255,255,255,0.6) !important;
+    transition: background-color 9999s ease-in-out 0s !important;
+}
+
+.panasonic-corner img.panasonic-logo {
+    height: 14px; /* SAMA dengan tinggi teks 15px */
+    width: auto;
+    display: block;
 }

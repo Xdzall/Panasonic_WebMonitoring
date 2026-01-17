@@ -467,7 +467,7 @@ input[type="checkbox"]:checked + .shift-button {
             <select class="form-select form-select-sm" style="width: 90px;" id="SelectedMonth" name="SelectedMonth" asp-for="SelectedMonth">
                                     @for (int i = 1; i <= 12; i++)
                                     {
-                        <option value="@i">@CultureInfo.GetCultureInfo("en-US").DateTimeFormat.GetMonthName(i)</option>
+                            <option value="@i">@CultureInfo.GetCultureInfo("en-US").DateTimeFormat.GetMonthName(i)</option>
                                     }
             </select>
         </div>
@@ -478,7 +478,7 @@ input[type="checkbox"]:checked + .shift-button {
             <select class="form-select form-select-sm" style="width: 70px;" id="SelectedYear" name="SelectedYear" asp-for="SelectedYear">
                                     @for (int i = DateTime.Now.Year; i >= 2000; i--)
                                     {
-                        <option value="@i">@i</option>
+                            <option value="@i">@i</option>
                                     }
             </select>
         </div>
@@ -544,7 +544,7 @@ input[type="checkbox"]:checked + .shift-button {
                         </th>
                         @for (int day = 1; day <= Model.DaysInMonth; day++)
                         {
-                                        <th>@day</th>
+                                            <th>@day</th>
                         }
                     </tr>
                 </thead>
@@ -556,21 +556,21 @@ input[type="checkbox"]:checked + .shift-button {
                         <td>Normal</td>
                         @for (int i = 0; i < Model.PlanData.Count; i++)
                         {
-                                        <td>@Model.PlanData[i]</td>
+                                            <td>@Model.PlanData[i]</td>
                         }
                     </tr>
                     <tr class="extra-row">
                         <td>Overtime</td>
                         @for (int i = 0; i < Model.DaysInMonth; i++)
                         {
-                                        <td>0</td>
+                                            <td>0</td>
                         }
                     </tr>
                     <tr>
                         <td><b>Total Plan</b></td>
                         @for (int i = 0; i < Model.PlanData.Count; i++)
                         {
-                                        <td>@Model.PlanData[i]</td>
+                                            <td>@Model.PlanData[i]</td>
                         }
                     </tr>
                     <tr class="table-secondary extra-row">
@@ -580,70 +580,70 @@ input[type="checkbox"]:checked + .shift-button {
                         <td>Normal</td>
                         @for (int i = 0; i < Model.NormalData.Count; i++)
                         {
-                                        <td>@Model.NormalData[i]</td>
+                                            <td>@Model.NormalData[i]</td>
                         }
                     </tr>
                     <tr class="extra-row">
                         <td>Overtime</td>
                         @for (int i = 0; i < Model.OvertimeData.Count; i++)
                         {
-                                        <td>@Model.OvertimeData[i]</td>
+                                            <td>@Model.OvertimeData[i]</td>
                         }
                     </tr>
                     <tr>
                         <td><b>Total Actual</b></td>
                         @for (int i = 0; i < Model.NormalData.Count; i++)
                         {
-                                        <td>@(Model.NormalData[i] + Model.OvertimeData[i])</td>
+                                            <td>@(Model.NormalData[i] + Model.OvertimeData[i])</td>
                         }
                     </tr>
                     <tr class="extra-row">
                         <td><b>Difference (Actual - Plan)</b></td>
                         @for (int i = 0; i < Model.NormalData.Count; i++)
                         {
-                                        <td>@((Model.NormalData[i] + Model.OvertimeData[i]) - Model.PlanData[i])</td>
+                                            <td>@((Model.NormalData[i] + Model.OvertimeData[i]) - Model.PlanData[i])</td>
                         }
                     </tr>
                     <tr class="extra-row">
                         <td><b>No. of Direct Workers</b></td>
                         @for (int i = 0; i < Model.NoOfDirectWorkers.Count; i++)
                         {
-                                        <td>@(Model.NoOfDirectWorkers[i] > 0 ? Model.NoOfDirectWorkers[i].ToString() : "0")</td>
+                                            <td>@(Model.NoOfDirectWorkers[i] > 0 ? Model.NoOfDirectWorkers[i].ToString() : "0")</td>
                         }
                     </tr>
                     <tr class="extra-row">
                         <td>Overtime - No. of Operator</td>
                         @for (int i = 0; i < Model.OvertimeOperators.Count; i++)
                         {
-                                        <td>@(Model.OvertimeOperators[i] > 0 ? Model.OvertimeOperators[i] : "0")</td>
+                                            <td>@(Model.OvertimeOperators[i] > 0 ? Model.OvertimeOperators[i] : "0")</td>
                         }
                     </tr>
                     <tr>
                         <td><b>Overtime - Minutes</b></td>
                         @for (int i = 0; i < Model.OvertimeMinutes.Count; i++)
                         {
-                                        <td>@(Model.OvertimeMinutes[i] > 0 ? Model.OvertimeMinutes[i] : "0")</td>
+                                            <td>@(Model.OvertimeMinutes[i] > 0 ? Model.OvertimeMinutes[i] : "0")</td>
                         }
                     </tr>
                     <tr class="extra-row">
                         <td>Total Working Time</td>
                         @for (int i = 0; i < Model.DailyWorkTime.Count; i++)
                         {
-                                        <td>@Model.DailyWorkTime[i]</td>
+                                            <td>@Model.DailyWorkTime[i]</td>
                         }
                     </tr>
                     <tr>
                         <td><b>Loss Time</b></td>
                         @for (int i = 0; i < Model.DailyLossTime.Count; i++)
                         {
-                                        <td>@(Model.DailyLossTime[i] > 0 ? Model.DailyLossTime[i] : "0")</td>
+                                            <td>@(Model.DailyLossTime[i] > 0 ? Model.DailyLossTime[i] : "0")</td>
                         }
                     </tr>
                     <tr>
                         <td><b>Achievement Ratio</b></td>
                         @for (int i = 0; i < Model.PlanData.Count; i++)
                         {
-                                        <td>
+                                            <td>
                                 @{
                                     decimal totalActual = Model.NormalData[i] + Model.OvertimeData[i];
                                     decimal plan = Model.PlanData[i];
@@ -655,16 +655,16 @@ input[type="checkbox"]:checked + .shift-button {
                                 }
                                 @if (ratio > 0)
                                 {
-                                                            <span>@ratio%</span>
+                                                                    <span>@ratio%</span>
                                 }
-                                        </td>
+                                            </td>
                         }
                     </tr>
                     <tr>
                         <td><b>Prod. Qty / Head / Hour</b></td>
                         @for (int i = 0; i < Model.PlanData.Count; i++)
                         {
-                                        <td>
+                                            <td>
                                 @{
                                     decimal totalActual = Model.NormalData[i] + Model.OvertimeData[i];
                                     int workers = Model.NoOfDirectWorkers[i];
@@ -679,7 +679,7 @@ input[type="checkbox"]:checked + .shift-button {
                                     }
                                 }
                                 @(pph > 0 ? pph.ToString() : "")
-                                        </td>
+                                            </td>
                         }
                     </tr>
                 </tbody>
@@ -725,7 +725,7 @@ input[type="checkbox"]:checked + .shift-button {
                                 <select id="TargetMonth" name="TargetMonth" class="form-select" required>
                                     @for (int i = 1; i <= 12; i++)
                                     {
-                                                    <option value="@i">@CultureInfo.GetCultureInfo("en-US").DateTimeFormat.GetMonthName(i)</option>
+                                                        <option value="@i">@CultureInfo.GetCultureInfo("en-US").DateTimeFormat.GetMonthName(i)</option>
                                     }
                                 </select>
                             </div>
@@ -734,7 +734,7 @@ input[type="checkbox"]:checked + .shift-button {
                                 <select id="TargetYear" name="TargetYear" class="form-select" required>
                                     @for (int i = DateTime.Now.Year; i <= DateTime.Now.Year + 5; i++)
                                     {
-                                                    <option value="@i">@i</option>
+                                                        <option value="@i">@i</option>
                                     }
                                 </select>
                             </div>
@@ -748,135 +748,135 @@ input[type="checkbox"]:checked + .shift-button {
 </div>
 
 @section Scripts {
-                <script src="~/js/chart.umd.min.js"></script>
-                <script src="~/js/jspdf.umd.min.js"></script>
-                <script src="~/js/jspdf.plugin.autotable.js"></script>
+                    <script src="~/js/chart.umd.min.js"></script>
+                    <script src="~/js/jspdf.umd.min.js"></script>
+                    <script src="~/js/jspdf.plugin.autotable.js"></script>
 
-                <script>
-                    document.addEventListener('DOMContentLoaded', function () {
-                        const normalData = @Html.Raw(Json.Serialize(Model.NormalData));
-                        const overtimeData = @Html.Raw(Json.Serialize(Model.OvertimeData));
-                        const planData = @Html.Raw(Json.Serialize(Model.PlanData));
-                        const originalPlanData = @Html.Raw(Json.Serialize(Model.OriginalPlanData));
-                        const chartLabels = @Html.Raw(Json.Serialize(Model.ChartLabels));
-                        const isCurrentMonth = @Html.Raw(Json.Serialize(Model.IsCurrentMonthView));
-                        const today = new Date().getDate();
-                        const daysInMonth = @Model.DaysInMonth;
-                        const anchorDay = isCurrentMonth ? today : daysInMonth;
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            const normalData = @Html.Raw(Json.Serialize(Model.NormalData));
+                            const overtimeData = @Html.Raw(Json.Serialize(Model.OvertimeData));
+                            const planData = @Html.Raw(Json.Serialize(Model.PlanData));
+                            const originalPlanData = @Html.Raw(Json.Serialize(Model.OriginalPlanData));
+                            const chartLabels = @Html.Raw(Json.Serialize(Model.ChartLabels));
+                            const isCurrentMonth = @Html.Raw(Json.Serialize(Model.IsCurrentMonthView));
+                            const today = new Date().getDate();
+                            const daysInMonth = @Model.DaysInMonth;
+                            const anchorDay = isCurrentMonth ? today : daysInMonth;
 
-                        let totalActualAtAnchor = 0;
-                        let totalPlanAtAnchor = 0;
-                        for (let i = 0; i < anchorDay; i++) {
-                            totalActualAtAnchor += (normalData[i] || 0) + (overtimeData[i] || 0);
-                            totalPlanAtAnchor += (planData[i] || 0);
-                        }
-
-                        document.getElementById('totalActualValue').textContent = totalActualAtAnchor.toLocaleString();
-                        document.getElementById('totalPlanValue').textContent = totalPlanAtAnchor.toLocaleString();
-
-                        const ratioActualData = [], ratioPlanData = [];
-                        let runningActualTotal = 0, runningPlanTotal = 0;
-
-                        for (let i = 0; i < chartLabels.length; i++) {
-                            if (isCurrentMonth && (i + 1) > today) {
-                                ratioActualData.push(null);
-                                ratioPlanData.push(null);
-                            } else {
-                                runningActualTotal += (normalData[i] || 0) + (overtimeData[i] || 0);
-                                runningPlanTotal += (planData[i] || 0);
-                                ratioActualData.push((totalActualAtAnchor > 0) ? (runningActualTotal / totalActualAtAnchor) * 100 : 0);
-                                ratioPlanData.push((totalPlanAtAnchor > 0) ? (runningPlanTotal / totalPlanAtAnchor) * 100 : 0);
+                            let totalActualAtAnchor = 0;
+                            let totalPlanAtAnchor = 0;
+                            for (let i = 0; i < anchorDay; i++) {
+                                totalActualAtAnchor += (normalData[i] || 0) + (overtimeData[i] || 0);
+                                totalPlanAtAnchor += (planData[i] || 0);
                             }
-                        }
 
-                        new Chart(document.getElementById('dayChart'), {
-                            type: 'bar',
-                            data: {
-                                labels: chartLabels,
-                                datasets: [
-                                    { type: 'line', label: 'Rasio Actual (%)', data: ratioActualData, borderColor: 'rgba(255, 215, 0, 1)', backgroundColor: 'rgba(255, 215, 0, 0.2)', tension: 0.1, yAxisID: 'y1' },
-                                    { type: 'line', label: 'Rasio Plan (%)', data: ratioPlanData, borderColor: 'rgba(255, 69, 0, 1)', backgroundColor: 'rgba(255, 69, 0, 0.2)', tension: 0.1, yAxisID: 'y1' },
-                                    { label: 'Original Plan', data: originalPlanData, backgroundColor: '#67C090', borderColor: '#67C090', barThickness: 15, stack: 'OriginalPlan', yAxisID: 'y' },
-                                    { label: 'Plan', data: planData, backgroundColor: '#9ECAD6', borderColor: '#9ECAD6', barThickness: 15, stack: 'Plan', yAxisID: 'y' },
-                                    { label: 'Normal', data: normalData, backgroundColor: '#640D5F', borderColor: '#640D5F', barThickness: 15, stack: 'Actual', yAxisID: 'y' },
-                                    { label: 'Overtime', data: overtimeData, backgroundColor: '#FF6384', borderColor: '#FF6384', barThickness: 15, stack: 'Actual', yAxisID: 'y' }
-                                ]
-                            },
-                            options: {
-                                devicePixelRatio: 3,
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                animation: { duration: 500 },
-                                interaction: { mode: 'index', intersect: false },
-                                scales: {
-                                    x: { stacked: true, ticks: { color: '#ffffff' } },
-                                    y: { type: 'linear', position: 'left', title: { display: true, text: 'Production Qty (unit)', color: '#ffffff' }, ticks: { color: '#ffffff' } },
-                                    y1: { type: 'linear', position: 'right', max: 120, title: { display: true, text: 'Ratio (%)', color: '#ffffff' }, ticks: { color: '#ffffff', callback: v => v + '%' }, grid: { drawOnChartArea: false } }
+                            document.getElementById('totalActualValue').textContent = totalActualAtAnchor.toLocaleString();
+                            document.getElementById('totalPlanValue').textContent = totalPlanAtAnchor.toLocaleString();
+
+                            const ratioActualData = [], ratioPlanData = [];
+                            let runningActualTotal = 0, runningPlanTotal = 0;
+
+                            for (let i = 0; i < chartLabels.length; i++) {
+                                if (isCurrentMonth && (i + 1) > today) {
+                                    ratioActualData.push(null);
+                                    ratioPlanData.push(null);
+                                } else {
+                                    runningActualTotal += (normalData[i] || 0) + (overtimeData[i] || 0);
+                                    runningPlanTotal += (planData[i] || 0);
+                                    ratioActualData.push((totalActualAtAnchor > 0) ? (runningActualTotal / totalActualAtAnchor) * 100 : 0);
+                                    ratioPlanData.push((totalPlanAtAnchor > 0) ? (runningPlanTotal / totalPlanAtAnchor) * 100 : 0);
+                                }
+                            }
+
+                            new Chart(document.getElementById('dayChart'), {
+                                type: 'bar',
+                                data: {
+                                    labels: chartLabels,
+                                    datasets: [
+                                        { type: 'line', label: 'Rasio Actual (%)', data: ratioActualData, borderColor: 'rgba(255, 215, 0, 1)', backgroundColor: 'rgba(255, 215, 0, 0.2)', tension: 0.1, yAxisID: 'y1' },
+                                        { type: 'line', label: 'Rasio Plan (%)', data: ratioPlanData, borderColor: 'rgba(255, 69, 0, 1)', backgroundColor: 'rgba(255, 69, 0, 0.2)', tension: 0.1, yAxisID: 'y1' },
+                                        { label: 'Original Plan', data: originalPlanData, backgroundColor: '#67C090', borderColor: '#67C090', barThickness: 15, stack: 'OriginalPlan', yAxisID: 'y' },
+                                        { label: 'Plan', data: planData, backgroundColor: '#9ECAD6', borderColor: '#9ECAD6', barThickness: 15, stack: 'Plan', yAxisID: 'y' },
+                                        { label: 'Normal', data: normalData, backgroundColor: '#640D5F', borderColor: '#640D5F', barThickness: 15, stack: 'Actual', yAxisID: 'y' },
+                                        { label: 'Overtime', data: overtimeData, backgroundColor: '#FF6384', borderColor: '#FF6384', barThickness: 15, stack: 'Actual', yAxisID: 'y' }
+                                    ]
                                 },
-                                plugins: {
-                                    legend: { labels: { color: '#ffffff' } },
-                                    tooltip: { titleColor: '#ffffff', bodyColor: '#ffffff' }
+                                options: {
+                                    devicePixelRatio: 3,
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    animation: { duration: 500 },
+                                    interaction: { mode: 'index', intersect: false },
+                                    scales: {
+                                        x: { stacked: true, ticks: { color: '#ffffff' } },
+                                        y: { type: 'linear', position: 'left', title: { display: true, text: 'Production Qty (unit)', color: '#ffffff' }, ticks: { color: '#ffffff' } },
+                                        y1: { type: 'linear', position: 'right', max: 120, title: { display: true, text: 'Ratio (%)', color: '#ffffff' }, ticks: { color: '#ffffff', callback: v => v + '%' }, grid: { drawOnChartArea: false } }
+                                    },
+                                    plugins: {
+                                        legend: { labels: { color: '#ffffff' } },
+                                        tooltip: { titleColor: '#ffffff', bodyColor: '#ffffff' }
+                                    }
                                 }
-                            }
+                            });
+
+                            document.getElementById('toggleExtraRows')?.addEventListener('click', function () {
+                                const extraRows = document.querySelectorAll('.extra-row');
+                                const icon = document.getElementById('toggleIcon');
+                                const isVisible = extraRows[0]?.style.display === 'table-row';
+                                extraRows.forEach(row => row.style.display = isVisible ? 'none' : 'table-row');
+                                icon?.classList.toggle('bi-chevron-down', isVisible);
+                                icon?.classList.toggle('bi-chevron-up', !isVisible);
+                            });
+
+                            document.getElementById('downloadPdfButton')?.addEventListener('click', function () {
+                                const btn = this;
+                                const origContent = btn.innerHTML;
+                                btn.disabled = true;
+                                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generating...';
+
+                                setTimeout(() => {
+                                    try {
+                                        const { jsPDF } = window.jspdf;
+                                        const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+                                        const pageWidth = doc.internal.pageSize.getWidth();
+
+                                        doc.setFontSize(18);
+                                        doc.text('Production Report', 40, 50);
+                                        doc.setFontSize(10);
+                                        doc.setTextColor(100);
+                                        doc.text(`Period: ${document.getElementById('SelectedMonth').selectedOptions[0].text} ${document.getElementById('SelectedYear').value}`, 40, 70);
+                                        doc.text(`Total Plan: ${document.getElementById('totalPlanValue').innerText}`, pageWidth - 40, 70, { align: 'right' });
+                                        doc.text(`Total Actual: ${document.getElementById('totalActualValue').innerText}`, pageWidth - 40, 85, { align: 'right' });
+                                        doc.text(`P/H/H: ${document.getElementById('totalPhhValue').innerText}`, pageWidth - 40, 100, { align: 'right' });
+                                        doc.setTextColor(0);
+
+                                        const chartImgData = document.getElementById('dayChart').toDataURL('image/png', 1.0);
+                                        doc.addImage(chartImgData, 'PNG', 40, 110, 760, 220);
+
+                                        const extraRows = document.querySelectorAll('.extra-row');
+                                        const wereHidden = extraRows[0]?.style.display === 'none';
+                                        if (wereHidden) extraRows.forEach(row => row.style.display = 'table-row');
+
+                                        doc.autoTable({
+                                            html: '#productionTable',
+                                            startY: 340,
+                                            theme: 'grid',
+                                            styles: { fontSize: 5, cellPadding: 2 },
+                                            headStyles: { fillColor: [44, 62, 80], fontSize: 6 }
+                                        });
+
+                                        if (wereHidden) extraRows.forEach(row => row.style.display = 'none');
+                                        doc.save('Production-Report.pdf');
+                                    } catch (err) {
+                                        console.error(err);
+                                        alert('Gagal membuat PDF. Cek console untuk detail.');
+                                    } finally {
+                                        btn.disabled = false;
+                                        btn.innerHTML = origContent;
+                                    }
+                                }, 100);
+                            });
                         });
-
-                        document.getElementById('toggleExtraRows')?.addEventListener('click', function () {
-                            const extraRows = document.querySelectorAll('.extra-row');
-                            const icon = document.getElementById('toggleIcon');
-                            const isVisible = extraRows[0]?.style.display === 'table-row';
-                            extraRows.forEach(row => row.style.display = isVisible ? 'none' : 'table-row');
-                            icon?.classList.toggle('bi-chevron-down', isVisible);
-                            icon?.classList.toggle('bi-chevron-up', !isVisible);
-                        });
-
-                        document.getElementById('downloadPdfButton')?.addEventListener('click', function () {
-                            const btn = this;
-                            const origContent = btn.innerHTML;
-                            btn.disabled = true;
-                            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generating...';
-
-                            setTimeout(() => {
-                                try {
-                                    const { jsPDF } = window.jspdf;
-                                    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
-                                    const pageWidth = doc.internal.pageSize.getWidth();
-
-                                    doc.setFontSize(18);
-                                    doc.text('Production Report', 40, 50);
-                                    doc.setFontSize(10);
-                                    doc.setTextColor(100);
-                                    doc.text(`Period: ${document.getElementById('SelectedMonth').selectedOptions[0].text} ${document.getElementById('SelectedYear').value}`, 40, 70);
-                                    doc.text(`Total Plan: ${document.getElementById('totalPlanValue').innerText}`, pageWidth - 40, 70, { align: 'right' });
-                                    doc.text(`Total Actual: ${document.getElementById('totalActualValue').innerText}`, pageWidth - 40, 85, { align: 'right' });
-                                    doc.text(`P/H/H: ${document.getElementById('totalPhhValue').innerText}`, pageWidth - 40, 100, { align: 'right' });
-                                    doc.setTextColor(0);
-
-                                    const chartImgData = document.getElementById('dayChart').toDataURL('image/png', 1.0);
-                                    doc.addImage(chartImgData, 'PNG', 40, 110, 760, 220);
-
-                                    const extraRows = document.querySelectorAll('.extra-row');
-                                    const wereHidden = extraRows[0]?.style.display === 'none';
-                                    if (wereHidden) extraRows.forEach(row => row.style.display = 'table-row');
-
-                                    doc.autoTable({
-                                        html: '#productionTable',
-                                        startY: 340,
-                                        theme: 'grid',
-                                        styles: { fontSize: 5, cellPadding: 2 },
-                                        headStyles: { fillColor: [44, 62, 80], fontSize: 6 }
-                                    });
-
-                                    if (wereHidden) extraRows.forEach(row => row.style.display = 'none');
-                                    doc.save('Production-Report.pdf');
-                                } catch (err) {
-                                    console.error(err);
-                                    alert('Gagal membuat PDF. Cek console untuk detail.');
-                                } finally {
-                                    btn.disabled = false;
-                                    btn.innerHTML = origContent;
-                                }
-                            }, 100);
-                        });
-                    });
-                </script>
+                    </script>
 }

@@ -216,15 +216,66 @@
     letter-spacing: -0.1px;
 }
 
-/* Logout Section Pres */
-#bdSidebar .center {
-    margin-top: auto !important; 
-    padding-bottom: 5px !important;
+/* Logout Button Style */
+#bdSidebar .center form {
+    margin: 0 !important;
+    padding: 0 !important;
     width: 100% !important;
     display: flex !important;
     justify-content: center !important;
 }
 
+/* Logout Section - PUSH KE BOTTOM */
+#bdSidebar .align-items-center.center {
+    margin-top: auto !important;  /* INI YANG PENTING - push ke bawah */
+    padding: 8px 0 !important;
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+}
+
+/* Logout Button Style */
+#bdSidebar .center form {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+}
+
+#bdSidebar .logout-btn {
+    width: 88px !important;
+    height: 50px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 8px !important;
+    background: transparent !important;
+    border: none !important;
+    color: #ff8a80 !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+    padding: 0 !important;
+    transition: all 0.2s ease !important;
+}
+
+#bdSidebar .logout-btn:hover {
+    background: rgba(255, 138, 128, 0.1) !important;
+    color: #ff5252 !important;
+}
+
+#bdSidebar .logout-btn i {
+    font-size: 15px !important;
+    margin-bottom: 2px !important;
+}
+
+#bdSidebar .logout-btn .nav-label {
+    font-size: 9px !important;
+    font-weight: 500 !important;
+    text-align: center !important;
+    line-height: 1.1 !important;
+}
 #bdSidebar .center a {
     width: 88px !important;
     height: 50px !important; 
@@ -374,13 +425,21 @@
                         <span class="nav-label">Break Time</span>
                     </a>
                 </li>
-            </ul>
-            <div class="align-items-center center">
-                <a href="#">
-                    <i class="fa-solid fa-right-from-bracket"></i>
-                    <span class="nav-label">Log Out</span>
-                </a>
-            </div>
+         </ul>
+
+<div class="align-items-center center">
+    <form method="post"
+          asp-area="Identity"
+          asp-page="/Account/Logout"
+          asp-route-returnUrl="@Url.Page("/Index", new { area = "" })">
+        <button type="submit" class="logout-btn">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span class="nav-label">Log Out</span>
+        </button>
+    </form>
+</div>
+
+
         </div>
 
         <div class="main-content-wrapper">
