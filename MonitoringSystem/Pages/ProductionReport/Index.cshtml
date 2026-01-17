@@ -3,7 +3,418 @@
 @model MonitoringSystem.Pages.ProductionReport.IndexModel
 @{
     ViewData["Title"] = "Production Report";
+    ViewData["ShowPanamonLines"] = true;
 }
+
+<style>
+/* FILTER AREA WITH LINES - SUPER COMPACT */
+.filter-area-with-lines {
+    position: relative;
+    padding: 1px 0;
+    margin-bottom: 8px;
+    margin-top: 0px;
+    min-height: 10px;
+     width: calc(100% - 14px);
+    margin-left: 7px;
+    margin-right: 7px;
+
+}
+.panamon-bottom-line,
+.panamon-bottomm-line {
+    position: absolute !important;
+    left: 7px !important;
+    right: 7px !important;
+    width: width: calc(100% - 14px) !important; 
+    height: 2px !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    z-index: 999 !important;
+    pointer-events: none !important;
+    display: block !important;
+}
+
+.panamon-bottom-line {
+    top: 0 !important;
+    border-top: 2px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.panamon-bottomm-line {
+    bottom: 0 !important;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* FILTER CONTENT - SUPER COMPACT */
+.filter-content {
+    position: relative;
+    z-index: 2;
+    padding: 6px 0;
+    border-radius: 15px;
+    margin-left: 7px;
+    margin-right: 7px;
+
+}
+
+.filter-content .form-select-sm {
+    height: 20px;
+    padding: 0 22px 0 8px;
+    font-size: 10px;
+    line-height: 20px;
+    border-radius: 999px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    color: #ffffff;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    background-size: 12px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 0;
+    padding-bottom: 0;
+    text-align: center;
+    padding-left: 8px;
+    padding-right: 22px;
+}
+.filter-content .form-select-sm option {
+    background-color: rgba(50, 60, 80, 0.95);
+    color: #ffffff;
+    font-size: 12px;
+    padding: 8px;
+}
+
+.filter-content .form-select-sm option:hover {
+    background-color: rgba(70, 85, 110, 0.95);
+}
+
+.filter-content .form-select:focus {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.1);
+}
+.filter-content label {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.filter-content .form-check-input {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.4);
+    border-radius: 8px;
+}
+
+.filter-content .form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.filter-content .btn-primary {
+    background-color: rgba(8, 65, 150, 0.95);
+    border: 2px solid rgba(100, 181, 246, 1);
+    color: rgba(100, 181, 246, 1);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.filter-content .btn-primary:hover {
+    background-color: rgba(5, 45, 110, 1);
+    border-color: rgba(144, 202, 249, 1);
+    color: rgba(144, 202, 249, 1);
+}
+
+.filter-content .btn-danger {
+    background-color: rgba(140, 30, 40, 0.95);
+    border: 2px solid rgba(239, 154, 154, 1);
+    color: rgba(239, 154, 154, 1);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.filter-content .btn-danger:hover {
+    background-color: rgba(110, 20, 30, 1);
+    border-color: rgba(244, 143, 177, 1);
+    color: rgba(244, 143, 177, 1);
+}
+
+/* TOMBOL UPLOAD & DOWNLOAD - MIRIP CHART BOX */
+/* TOMBOL UPLOAD & DOWNLOAD - MIRIP CHART BOX */
+.ms-auto .btn-primary {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border: 2px solid rgba(255, 255, 255, 0.5) !important;
+    color: #ffffff !important;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ms-auto .btn-primary:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.ms-auto .btn-danger {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border: 2px solid rgba(255, 255, 255, 0.5) !important;
+    color: #ffffff !important;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ms-auto .btn-danger:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.filter-content .btn {
+    border-radius: 999px !important;
+}
+/* TABLE STYLING - COMPACT */
+.table th,  
+.table td {
+    font-size: 11px;
+    padding: 0.25rem;
+    white-space: nowrap;
+    word-wrap: break-word;
+    vertical-align: middle;
+}
+
+.table th:first-child,
+.table td:first-child {
+    min-width: 100px;
+    white-space: normal;
+    text-align: left;
+    padding-left: .5rem;
+}
+
+.extra-row {
+    display: none;
+}
+
+/* TABLE BACKGROUND */
+.table.table {
+    background-color: rgba(255, 255, 255, 0.20) !important;
+}
+
+table.table thead th {
+    background-color: rgba(0, 0, 0, 0.7) !important;
+    color: #ffffff !important;
+}
+
+table.table tbody td {
+    background-color: transparent !important;
+    color: #eaeaea !important;
+}
+
+table.table-bordered > :not(caption) > * {
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* CHART CONTAINER - SUPER COMPACT */
+#dayDiv {
+    position: relative;
+    width: calc(100% - 14px);
+    max-width: 100%;
+    height: auto;
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+    margin-left: 7px;
+    margin-right: 7px;
+    background: rgba(255, 255, 255, 0.20);
+    border-radius: 12px;
+    padding: 8px 12px 6px 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3) !important;
+    overflow: visible !important;
+}
+
+#dayChart {
+    width: 100% !important;
+    max-width: 100%;
+    height: 350px !important;
+    margin-bottom: 6px;
+}
+/* TOTAL INFO - SUPER COMPACT */
+.total-info-text {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 15px;
+    padding: 2px 0;
+}
+
+.total-info-text span {
+    font-size: 0.75rem;
+    color: #ffffff;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.total-info-text strong {
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-left: 3px;
+}
+
+/* COMPACT FILTER */
+.filter-content .form-select-sm,
+.filter-content .btn-sm {
+    height: 20px;
+    min-height: 20px;
+    font-size: 10px;
+    line-height: 20px;
+}
+
+.filter-content .form-select-sm {
+    height: 20px;
+    padding: 0;
+    padding-left: 12px;
+    padding-right: 28px;
+    padding-top: -2px;
+    font-size: 10px;
+    line-height: 16px;
+    border-radius: 999px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    color: #ffffff;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 10px 10px;
+    text-align: center;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.filter-content .btn-sm {
+    padding: 0 12px;
+    border-radius: 999px;
+}
+
+.filter-content .form-check-input {
+    width: 14px;
+    height: 14px;
+    margin-top: 2px;
+}
+
+.filter-content label,
+.filter-content .form-check-label {
+    font-size: 10px;
+    line-height: 20px;
+}
+
+/* CRITICAL OVERFLOW CONTROL */
+/* CRITICAL OVERFLOW CONTROL - FIXED */
+html, body {
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    max-width: 100vw;
+}
+
+.container-fluid {
+    max-width: 100%;
+    overflow-x: visible !important;
+    overflow-y: auto !important;
+    height: auto;
+    padding-left: 0px !important;  /* ← TAMBAH INI */
+    padding-right: 0px !important; /* ← GANTI JADI 1PX */
+}
+
+.table-responsive {
+    max-width: calc(100% - 14px);
+    margin-left: 7px;
+    margin-right: 7px;
+    overflow-x: auto;
+    max-height: calc(100vh - 480px);
+}
+
+main.pb-5 {
+    padding-bottom: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+    display: flex;
+    flex-direction: column;
+}
+
+#reportContainer {
+    height: auto !important;
+    overflow: visible !important;
+    display: flex;
+    flex-direction: column;
+}
+
+#reportContainer > .container-fluid {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: visible !important;
+}
+/* CUSTOM SHIFT BUTTONS - KOTAK KAYAK GAMBAR */
+.shift-button {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background-color: rgba(70, 80, 100, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.shift-button:hover {
+    background-color: rgba(90, 100, 120, 0.7);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.shift-button.active {
+    background-color: rgba(50, 60, 80, 0.9);
+    border: 3px solid #ffffff;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+input[type="checkbox"]:checked + .shift-button {
+    background-color: rgba(50, 60, 80, 0.9);
+    border: 3px solid #ffffff;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+.main-content-wrapper {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.main-content-wrapper .p-4 {
+    padding-left: 1px !important;
+    padding-right: 1px !important;
+}
+
+#reportContainer {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+#reportContainer > .container-fluid {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+</style>
 
 <div id="reportContainer">
     @{
@@ -28,562 +439,444 @@
             monthlyPph = Math.Round((double)monthlyTotalActual / totalProductiveManHours, 2);
         }
     }
+
     <div class="container-fluid">
-        <div class="row g-3 align-items-center justify-content-center">
-            <div class="col-12">
-                <div class="row g-3 align-items-center justify-content-between flex-wrap">
-                    <div class="col-auto">
-                        <form method="post" class="row g-3 align-items-center">
-                            <div class="col-auto">
-                                <select class="form-select form-select-sm" id="SelectedMonth" name="SelectedMonth" asp-for="SelectedMonth">
+        <!-- FILTER AREA WITH HORIZONTAL LINES -->
+        <div class="filter-area-with-lines">    
+            <!-- GARIS HORIZONTAL - ALWAYS SHOW -->
+            <div class="panamon-bottom-line"></div>
+            <div class="panamon-bottomm-line"></div>
+
+            <div class="filter-content">
+                <div class="row g-3 align-items-center">
+                    <!-- FILTER FORM -->
+                  <div class="col-12">
+    <form method="post" class="d-flex flex-wrap align-items-center gap-3">
+        <!-- LINE - PALING KIRI -->
+        <div class="d-flex align-items-center gap-2">
+            <label class="mb-0 text-white small">Line</label>
+            <select class="form-select form-select-sm" style="width: 60px;" id="MachineLine" name="MachineLine" asp-for="MachineLine">
+                <option value="MCH1-01">CU</option>
+                <option value="MCH1-02">CS</option>
+            </select>
+        </div>
+
+        <!-- MONTH -->
+        <div class="d-flex align-items-center gap-2">
+            <label class="mb-0 text-white small">Month</label>
+            <select class="form-select form-select-sm" style="width: 90px;" id="SelectedMonth" name="SelectedMonth" asp-for="SelectedMonth">
                                     @for (int i = 1; i <= 12; i++)
                                     {
-                                            <option value="@i">@CultureInfo.GetCultureInfo("en-US").DateTimeFormat.GetMonthName(i)</option>
+                        <option value="@i">@CultureInfo.GetCultureInfo("en-US").DateTimeFormat.GetMonthName(i)</option>
                                     }
-                                </select>
-                            </div>
-                            <div class="col-auto">
-                                <select class="form-select form-select-sm" id="SelectedYear" name="SelectedYear" asp-for="SelectedYear">
+            </select>
+        </div>
+
+        <!-- YEAR -->
+        <div class="d-flex align-items-center gap-2">
+            <label class="mb-0 text-white small">Year</label>
+            <select class="form-select form-select-sm" style="width: 70px;" id="SelectedYear" name="SelectedYear" asp-for="SelectedYear">
                                     @for (int i = DateTime.Now.Year; i >= 2000; i--)
                                     {
-                                            <option value="@i">@i</option>
+                        <option value="@i">@i</option>
+                                    }
+            </select>
+        </div>
+
+        <!-- SHIFT -->
+        <div class="d-flex align-items-center gap-2">
+            <label class="mb-0 text-white small">Shift</label>
+            <div class="d-flex gap-2 shift-buttons-container">
+                <input type="checkbox" id="Shift1" name="SelectedShifts" value="1" @(Model.SelectedShifts.Contains("1") ? "checked" : "") style="display: none;">
+                <label for="Shift1" class="shift-button @(Model.SelectedShifts.Contains("1") ? "active" : "")">1</label>
+
+                <input type="checkbox" id="Shift2" name="SelectedShifts" value="2" @(Model.SelectedShifts.Contains("2") ? "checked" : "") style="display: none;">
+                <label for="Shift2" class="shift-button @(Model.SelectedShifts.Contains("2") ? "active" : "")">2</label>
+
+                <input type="checkbox" id="Shift3" name="SelectedShifts" value="3" @(Model.SelectedShifts.Contains("3") ? "checked" : "") style="display: none;">
+                <label for="Shift3" class="shift-button @(Model.SelectedShifts.Contains("3") ? "active" : "")">3</label>
+            </div>
+        </div>
+
+        <button type="submit" name="submitButton" value="search" class="btn btn-sm btn-primary">Search</button>
+        <button type="submit" name="submitButton" value="reset" class="btn btn-sm btn-danger">Reset</button>
+
+        <div class="ms-auto d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                <i class="bi bi-upload"></i> Upload
+            </button>
+            <button type="button" id="downloadPdfButton" class="btn btn-sm btn-danger">
+                <i class="bi bi-download"></i> Download
+            </button>
+        </div>
+    </form>
+</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CHART WITH BOX -->
+        <div id="dayDiv">
+            <div class="row">
+                <div class="col-12">
+                    <canvas id="dayChart"></canvas>
+                </div>
+            </div>
+
+            <!-- TOTAL INFO - NO EXTRA BOX -->
+            <div class="total-info-text">
+                <span>Total Actual: <strong id="totalActualValue" class="text-success"></strong></span>
+                <span>Total Plan: <strong id="totalPlanValue" class="text-primary"></strong></span>
+                <span>P/H/H: <strong id="totalPhhValue" class="text-info">@monthlyPph</strong></span>
+            </div>
+        </div>
+
+        <!-- TABLE -->
+        <div class="table-responsive">
+            <table class="table table-bordered text-center align-middle w-100" id="productionTable">
+                <thead class="table-dark">
+                    <tr>
+                        <th id="toggleExtraRows" style="min-width: 100px; max-width: 100px; cursor: pointer; user-select: none;">
+                            <div class="d-flex align-items-center">
+                                <i id="toggleIcon" class="bi bi-chevron-down me-2"></i>
+                                <span>Production Result</span>
+                            </div>
+                        </th>
+                        @for (int day = 1; day <= Model.DaysInMonth; day++)
+                        {
+                                        <th>@day</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="table-secondary extra-row">
+                        <td colspan="@(Model.DaysInMonth + 1)" class="text-center">Plan Forecast</td>
+                    </tr>
+                    <tr class="extra-row">
+                        <td>Normal</td>
+                        @for (int i = 0; i < Model.PlanData.Count; i++)
+                        {
+                                        <td>@Model.PlanData[i]</td>
+                        }
+                    </tr>
+                    <tr class="extra-row">
+                        <td>Overtime</td>
+                        @for (int i = 0; i < Model.DaysInMonth; i++)
+                        {
+                                        <td>0</td>
+                        }
+                    </tr>
+                    <tr>
+                        <td><b>Total Plan</b></td>
+                        @for (int i = 0; i < Model.PlanData.Count; i++)
+                        {
+                                        <td>@Model.PlanData[i]</td>
+                        }
+                    </tr>
+                    <tr class="table-secondary extra-row">
+                        <td colspan="@(Model.DaysInMonth + 1)" class="text-center">Actual</td>
+                    </tr>
+                    <tr class="extra-row">
+                        <td>Normal</td>
+                        @for (int i = 0; i < Model.NormalData.Count; i++)
+                        {
+                                        <td>@Model.NormalData[i]</td>
+                        }
+                    </tr>
+                    <tr class="extra-row">
+                        <td>Overtime</td>
+                        @for (int i = 0; i < Model.OvertimeData.Count; i++)
+                        {
+                                        <td>@Model.OvertimeData[i]</td>
+                        }
+                    </tr>
+                    <tr>
+                        <td><b>Total Actual</b></td>
+                        @for (int i = 0; i < Model.NormalData.Count; i++)
+                        {
+                                        <td>@(Model.NormalData[i] + Model.OvertimeData[i])</td>
+                        }
+                    </tr>
+                    <tr class="extra-row">
+                        <td><b>Difference (Actual - Plan)</b></td>
+                        @for (int i = 0; i < Model.NormalData.Count; i++)
+                        {
+                                        <td>@((Model.NormalData[i] + Model.OvertimeData[i]) - Model.PlanData[i])</td>
+                        }
+                    </tr>
+                    <tr class="extra-row">
+                        <td><b>No. of Direct Workers</b></td>
+                        @for (int i = 0; i < Model.NoOfDirectWorkers.Count; i++)
+                        {
+                                        <td>@(Model.NoOfDirectWorkers[i] > 0 ? Model.NoOfDirectWorkers[i].ToString() : "0")</td>
+                        }
+                    </tr>
+                    <tr class="extra-row">
+                        <td>Overtime - No. of Operator</td>
+                        @for (int i = 0; i < Model.OvertimeOperators.Count; i++)
+                        {
+                                        <td>@(Model.OvertimeOperators[i] > 0 ? Model.OvertimeOperators[i] : "0")</td>
+                        }
+                    </tr>
+                    <tr>
+                        <td><b>Overtime - Minutes</b></td>
+                        @for (int i = 0; i < Model.OvertimeMinutes.Count; i++)
+                        {
+                                        <td>@(Model.OvertimeMinutes[i] > 0 ? Model.OvertimeMinutes[i] : "0")</td>
+                        }
+                    </tr>
+                    <tr class="extra-row">
+                        <td>Total Working Time</td>
+                        @for (int i = 0; i < Model.DailyWorkTime.Count; i++)
+                        {
+                                        <td>@Model.DailyWorkTime[i]</td>
+                        }
+                    </tr>
+                    <tr>
+                        <td><b>Loss Time</b></td>
+                        @for (int i = 0; i < Model.DailyLossTime.Count; i++)
+                        {
+                                        <td>@(Model.DailyLossTime[i] > 0 ? Model.DailyLossTime[i] : "0")</td>
+                        }
+                    </tr>
+                    <tr>
+                        <td><b>Achievement Ratio</b></td>
+                        @for (int i = 0; i < Model.PlanData.Count; i++)
+                        {
+                                        <td>
+                                @{
+                                    decimal totalActual = Model.NormalData[i] + Model.OvertimeData[i];
+                                    decimal plan = Model.PlanData[i];
+                                    double ratio = 0;
+                                    if (plan > 0)
+                                    {
+                                        ratio = Math.Round(((double)totalActual / (double)plan) * 100, 2);
+                                    }
+                                }
+                                @if (ratio > 0)
+                                {
+                                                            <span>@ratio%</span>
+                                }
+                                        </td>
+                        }
+                    </tr>
+                    <tr>
+                        <td><b>Prod. Qty / Head / Hour</b></td>
+                        @for (int i = 0; i < Model.PlanData.Count; i++)
+                        {
+                                        <td>
+                                @{
+                                    decimal totalActual = Model.NormalData[i] + Model.OvertimeData[i];
+                                    int workers = Model.NoOfDirectWorkers[i];
+                                    int workingMinutes = Model.DailyWorkTime[i];
+                                    int lossMinutes = Model.DailyLossTime[i];
+                                    double netProductiveMinutes = workingMinutes - lossMinutes;
+                                    double pph = 0;
+                                    if (totalActual > 0 && workers > 0 && netProductiveMinutes > 0)
+                                    {
+                                        double netProductiveHours = netProductiveMinutes / 60.0;
+                                        pph = Math.Round((double)totalActual / workers / netProductiveHours, 2);
+                                    }
+                                }
+                                @(pph > 0 ? pph.ToString() : "")
+                                        </td>
+                        }
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- UPLOAD MODAL -->
+    <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="uploadModalLabel">Upload Plan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3 text-center">
+                        <div class="d-flex justify-content-center gap-2">
+                            <a asp-page-handler="DownloadTemplate" asp-route-type="cu" class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-file-earmark-excel-fill"></i> Template CU
+                            </a>
+                            <a asp-page-handler="DownloadTemplate" asp-route-type="cs" class="btn btn-sm btn-outline-info">
+                                <i class="bi bi-file-earmark-excel-fill"></i> Template CS
+                            </a>
+                        </div>
+                    </div>
+                    <hr />
+                    <form method="post" enctype="multipart/form-data" asp-page-handler="Upload">
+                        <div class="mb-3">
+                            <label for="UploadedFile" class="form-label">Pilih File Plan:</label>
+                            <input type="file" id="UploadedFile" name="UploadedFile" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="TargetMachine" class="form-label">Untuk Mesin:</label>
+                            <select id="TargetMachine" name="TargetMachine" class="form-select" required>
+                                <option value="MCH1-01">CU</option>
+                                <option value="MCH1-02">CS</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="TargetMonth" class="form-label">Untuk Bulan:</label>
+                                <select id="TargetMonth" name="TargetMonth" class="form-select" required>
+                                    @for (int i = 1; i <= 12; i++)
+                                    {
+                                                    <option value="@i">@CultureInfo.GetCultureInfo("en-US").DateTimeFormat.GetMonthName(i)</option>
                                     }
                                 </select>
                             </div>
-                            <div class="col-auto d-flex gap-4 align-items-center">
-                                <label class="fs-10">Machine Line</label>
-                                <select class="form-select form-select-sm border-dark filter-control" id="MachineLine" name="MachineLine" asp-for="MachineLine">
-                                    <option value="MCH1-01">CU</option>
-                                    <option value="MCH1-02">CS</option>
+                            <div class="col-md-6 mb-3">
+                                <label for="TargetYear" class="form-label">Untuk Tahun:</label>
+                                <select id="TargetYear" name="TargetYear" class="form-select" required>
+                                    @for (int i = DateTime.Now.Year; i <= DateTime.Now.Year + 5; i++)
+                                    {
+                                                    <option value="@i">@i</option>
+                                    }
                                 </select>
                             </div>
-                            <div class="col-auto d-flex gap-3 align-items-center">
-                                <label class="fs-10">Shift</label>
-                                <div class="d-flex gap-2">
-                                    <div class="form-check">
-                                        <input class="form-check-input filter-control" type="checkbox" id="Shift1" name="SelectedShifts" value="1" @(Model.SelectedShifts.Contains("1") ? "checked" : "")>
-                                        <label class="form-check-label" for="Shift1">1</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input filter-control" type="checkbox" id="Shift2" name="SelectedShifts" value="2" @(Model.SelectedShifts.Contains("2") ? "checked" : "")>
-                                        <label class="form-check-label" for="Shift2">2</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input filter-control" type="checkbox" id="Shift3" name="SelectedShifts" value="3" @(Model.SelectedShifts.Contains("3") ? "checked" : "")>
-                                        <label class="form-check-label" for="Shift3">3</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-auto d-flex gap-2">
-                                <button type="submit" name="submitButton" value="search" class="btn btn-sm fw-bold fs-6 text-white" style="background-color: rgb(61, 121, 176);">Search</button>
-                                <button type="submit" name="submitButton" value="reset" class="btn btn-sm fw-bold fs-6 text-white" style="background-color: rgb(176, 61, 61);">Reset</button>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="col-auto ms-auto">
-                        <div class="bg-white rounded shadow-sm border p-2">
-                            <div class="d-flex justify-content-center gap-3">
-                                <span class="fw-bold" style="font-size: 0.9rem;">
-                                    Total Actual: <span id="totalActualValue" class="text-success"></span>
-                                </span>
-                                <span class="fw-bold" style="font-size: 0.9rem;">
-                                    Total Plan: <span id="totalPlanValue" class="text-primary"></span>
-                                </span>
-                                <span class="fw-bold" style="font-size: 0.9rem;">
-                                    P/H/H: <span id="totalPhhValue" class="text-info">@monthlyPph</span>
-                                </span>
-                            </div>
                         </div>
-                    </div>
-                    <div class="col-auto ms-auto">
-                        <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
-                                Upload
-                            </button>
-                            <button type="button" id="downloadPdfButton" class="btn btn-sm btn-danger d-flex align-items-center gap-1">
-                                <span>Download</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header d-flex justify-content-between align-items-center">
-                                <h5 class="modal-title" id="uploadModalLabel">Upload Plan</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="mb-3 text-center">
-                                    <div class="d-flex justify-content-center gap-2">
-                                        <a asp-page-handler="DownloadTemplate" asp-route-type="cu" class="btn btn-sm btn-outline-success d-flex align-items-center gap-1">
-                                            <i class="bi bi-file-earmark-excel-fill"></i>
-                                            Template CU
-                                        </a>
-                                        <a asp-page-handler="DownloadTemplate" asp-route-type="cs" class="btn btn-sm btn-outline-info d-flex align-items-center gap-1">
-                                            <i class="bi bi-file-earmark-excel-fill"></i>
-                                            Template CS
-                                        </a>
-                                    </div>
-                                </div>
-                                <hr />
-                                <form method="post" enctype="multipart/form-data" asp-page-handler="Upload">
-                                    <div class="form-group mb-3">
-                                        <label for="UploadedFile" class="form-label">Pilih File Plan:</label>
-                                        <input type="file" id="UploadedFile" name="UploadedFile" class="form-control" required>
-                                    </div>
-                                    <div class="form-group mb-3">
-                                        <label for="TargetMachine" class="form-label">Untuk Mesin:</label>
-                                        <select id="TargetMachine" name="TargetMachine" class="form-select" required>
-                                            <option value="MCH1-01">CU</option>
-                                            <option value="MCH1-02">CS</option>
-                                        </select>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6 form-group mb-3">
-                                            <label for="TargetMonth" class="form-label">Untuk Bulan:</label>
-                                            <select id="TargetMonth" name="TargetMonth" class="form-select" required>
-                                                @for (int i = 1; i <= 12; i++)
-                                                {
-                                                        <option value="@i">@CultureInfo.GetCultureInfo("en-US").DateTimeFormat.GetMonthName(i)</option>
-                                                }
-                                            </select>
-                                        </div>
-                                        <div class="col-md-6 form-group mb-3">
-                                            <label for="TargetYear" class="form-label">Untuk Tahun:</label>
-                                            <select id="TargetYear" name="TargetYear" class="form-select" required>
-                                                @for (int i = DateTime.Now.Year; i <= DateTime.Now.Year + 5; i++)
-                                                {
-                                                        <option value="@i">@i</option>
-                                                }
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <button type="submit" class="btn btn-success">Upload dan Simpan</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row mt-4" id="dayDiv">
-                    <canvas id="dayChart" width="100%" height="25%"></canvas>
+                        <button type="submit" class="btn btn-success">Upload dan Simpan</button>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-@{
-    var headerDates = Enumerable.Range(1, Model.DaysInMonth).ToList();
-}
-
-<div class="table-responsive">
-    <table class="table table-bordered text-center align-middle w-100" id="productionTable">
-        <thead class="table-dark">
-            <tr>
-                <th id="toggleExtraRows" style="min-width: 100px; max-width: 100px; cursor: pointer; user-select: none;">
-                    <div class="d-flex align-items-center">
-                        <i id="toggleIcon" class="bi bi-chevron-down me-2"></i>
-                        <span>Production Result</span>
-                    </div>
-                </th>
-                @foreach (var day in headerDates)
-                {
-                        <th>@day</th>
-                }
-            </tr>
-        </thead>
-        <tbody>
-            <tr class="table-secondary extra-row">
-                <td colspan="@(Model.DaysInMonth + 1)" class="text-center">Plan Forecast</td>
-            </tr>
-            <tr class="extra-row">
-                <td>Normal</td>
-                @for (int i = 0; i < Model.PlanData.Count; i++)
-                {
-                        <td>@Model.PlanData[i]</td>
-                }
-            </tr>
-            <tr class="extra-row">
-                <td>Overtime</td>
-                @for (int i = 0; i < Model.DaysInMonth; i++)
-                {
-                        <td>0</td>
-                }
-            </tr>
-            <tr>
-                <td><b>Total Plan</b></td>
-                @for (int i = 0; i < Model.PlanData.Count; i++)
-                {
-                        <td>@Model.PlanData[i]</td>
-                }
-            </tr>
-            <tr class="table-secondary extra-row">
-                <td colspan="@(Model.DaysInMonth + 1)" class="text-center">Actual</td>
-            </tr>
-            <tr class="extra-row">
-                <td>Normal</td>
-                @for (int i = 0; i < Model.NormalData.Count; i++)
-                {
-                        <td>@Model.NormalData[i]</td>
-                }
-            </tr>
-            <tr class="extra-row">
-                <td>Overtime</td>
-                @for (int i = 0; i < Model.OvertimeData.Count; i++)
-                {
-                        <td>@Model.OvertimeData[i]</td>
-                }
-            </tr>
-            <tr>
-                <td><b>Total Actual</b></td>
-                @for (int i = 0; i < Model.NormalData.Count; i++)
-                {
-                        <td>@(Model.NormalData[i] + Model.OvertimeData[i])</td>
-                }
-            </tr>
-            <tr class="extra-row">
-                <td><b>Difference (Actual - Plan)</b></td>
-                @for (int i = 0; i < Model.NormalData.Count; i++)
-                {
-                        <td>@((Model.NormalData[i] + Model.OvertimeData[i]) - Model.PlanData[i])</td>
-                }
-            </tr>
-            <tr class="extra-row">
-                <td><b>No. of Direct Workers</b></td>
-                @for (int i = 0; i < Model.NoOfDirectWorkers.Count; i++)
-                {
-                        <td>@(Model.NoOfDirectWorkers[i] > 0 ? Model.NoOfDirectWorkers[i].ToString() : "0")</td>
-                }
-            </tr>
-            <tr class="extra-row">
-                <td>Overtime - No. of Operator</td>
-                @for (int i = 0; i < Model.OvertimeOperators.Count; i++)
-                {
-                        <td>@(Model.OvertimeOperators[i] > 0 ? Model.OvertimeOperators[i] : "0")</td>
-                }
-            </tr>
-            <tr>
-                <td><b>Overtime - Minutes</b></td>
-                @for (int i = 0; i < Model.OvertimeMinutes.Count; i++)
-                {
-                        <td>@(Model.OvertimeMinutes[i] > 0 ? Model.OvertimeMinutes[i] : "0")</td>
-                }
-            </tr>
-            <tr class="extra-row">
-                <td>Total Working Time</td>
-                @for (int i = 0; i < Model.DailyWorkTime.Count; i++)
-                {
-                        <td>@Model.DailyWorkTime[i]</td>
-                }
-            </tr>
-            <tr>
-                <td><b>Loss Time</b></td>
-                @for (int i = 0; i < Model.DailyLossTime.Count; i++)
-                {
-                        <td>@(Model.DailyLossTime[i] > 0 ? Model.DailyLossTime[i] : "0")</td>
-                }
-            </tr>
-            <tr>
-                <td><b>Achievement Ratio</b></td>
-                @for (int i = 0; i < Model.PlanData.Count; i++)
-                {
-                        <td>
-                        @{
-                            decimal totalActual = Model.NormalData[i] + Model.OvertimeData[i];
-                            decimal plan = Model.PlanData[i];
-                            double ratio = 0;
-                            if (plan > 0)
-                            {
-                                ratio = Math.Round(((double)totalActual / (double)plan) * 100, 2);
-                            }
-                        }
-                        @if (ratio > 0)
-                        {
-                                    <span class="@(ratio >= 100)">@ratio%</span>
-                        }
-                        </td>
-                }
-            </tr>
-            <tr>
-                <td><b>Prod. Qty / Head / Hour</b></td>
-                @for (int i = 0; i < Model.PlanData.Count; i++)
-                {
-                        <td>
-                        @{
-                            decimal totalActual = Model.NormalData[i] + Model.OvertimeData[i];
-                            int workers = Model.NoOfDirectWorkers[i];
-                            int workingMinutes = Model.DailyWorkTime[i];
-                            int lossMinutes = Model.DailyLossTime[i];
-                            double netProductiveMinutes = workingMinutes - lossMinutes;
-                            double pph = 0;
-                            if (totalActual > 0 && workers > 0 && netProductiveMinutes > 0)
-                            {
-                                double netProductiveHours = netProductiveMinutes / 60.0;
-                                pph = Math.Round((double)totalActual / workers / netProductiveHours, 2);
-                            }
-                        }
-                        @(pph > 0 ? pph.ToString() : "")
-                        </td>
-                }
-            </tr>
-        </tbody>
-    </table>
-</div>
-
-<style>
-    .table th,
-    .table td {
-        font-size: 10px;
-        padding: 0.2rem;
-        white-space: nowrap;
-        word-wrap: break-word;
-        vertical-align: middle;
-    }
-
-    .table th:first-child,
-    .table td:first-child {
-        min-width: 100px;
-        white-space: normal;
-        text-align: left;
-        padding-left: .5rem;
-    }
-
-    .extra-row {
-        display: none;
-    }
-</style>
-
 @section Scripts {
-        <script src="~/js/chart.umd.min.js"></script>
-        <script src="~/js/jspdf.umd.min.js"></script>
-        <script src="~/js/jspdf.plugin.autotable.js"></script>
+                <script src="~/js/chart.umd.min.js"></script>
+                <script src="~/js/jspdf.umd.min.js"></script>
+                <script src="~/js/jspdf.plugin.autotable.js"></script>
 
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                const normalData = @Html.Raw(Json.Serialize(Model.NormalData));
-                const overtimeData = @Html.Raw(Json.Serialize(Model.OvertimeData));
-                const planData = @Html.Raw(Json.Serialize(Model.PlanData));
-                const originalPlanData = @Html.Raw(Json.Serialize(Model.OriginalPlanData));
-                const chartLabels = @Html.Raw(Json.Serialize(Model.ChartLabels));
-                const isCurrentMonth = @Html.Raw(Json.Serialize(Model.IsCurrentMonthView));
-                const today = new Date().getDate();
-                const daysInMonth = @Model.DaysInMonth;
-                const anchorDay = isCurrentMonth ? today : daysInMonth;
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        const normalData = @Html.Raw(Json.Serialize(Model.NormalData));
+                        const overtimeData = @Html.Raw(Json.Serialize(Model.OvertimeData));
+                        const planData = @Html.Raw(Json.Serialize(Model.PlanData));
+                        const originalPlanData = @Html.Raw(Json.Serialize(Model.OriginalPlanData));
+                        const chartLabels = @Html.Raw(Json.Serialize(Model.ChartLabels));
+                        const isCurrentMonth = @Html.Raw(Json.Serialize(Model.IsCurrentMonthView));
+                        const today = new Date().getDate();
+                        const daysInMonth = @Model.DaysInMonth;
+                        const anchorDay = isCurrentMonth ? today : daysInMonth;
 
-                let totalActualAtAnchor = 0;
-                let totalPlanAtAnchor = 0;
-                for (let i = 0; i < anchorDay; i++) {
-                    totalActualAtAnchor += (normalData[i] || 0) + (overtimeData[i] || 0);
-                    totalPlanAtAnchor += (planData[i] || 0);
-                }
+                        let totalActualAtAnchor = 0;
+                        let totalPlanAtAnchor = 0;
+                        for (let i = 0; i < anchorDay; i++) {
+                            totalActualAtAnchor += (normalData[i] || 0) + (overtimeData[i] || 0);
+                            totalPlanAtAnchor += (planData[i] || 0);
+                        }
 
-                const totalActualElement = document.getElementById('totalActualValue');
-                const totalPlanElement = document.getElementById('totalPlanValue');
-                if (totalActualElement) totalActualElement.textContent = totalActualAtAnchor.toLocaleString();
-                if (totalPlanElement) totalPlanElement.textContent = totalPlanAtAnchor.toLocaleString();
+                        document.getElementById('totalActualValue').textContent = totalActualAtAnchor.toLocaleString();
+                        document.getElementById('totalPlanValue').textContent = totalPlanAtAnchor.toLocaleString();
 
-                const ratioActualData = [], ratioPlanData = [];
-                let runningActualTotal = 0, runningPlanTotal = 0;
+                        const ratioActualData = [], ratioPlanData = [];
+                        let runningActualTotal = 0, runningPlanTotal = 0;
 
-                for (let i = 0; i < chartLabels.length; i++) {                
-                    if (isCurrentMonth && (i + 1) > today) {
-                        ratioActualData.push(null);
-                        ratioPlanData.push(null);
-                    } else {
-                        runningActualTotal += (normalData[i] || 0) + (overtimeData[i] || 0);
-                        runningPlanTotal += (planData[i] || 0);
+                        for (let i = 0; i < chartLabels.length; i++) {
+                            if (isCurrentMonth && (i + 1) > today) {
+                                ratioActualData.push(null);
+                                ratioPlanData.push(null);
+                            } else {
+                                runningActualTotal += (normalData[i] || 0) + (overtimeData[i] || 0);
+                                runningPlanTotal += (planData[i] || 0);
+                                ratioActualData.push((totalActualAtAnchor > 0) ? (runningActualTotal / totalActualAtAnchor) * 100 : 0);
+                                ratioPlanData.push((totalPlanAtAnchor > 0) ? (runningPlanTotal / totalPlanAtAnchor) * 100 : 0);
+                            }
+                        }
 
-                        let actualRatio = (totalActualAtAnchor > 0) ? (runningActualTotal / totalActualAtAnchor) * 100 : 0;
-                        ratioActualData.push(actualRatio);
-
-                        let planRatio = (totalPlanAtAnchor > 0) ? (runningPlanTotal / totalPlanAtAnchor) * 100 : 0;
-                        ratioPlanData.push(planRatio);
-                    }
-                }
-
-                // const ratioActualData = [], ratioPlanData = [];
-                // let runningActualTotal = 0, runningPlanTotal = 0;
-                // for (let i = 0; i < chartLabels.length; i++) {
-                //     runningActualTotal += (normalData[i] || 0) + (overtimeData[i] || 0);
-                //     runningPlanTotal += (planData[i] || 0);
-                //     let actualRatio = 0;
-                //     if (totalActualAtAnchor > 0) {
-                //         actualRatio = (((i < anchorDay) ? runningActualTotal : totalActualAtAnchor) / totalActualAtAnchor) * 100;
-                //     }
-                //     ratioActualData.push(actualRatio);
-                //     let planRatio = 0;
-                //     if (totalPlanAtAnchor > 0) {
-                //         planRatio = (runningPlanTotal / totalPlanAtAnchor) * 100;
-                //     }
-                //     ratioPlanData.push(planRatio);
-                // }
-
-                const ctx = document.getElementById('dayChart');
-                if (ctx) {
-                    new Chart(ctx, {
-                        type: 'bar',
-                        data: {
-                            labels: chartLabels,
-                            datasets: [{
-                                type: 'line', label: 'Rasio Actual (%)', data: ratioActualData,
-                                borderColor: 'rgba(255, 215, 0, 1)', backgroundColor: 'rgba(255, 215, 0, 0.2)',
-                                tension: 0.1, yAxisID: 'y1'
-                            }, {
-                                type: 'line', label: 'Rasio Plan (%)', data: ratioPlanData,
-                                borderColor: 'rgba(255, 69, 0, 1)', backgroundColor: 'rgba(255, 69, 0, 0.2)',
-                                tension: 0.1, yAxisID: 'y1'
-                                }, {
-
-                                // type: 'line',
-                                label: 'Original Plan',
-                                data: originalPlanData,
-                                borderColor: '#67C090',
-                                backgroundColor: '#67C090',
-                                // tension: 0.1,
-                                barThickness: 15,
-                                stack: 'OriginalPlan',
-                                yAxisID: 'y'
-                            }, {
-
-                                            label: 'Plan', data: planData, backgroundColor: '#9ECAD6',
-                                            borderColor: '#9ECAD6', barThickness: 15, stack: 'Plan', yAxisID: 'y'
-                                },{
-                                    label: 'Normal', data: normalData, backgroundColor: '#640D5F',
-                                    borderColor: '#640D5F', barThickness: 15, stack: 'Actual', yAxisID: 'y'
-                            }, {
-                                label: 'Overtime', data: overtimeData, backgroundColor: '#FF6384',
-                                borderColor: '#FF6384', barThickness: 15, stack: 'Actual', yAxisID: 'y'
-                            }]
-                        },
-                        options: {
-                               devicePixelRatio: 3, responsive: true, animation: { duration: 500 }, interaction: { mode: 'index', intersect: false }, stacked: false,
-                            scales: {
-                                y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Production Qty (unit)' } },
-                                y1: {
-                                    type: 'linear', display: true, position: 'right', max: 120,
-                                    title: { display: true, text: 'Ratio (%)' },
-                                    ticks: { callback: (value) => value + '%' },
-                                    grid: { drawOnChartArea: false }
-                                },
-                                x: { stacked: true }
+                        new Chart(document.getElementById('dayChart'), {
+                            type: 'bar',
+                            data: {
+                                labels: chartLabels,
+                                datasets: [
+                                    { type: 'line', label: 'Rasio Actual (%)', data: ratioActualData, borderColor: 'rgba(255, 215, 0, 1)', backgroundColor: 'rgba(255, 215, 0, 0.2)', tension: 0.1, yAxisID: 'y1' },
+                                    { type: 'line', label: 'Rasio Plan (%)', data: ratioPlanData, borderColor: 'rgba(255, 69, 0, 1)', backgroundColor: 'rgba(255, 69, 0, 0.2)', tension: 0.1, yAxisID: 'y1' },
+                                    { label: 'Original Plan', data: originalPlanData, backgroundColor: '#67C090', borderColor: '#67C090', barThickness: 15, stack: 'OriginalPlan', yAxisID: 'y' },
+                                    { label: 'Plan', data: planData, backgroundColor: '#9ECAD6', borderColor: '#9ECAD6', barThickness: 15, stack: 'Plan', yAxisID: 'y' },
+                                    { label: 'Normal', data: normalData, backgroundColor: '#640D5F', borderColor: '#640D5F', barThickness: 15, stack: 'Actual', yAxisID: 'y' },
+                                    { label: 'Overtime', data: overtimeData, backgroundColor: '#FF6384', borderColor: '#FF6384', barThickness: 15, stack: 'Actual', yAxisID: 'y' }
+                                ]
                             },
-                            plugins: {
-                                tooltip: {
-                                    callbacks: {
-                                        label: function (context) {
-                                            let label = context.dataset.label || '';
-                                            if (label) { label += ': '; }
-                                            if (context.parsed.y !== null) {
-                                                label += context.dataset.yAxisID === 'y1' ? context.parsed.y.toFixed(2) + '%' : context.parsed.y + ' unit';
-                                            }
-                                            return label;
-                                        }
-                                    }
+                            options: {
+                                devicePixelRatio: 3,
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                animation: { duration: 500 },
+                                interaction: { mode: 'index', intersect: false },
+                                scales: {
+                                    x: { stacked: true, ticks: { color: '#ffffff' } },
+                                    y: { type: 'linear', position: 'left', title: { display: true, text: 'Production Qty (unit)', color: '#ffffff' }, ticks: { color: '#ffffff' } },
+                                    y1: { type: 'linear', position: 'right', max: 120, title: { display: true, text: 'Ratio (%)', color: '#ffffff' }, ticks: { color: '#ffffff', callback: v => v + '%' }, grid: { drawOnChartArea: false } }
+                                },
+                                plugins: {
+                                    legend: { labels: { color: '#ffffff' } },
+                                    tooltip: { titleColor: '#ffffff', bodyColor: '#ffffff' }
                                 }
                             }
-                        }
+                        });
+
+                        document.getElementById('toggleExtraRows')?.addEventListener('click', function () {
+                            const extraRows = document.querySelectorAll('.extra-row');
+                            const icon = document.getElementById('toggleIcon');
+                            const isVisible = extraRows[0]?.style.display === 'table-row';
+                            extraRows.forEach(row => row.style.display = isVisible ? 'none' : 'table-row');
+                            icon?.classList.toggle('bi-chevron-down', isVisible);
+                            icon?.classList.toggle('bi-chevron-up', !isVisible);
+                        });
+
+                        document.getElementById('downloadPdfButton')?.addEventListener('click', function () {
+                            const btn = this;
+                            const origContent = btn.innerHTML;
+                            btn.disabled = true;
+                            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generating...';
+
+                            setTimeout(() => {
+                                try {
+                                    const { jsPDF } = window.jspdf;
+                                    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+                                    const pageWidth = doc.internal.pageSize.getWidth();
+
+                                    doc.setFontSize(18);
+                                    doc.text('Production Report', 40, 50);
+                                    doc.setFontSize(10);
+                                    doc.setTextColor(100);
+                                    doc.text(`Period: ${document.getElementById('SelectedMonth').selectedOptions[0].text} ${document.getElementById('SelectedYear').value}`, 40, 70);
+                                    doc.text(`Total Plan: ${document.getElementById('totalPlanValue').innerText}`, pageWidth - 40, 70, { align: 'right' });
+                                    doc.text(`Total Actual: ${document.getElementById('totalActualValue').innerText}`, pageWidth - 40, 85, { align: 'right' });
+                                    doc.text(`P/H/H: ${document.getElementById('totalPhhValue').innerText}`, pageWidth - 40, 100, { align: 'right' });
+                                    doc.setTextColor(0);
+
+                                    const chartImgData = document.getElementById('dayChart').toDataURL('image/png', 1.0);
+                                    doc.addImage(chartImgData, 'PNG', 40, 110, 760, 220);
+
+                                    const extraRows = document.querySelectorAll('.extra-row');
+                                    const wereHidden = extraRows[0]?.style.display === 'none';
+                                    if (wereHidden) extraRows.forEach(row => row.style.display = 'table-row');
+
+                                    doc.autoTable({
+                                        html: '#productionTable',
+                                        startY: 340,
+                                        theme: 'grid',
+                                        styles: { fontSize: 5, cellPadding: 2 },
+                                        headStyles: { fillColor: [44, 62, 80], fontSize: 6 }
+                                    });
+
+                                    if (wereHidden) extraRows.forEach(row => row.style.display = 'none');
+                                    doc.save('Production-Report.pdf');
+                                } catch (err) {
+                                    console.error(err);
+                                    alert('Gagal membuat PDF. Cek console untuk detail.');
+                                } finally {
+                                    btn.disabled = false;
+                                    btn.innerHTML = origContent;
+                                }
+                            }, 100);
+                        });
                     });
-                }
-
-                const toggleHeader = document.getElementById('toggleExtraRows');
-                if (toggleHeader) {
-                    toggleHeader.addEventListener('click', function () {
-                        const extraRows = document.querySelectorAll('.extra-row');
-                        const toggleIcon = document.getElementById('toggleIcon');
-                        const isVisible = extraRows[0] && extraRows[0].style.display === 'table-row';
-                        extraRows.forEach(row => { row.style.display = isVisible ? 'none' : 'table-row'; });
-                        if (toggleIcon) {
-                            toggleIcon.classList.toggle('bi-chevron-down', isVisible);
-                            toggleIcon.classList.toggle('bi-chevron-up', !isVisible);
-                        }
-                    });
-                }
-
-                const downloadPdfButton = document.getElementById('downloadPdfButton');
-                if (downloadPdfButton) {
-                    downloadPdfButton.addEventListener('click', function () {
-                        const originalButtonContent = downloadPdfButton.innerHTML;
-                        downloadPdfButton.disabled = true;
-                        downloadPdfButton.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Generating...`;
-
-                        setTimeout(() => {
-                            try {
-                                if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
-                                    throw new Error("jsPDF library not loaded. Pastikan file jspdf.umd.min.js ada di folder ~/js/.");
-                                }
-                                const { jsPDF } = window.jspdf;
-                                const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
-
-                                 if (typeof doc.autoTable !== 'function') {
-                                    throw new Error("jspdf-autotable plugin not loaded. Pastikan file jspdf.plugin.autotable.js ada di folder ~/js/.");
-                                }
-
-                                const totalActual = document.getElementById('totalActualValue').innerText;
-                                const totalPlan = document.getElementById('totalPlanValue').innerText;
-                                const totalPhh = document.getElementById('totalPhhValue').innerText;
-                                const monthSelect = document.getElementById('SelectedMonth');
-                                const selectedMonth = monthSelect.options[monthSelect.selectedIndex].text;
-                                const selectedYear = document.getElementById('SelectedYear').value;
-                                const pageWidth = doc.internal.pageSize.getWidth();
-
-                                doc.setFontSize(18);
-                                doc.text('Production Report', 40, 50);
-
-                                doc.setFontSize(10);
-                                doc.setTextColor(100);
-                                doc.text(`Period: ${selectedMonth} ${selectedYear}`, 40, 70);
-
-                                doc.text(`Total Plan: ${totalPlan}`, pageWidth - 40, 70, { align: 'right' });
-                                doc.text(`Total Actual: ${totalActual}`, pageWidth - 40, 85, { align: 'right' });
-                                doc.text(`P/H/H: ${totalPhh}`, pageWidth - 40, 100, { align: 'right' });
-                                doc.setTextColor(0); 
-
-                                const chartCanvas = document.getElementById('dayChart');
-                                const chartImgData = chartCanvas.toDataURL('image/png', 1.0);
-                                doc.addImage(chartImgData, 'PNG', 40, 110, 760, 220);
-
-                                const extraRows = document.querySelectorAll('.extra-row');
-                                const wereRowsHidden = extraRows.length > 0 && extraRows[0].style.display === 'none';
-                                if (wereRowsHidden) {
-                                    extraRows.forEach(row => { row.style.display = 'table-row'; });
-                                }
-
-                                doc.autoTable({
-                                    html: '#productionTable',
-                                    startY: 340,
-                                    theme: 'grid',
-                                    styles: { fontSize: 5, cellPadding: 2 },
-                                    headStyles: { fillColor: [44, 62, 80], fontSize: 6 },
-                                    didParseCell: function (data) {
-                                        if (data.row.section === 'head' && data.column.index === 0) {
-                                            data.cell.text = data.cell.raw.innerText;
-                                        }
-                                        if (data.cell.text && (data.cell.text[0] === 'Plan Forecast' || data.cell.text[0] === 'Actual')) {
-                                            data.cell.styles.halign = 'center';
-                                            data.cell.styles.fontStyle = 'bold';
-                                        }
-                                    }
-                                });
-
-                                if (wereRowsHidden) {
-                                    extraRows.forEach(row => { row.style.display = 'none'; });
-                                }
-
-                                doc.save('Production-Report.pdf');
-
-                            } catch (err) {
-                                console.error("Gagal membuat PDF: ", err);
-                                alert("Maaf, terjadi kesalahan saat membuat PDF. Cek console (F12) untuk detail error.");
-                            } finally {
-                                downloadPdfButton.disabled = false;
-                                downloadPdfButton.innerHTML = originalButtonContent;
-                            }
-                        }, 100);
-                    });
-                }
-            });
-        </script>
+                </script>
 }

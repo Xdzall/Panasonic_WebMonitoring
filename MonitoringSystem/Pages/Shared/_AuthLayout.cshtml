@@ -12,27 +12,64 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 </head>
 <body class="auth-body">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-8 text-center my-4">
-                <h2 class="fw-bold mb-0" style="color: rgb(61, 121, 176);">AC BU Monitoring System</h2>
-                <p class="text-muted">Panasonic Manufacturing Indonesia (PMI)</p>
-            </div>
+    <!-- Header Elements: Panasonic corner + Datetime + Horizontal line -->
+    <div class="panasonic-corner">Panasonic</div>
+    <div class="top-horizontal-line"></div>
+    <div class="datetime-corner">
+        <p class="mb-0 fw-semibold" id="currentDate">@(DateTime.Now.ToString("dd.MM.yyyy"))</p>
+        <p class="mb-0 fw-semibold" id="currentTime">@(DateTime.Now.ToString("HH:mm:ss tt"))</p>
+    </div>
+    <!-- Brand Logo PANAMON -->
+    <div class="text-center">
+        <div class="brand-logo">
+            <span class="brand-text">PANAM</span>
+            <span class="brand-o"></span>
+            <span class="brand-text">N</span>
         </div>
+    </div>
+    <!-- Main Content -->
+    <div class="container">
         <main role="main">
             @RenderBody()
         </main>
     </div>
-
-    <footer class="footer text-center py-3 mt-5">
+    <!-- Footer - HAPUS fs-6 -->
+    <footer class="footer text-center py-3 auth-footer">
         <div class="container">
-            <p class="text-dark text-center fs-6 mb-0">&copy; 2025 - Panasonic Manufacturing Indonesia (PMI) - AC BU</p>
+            <p class="text-white text-center mb-0">&copy; 2025 - Panasonic Manufacturing Indonesia (PMI) - AC BU</p>
         </div>
     </footer>
-
+    <!-- Scripts -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/identity-scripts.js" asp-append-version="true"></script>
+    <!-- Update datetime real-time -->
+    <script>
+        function updateDateTime() {
+            const now = new Date();
+            // Format date: DD.MM.YYYY
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            const dateStr = `${day}.${month}.${year}`;
+            // Format time: HH:MM:SS AM/PM
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // 0 should be 12
+            const hoursStr = String(hours).padStart(2, '0');
+            const timeStr = `${hoursStr}:${minutes}:${seconds} ${ampm}`;
+            const dateElem = document.getElementById('currentDate');
+            const timeElem = document.getElementById('currentTime');
+            if (dateElem) dateElem.textContent = dateStr;
+            if (timeElem) timeElem.textContent = timeStr;
+        }
+        // Update every second
+        setInterval(updateDateTime, 1000);
+        updateDateTime(); // Initial call
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

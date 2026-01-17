@@ -1,39 +1,48 @@
 ﻿@page
 @model LoginModel
 @{
-    ViewData["Title"] = "Log in";
+    ViewData["Title"] = "Log in PANAMON";
     Layout = "_AuthLayout";
 }
 
-<div class="container mt-5">
-    @if (!string.IsNullOrEmpty(Model.StatusMessage))
-    {
-        <div id="statusAlert" class="alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-3" role="alert" style="z-index: 1050; min-width: 300px;">
-            @Model.StatusMessage
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
+<!-- Alert Success Message -->
+@if (!string.IsNullOrEmpty(Model.StatusMessage))
+{
+            <div id="statusAlert" class="alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-3" role="alert" style="z-index: 1050; min-width: 300px;">
+        @Model.StatusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+}
 
+<!-- Login Card - HAPUS mt-5 dari container -->
+<div class="container">
     <div class="row justify-content-center">
-        <div class="col-md-6">
+        <div class="col-md-9">
             <div class="card shadow-lg border-0">
                 <div class="card-header bg-primary text-white text-center py-4">
                     <h2>@ViewData["Title"]</h2>
-                    <p class="mb-0">Welcome back! Please sign in to your account</p>
+                    <p class="mb-0">Please sign in to your account</p>
                 </div>
                 <div class="card-body p-4">
                     <form id="account" method="post">
                         <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
 
-                        <div class="form-floating mb-3">
-                            <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                            <label asp-for="Input.Email" class="form-label">Email</label>
+                        <div class="mb-3">
+                            <input asp-for="Input.Email"
+                                   class="custom-input"
+                                   autocomplete="new-email"
+                                   aria-required="true"
+                                   placeholder="Email" />
                             <span asp-validation-for="Input.Email" class="text-danger"></span>
                         </div>
 
-                        <div class="form-floating mb-3">
-                            <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
-                            <label asp-for="Input.Password" class="form-label">Password</label>
+                        <div class="mb-3">
+                            <input asp-for="Input.Password"
+                                   type="password"
+                                   class="custom-input"
+                                   autocomplete="new-password"
+                                   aria-required="true"
+                                   placeholder="Password" />
                             <span asp-validation-for="Input.Password" class="text-danger"></span>
                         </div>
 
@@ -43,50 +52,45 @@
 
                         <div class="text-center">
                             <div>
-                                <a id="forgot-password" asp-page="./ForgotPassword" asp-route-returnUrl="@Model.ReturnUrl" class="text-decoration-none">Forgot your password?</a>
+                                <a id="forgot-password" asp-page="./ForgotPassword" asp-route-returnUrl="@Model.ReturnUrl" class="text-decoration-none text-white">Forgot your password?</a>
                             </div>
-                            @* <div> *@
-                            @*     <p>Don't have an account yet? <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" class="text-decoration-none">Register</a> </p> *@
-                            @* </div> *@
                         </div>
                     </form>
                 </div>
 
                 @if (Model.ExternalLogins?.Count > 0)
                 {
-                    <div class="card-footer bg-light p-4">
-                        <h3 class="text-center mb-3">Use another service to log in</h3>
-                        <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="text-center">
-                            <div>
+                            <div class="card-footer bg-light p-4">
+                                <h3 class="text-center mb-3">Use another service to log in</h3>
+                                <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="text-center">
+                                    <div>
                                 @foreach (var provider in Model.ExternalLogins!)
                                 {
-                                    <button type="submit" class="btn btn-outline-secondary mb-2 me-2 w-100" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">
-                                        <i class="bi bi-@provider.Name.ToLower()"></i> @provider.DisplayName
-                                    </button>
+                                                    <button type="submit" class="btn btn-outline-secondary mb-2 me-2 w-100" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">
+                                                        <i class="bi bi-@provider.Name.ToLower()"></i> @provider.DisplayName
+                                                    </button>
                                 }
+                                    </div>
+                                </form>
                             </div>
-                        </form>
-                    </div>
                 }
-
             </div>
         </div>
     </div>
 </div>
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
 
-    <script>
-        window.addEventListener('DOMContentLoaded', (event) => {
-            const alertElem = document.getElementById('statusAlert');
-            if (alertElem) {
-                // Set timer 5 detik (5000 ms) untuk sembunyikan alert
-                setTimeout(() => {
-                    // Bootstrap 5 alert butuh trigger close method supaya fade out lancar
-                    let bsAlert = bootstrap.Alert.getOrCreateInstance(alertElem);
-                    bsAlert.close();
-                }, 5000);
-            }
-        });
-    </script>
+@section Scripts {
+            <partial name="_ValidationScriptsPartial" />
+
+            <script>
+                window.addEventListener('DOMContentLoaded', (event) => {
+                    const alertElem = document.getElementById('statusAlert');
+                    if (alertElem) {
+                        setTimeout(() => {
+                            let bsAlert = bootstrap.Alert.getOrCreateInstance(alertElem);
+                            bsAlert.close();
+                        }, 5000);
+                    }
+                });
+            </script>
 }

@@ -1,118 +1,454 @@
-﻿.auth-body {
-    background-color: #f8f9fa;
+﻿/* ==========================================
+   SECTION 1: AUTH PAGES (Login/Register)
+   Semua CSS dengan prefix .auth-body
+   ========================================== */
+
+/* Background untuk halaman auth */
+.auth-body {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('../assets/BackgroundPanamon.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
     min-height: 100vh;
+    padding: 20px 0;
+}
+
+    /* Card styling untuk auth */
+    .auth-body .card {
+        background: linear-gradient(135deg, rgba(50, 60, 80, 0.7) 0%, rgba(30, 40, 60, 0.8) 100%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.35) !important;
+        box-shadow: none !important;
+        border-radius: 12px;
+        max-width: 620px;
+        width: 100%;
+        margin: 50px auto;
+    }
+
+    .auth-body .card-header {
+        background: transparent !important;
+        border: 1px solid rgba(255, 255, 255, 0.35) !important;
+        box-shadow: none !important;
+        border-radius: 12px;
+        border-bottom: none !important;
+        padding: 0.75rem 1.5rem !important;
+    }
+
+        .auth-body .card-header.bg-primary {
+            background: transparent !important;
+        }
+
+        .auth-body .card-header.bg-success {
+            background: transparent !important;
+        }
+
+        .auth-body .card-header h2 {
+            font-size: 1.3rem !important;
+            margin-bottom: 0.15rem !important;
+        }
+
+        .auth-body .card-header p {
+            font-size: 0.75rem !important;
+            margin-bottom: 0 !important;
+        }
+
+    .auth-body .card-body {
+        padding: 1.5rem 2rem !important;
+    }
+
+        .auth-body .card-body form {
+            max-width: 75%;
+            margin: 0 auto;
+        }
+
+    /* Custom Input Box untuk auth */
+    .auth-body .custom-input {
+        width: 100%;
+        background: linear-gradient(135deg, rgba(120, 130, 150, 1.0) 0%, rgba(100, 110, 130, 1.0) 100%) !important;
+        border: 1.5px solid rgba(255, 255, 255, 0.5) !important;
+        border-radius: 8px !important;
+        padding: 0.75rem 1rem !important;
+        font-size: 15px !important;
+        color: rgba(255, 255, 255, 1.0) !important;
+        height: 50px !important;
+        transition: all 0.3s ease;
+        box-shadow: none !important; /* ← YANG DITAMBAH CUMA INI */
+        outline: none !important; /* ← DAN INI */
+    }
+
+        .auth-body .custom-input:focus {
+            background: linear-gradient(135deg, rgba(130, 140, 160, 1.0) 0%, rgba(110, 120, 140, 1.0) 100%) !important;
+            border: 1.5px solid rgba(255, 255, 255, 0.7) !important;
+            outline: none !important; /* ← DAN INI */
+            box-shadow: none !important; /* ← DAN INI */
+        }
+
+        .auth-body .custom-input::placeholder {
+            color: rgba(255, 255, 255, 0.5) !important;
+        }
+
+    /* Autofill untuk custom input di auth */
+    .auth-body input.custom-input:-webkit-autofill,
+    .auth-body input.custom-input:-webkit-autofill:hover,
+    .auth-body input.custom-input:-webkit-autofill:focus,
+    .auth-body input.custom-input:-webkit-autofill:active {
+        transition: background-color 5000s ease-in-out 0s !important;
+        -webkit-box-shadow: 0 0 0px 1000px rgba(120, 130, 150, 1.0) inset !important;
+        -webkit-text-fill-color: white !important;
+    }
+
+    /* Label styling untuk auth */
+    .auth-body .form-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        color: #ffffff;
+    }
+
+    /* Jarak antar input untuk auth */
+    .auth-body .mb-3 {
+        margin-bottom: 1rem !important;
+    }
+
+    /* Buttons untuk auth */
+    .auth-body .btn-primary,
+    .auth-body .btn-success,
+    .auth-body .btn-white {
+        border-radius: 5px;
+        padding: 10px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .auth-body .btn-white {
+        background-color: #ffffff;
+        border: none;
+    }
+
+        .auth-body .btn-white:hover {
+            box-shadow: 0 5px 15px #f8f9fa;
+            background-color: #ffffff;
+            transform: translateY(-2px);
+            color: black;
+        }
+
+    .auth-body .btn-primary {
+        background: linear-gradient(109.6deg, rgb(61, 121, 176) 11.3%, rgb(45, 76, 174) 91.1%);
+        border: none;
+    }
+
+        .auth-body .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
+            background: linear-gradient(109.6deg, rgb(71, 131, 186) 11.3%, rgb(45, 76, 174) 91.1%);
+        }
+
+    .auth-body .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+    }
+
+    .auth-body .btn-lg {
+        padding: 0.65rem 1rem !important;
+        font-size: 1rem !important;
+    }
+
+    .auth-body .d-grid {
+        margin-bottom: 0.75rem !important;
+    }
+
+    /* Links untuk auth */
+    .auth-body .text-decoration-none {
+        color: rgb(255, 255, 255);
+        transition: all 0.2s ease;
+    }
+
+        .auth-body .text-decoration-none:hover {
+            color: rgb(200, 220, 255);
+            text-decoration: underline !important;
+        }
+
+    /* Validation errors untuk auth */
+    .auth-body .text-danger {
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+        color: #ff6b6b !important;
+    }
+
+    /* External login buttons untuk auth */
+    .auth-body .btn-outline-secondary {
+        border-radius: 5px;
+        transition: all 0.3s ease;
+    }
+
+        .auth-body .btn-outline-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
+        }
+
+    /* Password toggle untuk auth */
+    .auth-body .password-toggle {
+        color: #ffffff;
+    }
+
+        .auth-body .password-toggle:hover {
+            color: rgb(200, 220, 255);
+        }
+
+/* Brand logo untuk auth page - PENTING: Tanpa prefix .auth-body supaya bisa diakses */
+.brand-logo {
+    display: inline-flex !important;
+    align-items: center;
+    font-family: 'Montserrat', 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 30px;
+    letter-spacing: 0.5em !important;
+    color: #ffffff;
+    margin-top: 115px !important;
+    /* DEKAT - Jarak logo ke card login */
+    margin-bottom: 0px !important;
+    position: relative;
+    z-index: 1;
+}
+
+.brand-text {
+    line-height: 1;
+}
+
+.brand-o {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 33px;
+    height: 33px;
+    border: 3px solid #ffffff;
+    border-radius: 50%;
+    margin-left: 0.1em;
+    margin-right: 0.5em;
+    transform: translateY(-3px);
+}
+
+    .brand-o::after {
+        content: "";
+        width: 13px;
+        height: 13px;
+        background-color: #ffffff;
+        border-radius: 50%;
+    }
+
+/* Header elements untuk auth - PENTING: Tanpa prefix .auth-body */
+.panasonic-corner {
+    position: absolute !important;
+    top: 26px;
+    left: 40px;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 0.15em;
+    color: #ffffff;
+    z-index: 1000;
+}
+
+.datetime-corner {
+    position: absolute !important;
+    top: 29px !important;
+    right: 35px !important;
+    font-family: 'Montserrat', 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    color: #ffffff;
+    z-index: 1000 !important;
+    display: flex !important;
+    gap: 15px;
+    align-items: center;
+}
+
+    .datetime-corner p {
+        margin: 0;
+    }
+
+        .datetime-corner p:first-child::after {
+            content: "|";
+            margin-left: 15px;
+            color: #ffffff;
+        }
+
+.top-horizontal-line {
+    position: absolute !important;
+    top: 71px;
+    left: 40px;
+    right: 35px;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.25);
+    z-index: 999;
+}
+
+/* Footer styling untuk auth */
+.auth-footer {
+    /* DIPERKECIL - Jarak card ke footer */
+    margin-top: -2.5rem !important;
+    font-size: 9px !important;
+}
+
+/* Responsive adjustments untuk auth */
+@media (max-width: 768px) {
+    .auth-body .col-md-6 {
+        padding: 0 15px;
+    }
+
+    .auth-body .card {
+        margin: 30px auto;
+    }
+}
+
+
+/* ==========================================
+   SECTION 2: DASHBOARD PAGES (_Layout.cshtml)
+   CSS tanpa prefix .auth-body
+   ========================================== */
+
+/* Default body untuk dashboard - Full White */
+body:not(.auth-body) {
+    background-color: #ffffff !important;
+    background-image: none !important;
+    color: #333333;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+    /* HIDE elemen auth HANYA di dashboard (body tanpa class auth-body) */
+    body:not(.auth-body) .panasonic-corner,
+    body:not(.auth-body) .datetime-corner,
+    body:not(.auth-body) .top-horizontal-line,
+    body:not(.auth-body) .brand-logo {
+        display: none !important;
+    }
+
+/* Dashboard variables */
+:root {
+    --panasonic-blue: rgb(61, 121, 176);
+    --bg-light: #ffffff;
+    --text-dark: #333333;
+    --border-radius: 5px;
+}
+
+.dashboard-container {
+    padding: 10px;
+}
+
+.grid-border {
+    border: 1px solid var(--panasonic-blue);
+    padding: 8px;
+    background: #ffffff;
+    border-radius: var(--border-radius);
+    margin-bottom: 10px;
+}
+
+.fill-height {
+    height: 100%;
     display: flex;
     flex-direction: column;
 }
 
-.card {
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    border: none;
+.section-title {
+    color: var(--panasonic-blue);
+    font-weight: 900;
+    text-align: center;
+    text-transform: uppercase;
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    border-bottom: 2px solid var(--panasonic-blue);
+    padding-bottom: 5px;
 }
 
-.card-header {
-    border-bottom: none;
-    padding: 1rem;
+.btn-custom-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
 }
 
-    .card-header.bg-primary {
-        background: linear-gradient(109.6deg, rgb(61, 121, 176) 11.3%, rgb(35, 66, 164) 91.1%) !important;
-    }
-
-    .card-header.bg-success {
-        background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%) !important;
-    }
-
-.form-floating > .form-control {
-    padding: 1rem 0.75rem;
-}
-
-    .form-floating > .form-control:focus {
-        border-color: #80bdff;
-        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-    }
-
-.btn-primary, .btn-success, .btn-white {
-    border-radius: 5px;
+.btn-blue-active {
+    background-color: var(--panasonic-blue);
+    color: white;
+    font-weight: bold;
+    border: 1px solid var(--panasonic-blue);
+    width: 100%;
+    border-radius: var(--border-radius);
     padding: 10px;
-    font-weight: 500;
-    transition: all 0.3s ease;
 }
 
-.btn-white {
-    background-color: #ffffff;
-    border: none;
-}
-
-    .btn-white:hover {
-        box-shadow: 0 5px 15px #f8f9fa;
-        background-color: #ffffff;
-        transform: translateY(-2px);
-        color: black;
-    }
-
-
-.btn-primary {
-    background: linear-gradient(109.6deg, rgb(61, 121, 176) 11.3%, rgb(45, 76, 174) 91.1%);
-    border: none;
-}
-
-    .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
-        background: linear-gradient(109.6deg, rgb(71, 131, 186) 11.3%, rgb(45, 76, 174) 91.1%);
-    }
-
-.btn-success:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
-}
-
-.text-decoration-none {
-    color: rgb(61, 121, 176);
-    transition: all 0.2s ease;
-}
-
-    .text-decoration-none:hover {
-        color: rgb(35, 66, 164);
-        text-decoration: underline !important;
-    }
-
-/* Style for the validation errors */
-.text-danger {
-    font-size: 0.85rem;
-    margin-top: 0.25rem;
-}
-
-/* External login buttons styling */
-.btn-outline-secondary {
-    border-radius: 5px;
-    transition: all 0.3s ease;
-}
-
-    .btn-outline-secondary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
-    }
-
-/* Password toggle icon positioning */
-.password-toggle {
+.btn-outline-inactive {
+    background-color: white;
     color: #6c757d;
+    font-weight: bold;
+    border: 2px solid #6c757d;
+    width: 100%;
+    border-radius: var(--border-radius);
+    padding: 10px;
 }
 
-    .password-toggle:hover {
-        color: rgb(61, 121, 176);
+    .btn-outline-inactive:hover {
+        background-color: #f8f9fa;
+        color: #333;
     }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .col-md-6 {
-        padding: 0 15px;
-    }
+.kpi-box {
+    text-align: center;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #dee2e6;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
 
-    .card {
-        margin-bottom: 30px;
-    }
+.kpi-header {
+    background-color: var(--panasonic-blue);
+    color: white;
+    font-weight: bold;
+    padding: 8px;
+    font-size: 1rem;
+    text-transform: uppercase;
+}
+
+.kpi-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dark);
+    background-color: #fff;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1050;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 8px;
+}
+
+.close-button {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
 }

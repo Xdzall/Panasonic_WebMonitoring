@@ -1,0 +1,326 @@
+﻿/* wwwroot/css/background-style.css */
+/* CSS INI HANYA BERLAKU UNTUK HALAMAN DENGAN CLASS "reusable-bg" */
+
+/* ====================================================
+   BACKGROUND - PAKAI BACKGROUNDPANAMON.PNG (FULL SCREEN)
+   ==================================================== */
+html.reusable-bg-html {
+    height: 100%;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+body.reusable-bg {
+    background-image: url('/assets/BackgroundPanamon.png') !important;
+    background-size: cover !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    background-attachment: fixed !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 100vh !important;
+    height: 100% !important;
+    width: 100% !important;
+    overflow-x: hidden;
+}
+
+    /* ====================================================
+   FORCE TRANSPARENT SEMUA CONTAINER PUTIH
+   ==================================================== */
+    body.reusable-bg .bg-light,
+    body.reusable-bg .bg-white,
+    body.reusable-bg .flex-fill,
+    body.reusable-bg .overflow-y-scroll,
+    body.reusable-bg .p-2,
+    body.reusable-bg main,
+    body.reusable-bg .container-fluid {
+        background: transparent !important;
+        background-color: transparent !important;
+    }
+
+    /* ====================================================
+   CUSTOM SCROLLBAR
+   ==================================================== */
+    body.reusable-bg ::-webkit-scrollbar {
+        width: 12px;
+        height: 12px;
+    }
+
+    body.reusable-bg ::-webkit-scrollbar-track {
+        background: rgba(26, 26, 46, 0.5);
+        border-radius: 10px;
+    }
+
+    body.reusable-bg ::-webkit-scrollbar-thumb {
+        background: rgba(61, 121, 176, 0.7);
+        border-radius: 10px;
+        border: 2px solid rgba(26, 26, 46, 0.5);
+    }
+
+        body.reusable-bg ::-webkit-scrollbar-thumb:hover {
+            background: rgba(61, 121, 176, 0.9);
+        }
+
+    body.reusable-bg ::-webkit-scrollbar-corner {
+        background: rgba(26, 26, 46, 0.5);
+    }
+
+    /* Firefox scrollbar */
+    body.reusable-bg * {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(61, 121, 176, 0.7) rgba(26, 26, 46, 0.5);
+    }
+
+    /* ====================================================
+   FOOTER COPYRIGHT - STYLE DARI BACKGROUND DESIGN
+   ==================================================== */
+    body.reusable-bg .position-sticky.sticky-bottom,
+    body.reusable-bg .sticky-bottom {
+        background: rgba(15, 32, 39, 0.9) !important;
+        backdrop-filter: blur(15px) !important;
+        -webkit-backdrop-filter: blur(15px) !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+        body.reusable-bg .position-sticky.sticky-bottom *,
+        body.reusable-bg .sticky-bottom * {
+            color: #ffffff !important;
+        }
+
+        body.reusable-bg .position-sticky.sticky-bottom span,
+        body.reusable-bg .sticky-bottom span,
+        body.reusable-bg .position-sticky.sticky-bottom p,
+        body.reusable-bg .sticky-bottom p {
+            color: #ffffff !important;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+    /* ====================================================
+   WRAPPER LOGO PANAMON
+   ==================================================== */
+    body.reusable-bg .test-background-wrapper {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding-top: 180px;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+        /* ====================================================
+   BRAND LOGO - DESIGN KECIL (REUSABLE)
+   ==================================================== */
+        body.reusable-bg .test-background-wrapper .brand-logo {
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+            font-size: 17px;
+            letter-spacing: 0.3em !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            color: #ffffff !important;
+            font-family: 'Montserrat', 'Poppins', sans-serif;
+            font-weight: 600;
+        }
+
+        body.reusable-bg .test-background-wrapper .brand-text {
+            line-height: 1 !important;
+            display: inline-block !important;
+            transform: translateY(0px) !important;
+        }
+
+        /* Lingkaran O */
+        body.reusable-bg .test-background-wrapper .brand-o {
+            width: 15px !important;
+            height: 15px !important;
+            border: 2px solid #ffffff !important;
+            border-radius: 50%;
+            margin-left: 0.05em !important;
+            margin-right: 0.3em !important;
+            transform: translateY(0px) !important;
+            flex-shrink: 0 !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+            /* Dot dalam lingkaran */
+            body.reusable-bg .test-background-wrapper .brand-o::after {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 7px !important;
+                height: 7px !important;
+                background-color: #ffffff !important;
+                border-radius: 50%;
+            }
+
+    /* ====================================================
+   HEADER ELEMENTS
+   ==================================================== */
+    /* Tulisan PANASONIC */
+    body.reusable-bg .panasonic-corner {
+        position: fixed;
+        top: 30px;
+        left: 45px;
+        font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+        font-weight: 800;
+        font-size: 17px;
+        letter-spacing: 0.15em;
+        color: #ffffff;
+        z-index: 1000;
+    }
+
+    /* Garis horizontal */
+    body.reusable-bg .top-horizontal-line {
+        position: fixed;
+        top: 75px;
+        left: 110px;
+        right: 32px;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.25);
+        z-index: 999;
+    }
+
+        body.reusable-bg .top-horizontal-line.line-2 {
+            top: 120px;
+        }
+
+    /* Tanggal & Waktu */
+    body.reusable-bg .datetime-corner {
+        position: fixed !important;
+        top: 33px !important;
+        right: 32px !important;
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        font-weight: 600;
+        font-size: 13px;
+        color: #ffffff;
+        z-index: 1000 !important;
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+
+        body.reusable-bg .datetime-corner p {
+            margin: 0;
+        }
+
+    /* ====================================================
+   FINAL FIX - HEADER BACKGROUND LAYER (DO NOT MOVE)
+   ==================================================== */
+    body.reusable-bg .panasonic-corner,
+    body.reusable-bg .top-horizontal-line,
+    body.reusable-bg .datetime-corner {
+        z-index: 3000 !important;
+        pointer-events: none;
+    }
+
+    body.reusable-bg .test-background-wrapper {
+        z-index: 1040 !important;
+        pointer-events: none;
+    }
+    /* ===== FIX CONTENT LAYER ===== */ body.reusable-bg .flex-fill {
+        position: relative;
+        z-index: 50;
+        background: transparent !important;
+    }
+
+    body.reusable-bg main, body.reusable-bg canvas, body.reusable-bg .chart-container {
+        background: transparent !important;
+    }
+    /* Pastikan sidebar & konten di bawah header */
+
+    body.reusable-bg #bdSidebar {
+        position: relative;
+        z-index: 100;
+    }
+
+    body.reusable-bg .panasonic-corner {
+        position: fixed !important;
+        top: 30px !important;
+        left: 45px !important;
+        color: #ffffff !important;
+        font-family: sans-serif !important;
+        font-weight: 800 !important;
+        font-size: 18px !important;
+        letter-spacing: 0.2em !important;
+        z-index: 99999 !important; /* Nilai sangat tinggi */
+        display: block !important;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    /* Garis Horizontal */
+    body.reusable-bg .top-horizontal-line {
+        position: fixed !important;
+        top: 75px !important;
+        left: 110px !important;
+        right: 32px !important;
+        height: 2px !important; /* Tebalkan sedikit agar terlihat */
+        background: rgba(255, 255, 255, 0.5) !important; /* Lebih terang */
+        z-index: 99998 !important;
+        display: block !important;
+    }
+
+        body.reusable-bg .top-horizontal-line.line-2 {
+            top: 120px !important;
+        }
+
+    /* Jam dan Tanggal Pojok Kanan */
+    body.reusable-bg .datetime-corner {
+        position: fixed !important;
+        top: 30px !important;
+        right: 45px !important;
+        color: #ffffff !important;
+        z-index: 99999 !important;
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 20px !important;
+        font-weight: 600 !important;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+        body.reusable-bg .datetime-corner p {
+            margin: 0 !important;
+            padding: 0 !important;
+            color: #ffffff !important;
+        }
+
+    /* FORCE OVERRIDE - PASTE DI PALING BAWAH FILE */
+    body.reusable-bg .panasonic-corner,
+    body.reusable-bg .top-horizontal-line,
+    body.reusable-bg .datetime-corner {
+        visibility: visible !important;
+        opacity: 1 !important;
+        display: block !important;
+        z-index: 999999 !important; /* Tambah angka 9 nya satu lagi */
+        pointer-events: auto !important;
+    }
+
+    /* Pastikan tidak tergeser ke luar layar */
+    body.reusable-bg .panasonic-corner {
+        left: 45px !important;
+        top: 30px !important;
+    }
+
+    body.reusable-bg .datetime-corner {
+        right: 45px !important;
+        top: 30px !important;
+        display: flex !important;
+    }
+
+    /* HILANGKAN BACKGROUND YANG MENUTUPI */
+    body.reusable-bg .flex-fill,
+    body.reusable-bg .overflow-y-scroll,
+    body.reusable-bg main,
+    body.reusable-bg .p-2 {
+        background: none !important;
+        background-color: transparent !important;
+    }
