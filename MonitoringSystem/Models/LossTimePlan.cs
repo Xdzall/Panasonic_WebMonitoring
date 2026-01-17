@@ -18,6 +18,7 @@ namespace MonitoringSystem.Models
         public int Year { get; set; }
 
         public double TargetMinutes { get; set; }
+        public decimal Ratio { get; set; }
 
         public DateTime UploadedAt { get; set; } = DateTime.Now;
     }

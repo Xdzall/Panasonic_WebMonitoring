@@ -2,6 +2,7 @@
 @model MonitoringSystem.Pages.LossTimeReport.indexModel
 @{
     ViewData["Title"] = "Loss Time Report";
+    string[] months = { "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar" };
 }
 
 <div class="container-fluid mt-3">
@@ -9,47 +10,32 @@
         <div class="col-auto">
             <form method="get" id="filterForm" class="row g-3 align-items-end">
                 <div class="col-auto">
-                    <label class="form-label fw-bold small text-muted">Selected Year</label>
-                    <select class="form-select" id="SelectedYear" name="SelectedYear" asp-for="SelectedYear">
-                        @for (int i = DateTime.Now.Year; i >= 2000; i--)
+                    @* <label class="form-label fw-bold text-muted">Selected Year</label> *@
+                    <select class="form-select form-select-sm" id="SelectedYear" name="SelectedYear" asp-for="SelectedYear">
+                        @for (int i = DateTime.Now.Year; i >= 2020; i--)
                         {
                             <option value="@i">@i</option>
                         }
                     </select>
                 </div>
                 <div class="col-auto">
-                    <label class="form-label fw-bold small text-muted">Machine Line</label>
-                    <select name="MachineLine" class="form-select" asp-for="MachineLine">
+                    @* <label class="form-label fw-bold small text-muted">Machine Line</label> *@
+                    <select name="MachineLine" class="form-select form-select-sm" asp-for="MachineLine">
                         <option value="All">All Lines</option>
                         <option value="MCH1-01">(CU)</option>
                         <option value="MCH1-02">(CS)</option>
                     </select>
                 </div>
                 <div class="col-auto">
-                    <button type="submit" class="btn btn-primary w-100">
+                    <button type="submit" class="btn btn-sm text-white" style="background-color: rgb(61, 121, 176);">
                         <i class="fas fa-filter"></i> Apply Filter
                     </button>
                 </div>
                 <div class="col-auto">
-                    <button type="button" class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#uploadModal">
-                        <i class="fas fa-file-excel me-2"></i> Manage Plan
+                    <button type="button" class="btn btn-sm text-white" style="background-color: rgb(25, 135, 84);" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                        <i class="fas fa-file-excel me-2"></i> Manage BP
                     </button>
                 </div>
-
-                @*@if (TempData["Error"] != null)
-                {
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="fas fa-exclamation-triangle me-2"></i> @TempData["Error"]
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                }
-                @if (TempData["Success"] != null)
-                {
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="fas fa-check-circle me-2"></i> @TempData["Success"]
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                }*@
             </form>
         </div>
     </div>
@@ -63,12 +49,10 @@
                         <i class="fas fa-exclamation-triangle me-2"></i>
                         @TempData["Error"]
                     </div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto"
-                            data-bs-dismiss="toast"></button>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
                 </div>
             </div>
         }
-
         @if (TempData["Success"] != null)
         {
             <div id="successToast" class="toast align-items-center text-bg-success border-0 shadow" role="alert">
@@ -77,29 +61,105 @@
                         <i class="fas fa-check-circle me-2"></i>
                         @TempData["Success"]
                     </div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto"
-                            data-bs-dismiss="toast"></button>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
                 </div>
             </div>
         }
     </div>
 
-    <div class="card shadow border-0">
+    <div class="card shadow border-0 mb-4">
         <div class="card-header bg-white py-3">
             <h5 class="mb-0 fw-bold">
-                Actual vs Plan: @(Model.MachineLine == "All" ? "All Lines Combined" : Model.MachineLine)
+                Actual vs BP : @(Model.MachineLine == "All" ? "All Lines Combined" : Model.MachineLine)
                 (Apr @Model.SelectedYear - Mar @(Model.SelectedYear + 1))
             </h5>
         </div>
         <div class="card-body">
-            @if (Model.ChartDataJson == "{}" || Model.ChartDataJson.Contains("\"ActualData\":[0,0,0,0,0,0,0,0,0,0,0,0]"))
+            @if (Model.ChartDataJson == "{}" || !Model.Categories.Any())
             {
                 <div class="alert alert-warning text-center">
                     No data found for Fiscal Year @Model.SelectedYear. Please check if data exists in database.
                 </div>
             }
-            <div style="height: 450px; width: 100%;">
+            <div style="height: 420px; width: 100%;">
                 <canvas id="monthlyLossChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow border-0 mb-4">
+        <div class="card-header bg-dark text-white py-2">
+            <h6 class="mb-0">Detailed Loss Report</h6>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped text-center align-middle w-100 mb-0" id="lossTimeTable">
+                    <thead class="bg-light sticky-top">
+                        <tr>
+                            <th rowspan="2" class="align-middle" style="min-width: 150px;">Loss Category</th>
+                            @foreach (var m in months)
+                            {
+                                <th colspan="2">@m</th>
+                            }
+                        </tr>
+                        <tr>
+                            @for (int i = 0; i < 12; i++)
+                            {
+                                <th class="fw-bold small">BP</th>
+                                <th class="fw-bold small">Act</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Categories.Any())
+                        {
+                            string currentGroup = "";
+
+                            foreach (var cat in Model.Categories)
+                            {
+                                string groupName = Model.GetCategoryGroup(cat);
+
+                                if (groupName != currentGroup)
+                                {
+                                    <tr class="table-secondary">
+                                        <td colspan="25" class="text-center fw-bold text-uppercase py-1" style="letter-spacing: 1px;">
+                                            @groupName
+                                        </td>
+                                    </tr>
+                                    currentGroup = groupName;
+                                }
+
+                                <tr>
+                                    <td class="text-start fw-bold">@cat</td>
+                                    @for (int i = 0; i < 12; i++)
+                                    {
+                                        var planVal = Model.DetailPlans.ContainsKey(cat) ? Model.DetailPlans[cat][i] : 0;
+                                        var actVal = Model.DetailActuals.ContainsKey(cat) ? Model.DetailActuals[cat][i] : 0;
+
+                                        <td class="text-center fw-bold">@planVal</td>
+                                        <td class="text-center fw-bold">@actVal</td>
+
+                                        @* <td class="@(actVal > planVal ? "text-danger fw-bold" : "text-dark")">
+                                             @actVal
+                                        </td> *@
+                                    }
+                                </tr>
+                            }
+                            <tr class="table-dark fw-bold">
+                                <td class="text-start">TOTAL LOSS</td>
+                                @for (int i = 0; i < 12; i++)
+                                {
+                                    <td>@Model.TotalPlanPerMonth[i].ToString("N1")</td>
+                                    <td>@Model.TotalActualPerMonth[i].ToString("N1")</td>
+                                }
+                            </tr>
+                        }
+                        else
+                        {
+                            <tr><td colspan="25">No Data Available</td></tr>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -109,15 +169,13 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
-                <h5 class="modal-title" id="uploadModalLabel"><i class="fas fa-file-upload"></i> Upload Plan Data</h5>
+                <h5 class="modal-title" id="uploadModalLabel"><i class="fas fa-file-upload"></i> Upload BP Data</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-
             <form method="post" enctype="multipart/form-data" asp-page-handler="ImportExcel">
                 <div class="modal-body">
                     <input type="hidden" name="SelectedYear" value="@Model.SelectedYear" />
                     <input type="hidden" name="MachineLine" value="@Model.MachineLine" />
-
                     <div class="mb-3">
                         <label class="form-label fw-bold">1. Select Target Machine for Plan</label>
                         <select name="UploadMachineLine" class="form-select" required>
@@ -126,12 +184,10 @@
                         </select>
                         <div class="form-text text-muted">You must specify which machine this file belongs to.</div>
                     </div>
-
                     <div class="mb-3">
                         <label class="form-label fw-bold">2. Choose Excel File</label>
                         <input type="file" name="UploadedExcel" class="form-control" accept=".xlsx" required />
                     </div>
-
                     <hr />
                     <div class="d-flex justify-content-between align-items-center">
                         <span class="small text-muted">Need the format?</span>
@@ -142,7 +198,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-success">Import Plan</button>
+                    <button type="submit" class="btn btn-small text-white" style="background-color: rgb(25, 135, 84);">Import BP</button>
                 </div>
             </form>
         </div>
@@ -151,354 +207,150 @@
 
 <script src="~/js/chart.umd.min.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function() {
         var chartData = @Html.Raw(Model.ChartDataJson);
-
         var ctx = document.getElementById('monthlyLossChart').getContext('2d');
+
+        // Warna untuk stack bar (Loss Categories)
+        const barColors = [
+            '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b',
+            '#858796', '#5a5c69', '#fd7e14', '#20c997', '#6f42c1'
+        ];
+
+        let datasets = [];
+        let colorIdx = 0;
+
+        // 1. Loop Categories untuk membuat Stacked Bar
+        if(chartData.Categories){
+            chartData.Categories.forEach((cat) => {
+                let color = barColors[colorIdx % barColors.length];
+
+                // Dataset Actual Bar
+                datasets.push({
+                    label: cat + ' (Act)',
+                    data: chartData.Actuals[cat],
+                    backgroundColor: color,
+                    stack: 'Actual',
+                    order: 2 // Layer di belakang garis
+                });
+
+                // Dataset Plan Bar
+                datasets.push({
+                    label: cat + ' (Plan)',
+                    data: chartData.Plans[cat],
+                    backgroundColor: color,
+                    stack: 'Plan',
+                    opacity: 0.6, // Agak transparan untuk membedakan
+                    order: 2
+                });
+                colorIdx++;
+            });
+        }
+
+        // 2. TAMBAHKAN LINE CHART: ACTUAL RATIO
+        datasets.push({
+            label: 'Actual Ratio (%)',
+            data: chartData.RatioActual, // Data dari C#
+            type: 'line',
+            borderColor: '#e74a3b', // Merah
+            backgroundColor: '#e74a3b',
+            borderWidth: 3,
+            pointRadius: 4,
+            yAxisID: 'y_ratio', // Menggunakan sumbu kanan
+            tension: 0.1,
+            order: 0 // Layer paling depan
+        });
+
+        // 3. TAMBAHKAN LINE CHART: PLAN RATIO
+        datasets.push({
+            label: 'Plan Ratio (%)',
+            data: chartData.RatioPlan, // Data dari C#
+            type: 'line',
+            borderColor: '#4e73df', // Biru
+            backgroundColor: '#4e73df',
+            borderWidth: 2,
+            borderDash: [5, 5], // Garis putus-putus
+            pointRadius: 3,
+            yAxisID: 'y_ratio', // Menggunakan sumbu kanan
+            tension: 0.1,
+            order: 0
+        });
 
         new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: chartData.Labels,
-                datasets: [
-                    {
-                        label: 'Total Actual Loss (Min)',
-                        data: chartData.ActualData,
-                        backgroundColor: 'rgba(220, 53, 69, 0.8)',
-                        borderColor: 'rgba(220, 53, 69, 1)',
-                        borderWidth: 1
-                    },
-                    {
-                        label: 'Total Plan (Min)',
-                        data: chartData.PlanData,
-                        backgroundColor: 'rgba(13, 110, 253, 0.8)',
-                        borderColor: 'rgba(13, 110, 253, 1)',
-                        borderWidth: 1
-                    }
-                ]
+                datasets: datasets
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) label += ': ';
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y;
+                                    // Tambah tanda % jika dataset menggunakan sumbu kanan
+                                    if (context.dataset.yAxisID === 'y_ratio') label += '%';
+                                }
+                                return label;
+                            }
+                        }
+                    },
+                    legend: { display: false } // Hide legend jika terlalu ramai
+                },
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: { display: true, text: 'Duration (Minutes)' }
+                    x: {
+                        stacked: true,
+                        title: { display: true, text: 'Fiscal Month' }
+                    },
+                    y: { // Sumbu Kiri (Menit Loss)
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        stacked: true,
+                        title: { display: true, text: 'Loss Time (Minutes)' }
+                    },
+                    y_ratio: { // Sumbu Kanan (Persentase)
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        grid: {
+                            drawOnChartArea: false // Hilangkan grid agar tidak tumpang tindih
+                        },
+                        title: { display: true, text: 'Ratio (%)', color: '#333' },
+                        ticks: {
+                            callback: function(value) { return value + "%" }
+                        },
+                        suggestedMax: 5 // Opsional: set max default agar garis tidak terlalu mepet atas
                     }
                 }
             }
         });
-
-        const errorToast = document.getElementById("errorToast");
-        const successToast = document.getElementById("successToast");
-
-        if (errorToast) {
-            new bootstrap.Toast(errorToast, { delay: 5000 }).show();
-        }
-
-        if (successToast) {
-            new bootstrap.Toast(successToast, { delay: 3500 }).show();
-        }
     });
 </script>
 
-
-@*
-<div class="table-responsive">
-    <table class="table table-bordered text-center align-middle w-100" id="lossTimeTable">
-        <thead class="table-dark">
-            <tr>
-                <th id="toggleExtraRows" style="min-width: 150px; cursor: pointer; user-select: none;">
-                    <div class="d-flex align-items-center">
-                        <i id="toggleIcon" class="bi bi-chevron-down me-2"></i>
-                        <span>Loss Category</span>
-                    </div>
-                </th>
-                @foreach (var monthLabel in Model.MonthLabels)
-                {
-                        <th>@monthLabel</th>
-                }
-            </tr>
-        </thead>
-        <tbody>
-            <tr class="table-secondary extra-row">
-                <td colspan="13" class="text-center">Fixed Loss</td>
-            </tr>
-            <tr class="extra-row">
-                <td>Morning Assembly</td>
-                @for (int i = 0; i < 12; i++)
-                {
-                        <td>
-                        @{
-                            var minutes = Model.ReportData.MonthlyLosses.ContainsKey("Loss Awal Hari") ? Model.SecondsToMinutes(Model.ReportData.MonthlyLosses["Loss Awal Hari"][i]) : 0;
-                            @(minutes > 0 ? minutes.ToString("F1") : "0")
-                        }
-                        </td>
-                }
-            </tr>
-            <tr class="extra-row">
-                <td>Break Time (AM/PM)</td>
-                @for (int i = 0; i < 12; i++)
-                {
-                    <td>0</td>
-                }
-            </tr>
-            <tr class="extra-row">
-                <td>Cleaning</td>
-                @for (int i = 0; i < 12; i++)
-                {
-                    <td>0</td>
-                }
-            </tr>
-             <tr class="extra-row">
-                <td>General Assembly</td>
-                @for (int i = 0; i < 12; i++)
-                {
-                    <td>0</td>
-                }
-            </tr>
-
-            <tr class="table-secondary extra-row">
-                <td colspan="13" class="text-center">Control Loss</td>
-            </tr>
-             <tr class="extra-row">
-                <td>Material Shortage External</td>
-                @for (int i = 0; i < 12; i++)
-                {
-                        <td>
-                        @{
-                            var minutes = Model.ReportData.MonthlyLosses.ContainsKey("Material Shortage External") ? Model.SecondsToMinutes(Model.ReportData.MonthlyLosses["Material Shortage External"][i]) : 0;
-                            @(minutes > 0 ? minutes.ToString("F1") : "0")
-                        }
-                        </td>
-                }
-            </tr>
-
-            <tr class="table-secondary extra-row">
-                <td colspan="13" class="text-center">Operation Loss</td>
-            </tr>
-             <tr class="extra-row">
-                <td>Model Change</td>
-                @for (int i = 0; i < 12; i++)
-                {
-                        <td>
-                        @{
-                            var minutes = Model.ReportData.MonthlyLosses.ContainsKey("Change Model") ? Model.SecondsToMinutes(Model.ReportData.MonthlyLosses["Change Model"][i]) : 0;
-                            @(minutes > 0 ? minutes.ToString("F1") : "0")
-                        }
-                        </td>
-                }
-            </tr>
-            <tr class="extra-row">
-                <td>Man Power Adjustment</td>
-                @for (int i = 0; i < 12; i++)
-                {
-                        <td>
-                        @{
-                            var minutes = Model.ReportData.MonthlyLosses.ContainsKey("MP Adjustment") ? Model.SecondsToMinutes(Model.ReportData.MonthlyLosses["MP Adjustment"][i]) : 0;
-                            @(minutes > 0 ? minutes.ToString("F1") : "0")
-                        }
-                        </td>
-                }
-            </tr>
-
-            <tr class="table-secondary extra-row">
-                <td colspan="13" class="text-center">Balance Loss</td>
-            </tr>
-             <tr class="extra-row">
-                <td>Material Shortage Internal</td>
-                @for (int i = 0; i < 12; i++)
-                {
-                        <td>
-                        @{
-                            var minutes = Model.ReportData.MonthlyLosses.ContainsKey("Material Shortage Internal") ? Model.SecondsToMinutes(Model.ReportData.MonthlyLosses["Material Shortage Internal"][i]) : 0;
-                            @(minutes > 0 ? minutes.ToString("F1") : "0")
-                        }
-                        </td>
-                }
-            </tr>
-
-            <tr class="table-secondary extra-row">
-                <td colspan="13" class="text-center">Delivery Loss</td>
-            </tr>
-             <tr class="extra-row">
-                <td>Material Shortage Inhouse</td>
-                @for (int i = 0; i < 12; i++)
-                {
-                        <td>
-                        @{
-                            var minutes = Model.ReportData.MonthlyLosses.ContainsKey("Material Shortage Inhouse") ? Model.SecondsToMinutes(Model.ReportData.MonthlyLosses["Material Shortage Inhouse"][i]) : 0;
-                            @(minutes > 0 ? minutes.ToString("F1") : "0")
-                        }
-                        </td>
-                }
-            </tr>
-
-            <tr class="table-secondary extra-row">
-                <td colspan="13" class="text-center">Loss Adjustment</td>
-            </tr>
-            <tr class="extra-row">
-                <td>Quality Trouble</td>
-                @for (int i = 0; i < 12; i++)
-                {
-                        <td>
-                        @{
-                            var minutes = Model.ReportData.MonthlyLosses.ContainsKey("Quality Trouble") ? Model.SecondsToMinutes(Model.ReportData.MonthlyLosses["Quality Trouble"][i]) : 0;
-                            @(minutes > 0 ? minutes.ToString("F1") : "0")
-                        }
-                        </td>
-                }
-            </tr>
-            <tr class="extra-row">
-                <td>Rework</td>
-                @for (int i = 0; i < 12; i++)
-                {
-                        <td>
-                        @{
-                            var minutes = Model.ReportData.MonthlyLosses.ContainsKey("Rework") ? Model.SecondsToMinutes(Model.ReportData.MonthlyLosses["Rework"][i]) : 0;
-                            @(minutes > 0 ? minutes.ToString("F1") : "0")
-                        }
-                        </td>
-                }
-            </tr>
-            <tr class="extra-row">
-                <td>Machine & Tools Trouble</td>
-                @for (int i = 0; i < 12; i++)
-                {
-                        <td>
-                        @{
-                            var minutes = Model.ReportData.MonthlyLosses.ContainsKey("Machine Trouble") ? Model.SecondsToMinutes(Model.ReportData.MonthlyLosses["Machine Trouble"][i]) : 0;
-                            @(minutes > 0 ? minutes.ToString("F1") : "0")
-                        }
-                        </td>
-                }
-            </tr>
-
-            <tr class="table-secondary extra-row">
-                <td colspan="13" class="text-center">Total Loss & Actual</td>
-            </tr>
-            <tr class="table-group-divider">
-                <td class="fw-bold">Total Working Time</td>
-                @foreach (var workingTime in Model.TotalWorkingTimeByMonth)
-                {
-                    <td>@workingTime.ToString("N0")</td>
-                }
-            </tr>
-            <tr>
-                <td class="fw-bold">Total Loss</td>
-                @for (int i = 0; i < 12; i++)
-                {
-                        <td>@Model.SecondsToMinutes(Model.ReportData.TotalLossByMonth[i]).ToString("F1")</td>
-                }
-            </tr>
-             <tr>
-                <td class="fw-bold">Actual Loss = Total Loss - Fixed Loss</td>
-                @foreach (var actualLoss in Model.ActualLossByMonth)
-                {
-                    <td>@actualLoss.ToString("F1")</td>
-                }
-            </tr>
-            <tr>
-                <td class="fw-bold">Actual WT = Total WT - Fixed Loss</td>
-                @foreach (var actualWt in Model.ActualWtByMonth)
-                {
-                    <td>@actualWt.ToString("F1")</td>
-                }
-            </tr>
-            <tr>
-                <td class="fw-bold">Actual Loss vs Actual Working Time (%)</td>
-                @foreach (var presentage in Model.ActualLossVsActualWtPresentage)
-                {
-                    <td>@presentage</td>
-                }
-            </tr>
-            <tr>
-                <td class="fw-bold">Total Loss vs Total Working Time (%)</td>
-                @foreach (var presentage in Model.TotalLossVsTotalWtPresentage)
-                {
-                    <td>@presentage</td>
-                }
-            </tr>
-            <tr>
-                <td class="fw-bold">BP Total Loss vs Total Working Time (%)</td>
-                @for (int i = 0; i < 12; i++)
-                {
-                    <td>0%</td>
-                }
-            </tr>
-        </tbody>
-    </table>
-</div>
-
 <style>
-    .table th,
-    .table td {
-        font-size: 10px;
-        padding: 0.3rem;
+    .table th, .table td {
         white-space: nowrap;
-        word-wrap: break-word;
-        vertical-align: middle;
+        font-size: 0.7rem;
     }
 
-    .table th:first-child,
-    .table td:first-child {
-        min-width: 100px;
-        white-space: normal;
-        text-align: left;
-        padding-left: .5rem;
-    }
-    .extra-row {
-        display: none;
+        .table th:first-child, .table td:first-child {
+            white-space: normal;
+            position: sticky;
+            left: 0;
+            background-color: #fff;
+            z-index: 2;
+        }
+
+    .table-dark td:first-child {
+        background-color: #212529;
+        color: white;
     }
 </style>
-*@
-@* <script src="~/js/chart.umd.min.js"></script> *@
-@* <script> *@
-@*     document.addEventListener("DOMContentLoaded", function() { *@
-@*         // Data dari backend *@
-@*         var chartData = @Html.Raw(Model.ChartDataJson); *@
-
-@*         var ctx = document.getElementById('lossTimeChart').getContext('2d'); *@
-@*         new Chart(ctx, { *@
-@*             type: 'bar', *@
-@*             data: { *@
-@*                 labels: chartData.Labels, *@
-@*                 datasets: [ *@
-@*                     { *@
-@*                         label: 'Actual Loss (Min)', *@
-@*                         data: chartData.ActualData, *@
-@*                         backgroundColor: 'rgba(220, 53, 69, 0.7)', // Merah *@
-@*                         borderColor: 'rgba(220, 53, 69, 1)', *@
-@*                         borderWidth: 1 *@
-@*                     }, *@
-@*                     { *@
-@*                         label: 'Plan Limit (Min)', *@
-@*                         data: chartData.PlanData, *@
-@*                         backgroundColor: 'rgba(13, 110, 253, 0.7)', // Biru *@
-@*                         borderColor: 'rgba(13, 110, 253, 1)', *@
-@*                         borderWidth: 1 *@
-@*                     } *@
-@*                 ] *@
-@*             }, *@
-@*             options: { *@
-@*                 responsive: true, *@
-@*                 maintainAspectRatio: false, *@
-@*                 scales: { *@
-@*                     y: { *@
-@*                         beginAtZero: true, *@
-@*                         title: { display: true, text: 'Duration (Minutes)' } *@
-@*                     }, *@
-@*                     x: { *@
-@*                         ticks: { autoSkip: false, maxRotation: 90, minRotation: 45 } *@
-@*                     } *@
-@*                 }, *@
-@*                 plugins: { *@
-@*                     tooltip: { *@
-@*                         mode: 'index', *@
-@*                         intersect: false *@
-@*                     } *@
-@*                 } *@
-@*             } *@
-@*         }); *@
-@*     }); *@
-@* </script> *@
