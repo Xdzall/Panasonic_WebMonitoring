@@ -80,7 +80,7 @@ namespace MonitoringSystem.Pages.LossTime
             (new TimeSpan(18, 15, 0), new TimeSpan(18, 45, 0))
         };
 
-        public string connectionString = "Server=10.83.33.103;trusted_connection=false;Database=PROMOSYS;User Id=sa;Password=sa;Persist Security Info=False;Encrypt=False";
+        public string connectionString = "Server=AldinoMatasik\\SQLEXPRESS01;Database=PROMOSYS;Trusted_Connection=True;Encrypt=False";
         //public string connectionString = "Data Source=DESKTOP-NBPATD6\\MSSQLSERVERR;trusted_connection=true;trustservercertificate=True;Database=LatestPROMOSYS;Integrated Security=True;Encrypt=False";
 
         public void OnGet(int pageNumber = 1, int pageSize = 10)

@@ -13,9 +13,9 @@ namespace MonitoringSystem.Data
         {
         }
 
-
+        public DbSet<LossTimePlan> LossTimePlans { get; set; }
         public DbSet<AdditionalBreakTime> AdditionalBreakTimes { get; set; }
-        public DbSet<HourlyPlanData> HourlyPlanData { get; set; } 
+        public DbSet<HourlyPlanData> HourlyPlanData { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

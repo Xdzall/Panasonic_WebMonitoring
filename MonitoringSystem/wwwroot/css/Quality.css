@@ -1,4 +1,4 @@
-﻿/* --- GLOBAL STYLES (LIGHT THEME) --- */
+﻿
 :root {
     --panasonic-blue: rgb(61, 121, 176);
     --bg-light: #ffffff;
@@ -9,25 +9,20 @@
 body {
     background-color: var(--bg-light);
     color: var(--text-dark);
-    /* font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; */
 }
 
 .dashboard-container {
     padding: 10px;
 }
 
-/* --- LAYOUT HELPERS --- */
-/* Grid border menggunakan warna Biru Original */
 .grid-border {
     border: 1px solid var(--panasonic-blue);
     padding: 8px;
     background: #ffffff;
     border-radius: var(--border-radius);
     margin-bottom: 10px;
-    /* PENTING: Jangan set height 100% disini agar sidebar 'Auto Height' */
 }
 
-/* Class khusus agar Chart/Content Kanan tetap Full Height */
 .fill-height {
     height: 100%;
     display: flex;
@@ -45,7 +40,6 @@ body {
     padding-bottom: 5px;
 }
 
-/* --- BUTTONS (Blue/Outline Theme) --- */
 .btn-custom-group {
     display: flex;
     flex-direction: column;
@@ -78,7 +72,6 @@ body {
         color: #333;
     }
 
-/* --- KPI BOXES --- */
 .kpi-box {
     text-align: center;
     height: 100%;
@@ -109,45 +102,12 @@ body {
     background-color: #fff;
 }
 
-/* --- MODAL --- */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1050;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.4);
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: 15% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    max-width: 500px;
-    border-radius: 8px;
-}
-
-.close-button {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
 .scrollable-menu {
-    /* Tinggi kira-kira untuk 2 tombol (estimasi tombol ~45px + gap) */
     max-height: 115px;
-    overflow-y: auto; /* Munculkan scrollbar jika konten lebih panjang */
-    padding-right: 5px; /* Jarak agar scrollbar tidak menutupi teks */
+    overflow-y: auto; 
+    padding-right: 5px;
 }
 
-    /* Kustomisasi Scrollbar agar terlihat rapi (Opsional) */
     .scrollable-menu::-webkit-scrollbar {
         width: 6px;
     }
