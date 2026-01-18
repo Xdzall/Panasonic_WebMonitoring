@@ -195,7 +195,7 @@
     margin-right: 7px;
     background: rgba(255, 255, 255, 0.20);
     border-radius: 12px;
-    padding: 8px 12px 6px 12px;
+    padding: 5px 12px 5px 12px; 
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
     border: 2px solid rgba(255, 255, 255, 0.3) !important;
     overflow: visible !important;
@@ -222,13 +222,12 @@
     margin-right: 7px;
     overflow-x: auto;
     overflow-y: auto;
-    max-height: calc(100vh - 450px);
+    max-height: calc(100vh - 480px);
     position: relative;
     border-radius: 8px;
-    /* Smooth scrolling */
     scroll-behavior: smooth;
-    /* Padding bottom biar scrollbar keliatan */
-    padding-bottom: 2px;
+    padding-bottom: 20px;
+    margin-bottom: 30px;
 }
 
 /* SCROLLBAR HORIZONTAL - LEBIH TEBAL & JELAS */
@@ -258,13 +257,11 @@
     cursor: grabbing;
 }
 
-/* Scrollbar corner */
 .table-responsive::-webkit-scrollbar-corner {
     background: rgba(0, 0, 0, 0.5);
     border-radius: 7px;
 }
 
-/* Firefox scrollbar */
 .table-responsive {
     scrollbar-width: auto;
     scrollbar-color: #64b5f6 rgba(0, 0, 0, 0.5);
@@ -282,25 +279,59 @@
 /* STICKY FIRST COLUMN - DENGAN SHADOW GRADIENT */
 .table th:first-child,
 .table td:first-child {
-    min-width: 150px;
-    max-width: 150px;
+    min-width: 70px !important;
+    max-width: 70px !important;
+    width: 70px !important;
     white-space: normal;
     text-align: left;
-    padding-left: .5rem;
-    padding-right: .5rem;
+    padding-left: .25rem;
+    padding-right: .25rem;
+    padding-top: 0.15rem;
+    padding-bottom: 0.15rem;
+    font-size: 10px;
+    line-height: 1.2;
     position: sticky;
     left: 0;
     background-color: rgba(255, 255, 255, 0.20) !important;
     z-index: 10;
-    /* Shadow gradient untuk depth */
     box-shadow: 3px 0 8px rgba(0, 0, 0, 0.3);
+    border-right: 2px solid rgba(255, 255, 255, 0.3) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.25) !important;
 }
 
-/* Sticky header first column */
+/* Sticky header first column dengan cursor pointer untuk yang clickable */
+/* TABLE HEADER - SOLID BACKGROUND GAK TEMBUS PANDANG */
+table.table thead th {
+    background-color: rgba(30, 40, 60, 1) !important;  /* SOLID 100% - GAK TRANSPARAN */
+    color: #ffffff !important;
+    font-weight: 600;
+    border-bottom: 2px solid rgba(100, 181, 246, 0.5) !important;
+}
+
+/* Sticky header first column dengan cursor pointer */
 .table thead th:first-child {
-    background-color: rgba(0, 0, 0, 0.7) !important;
+    background-color: rgba(20, 30, 50, 1) !important;  /* SOLID & lebih gelap */
     z-index: 11;
     font-weight: 700;
+}
+
+.table thead th:first-child.toggle-header {
+    cursor: pointer;
+    user-select: none;
+}
+
+/* FIX LEBAR KOLOM BP & ACT - SEMUA SAMA */
+/* Target hanya row kedua header (BP/Act) dan semua tbody cells */
+.table thead tr:nth-child(2) th {
+    min-width: 38px !important;
+    max-width: 38px !important;
+    width: 38px !important;
+}
+
+.table tbody td:not(:first-child) {
+    min-width: 38px !important;
+    max-width: 38px !important;
+    width: 38px !important;
 }
 
 /* TABLE BACKGROUND - SAMA PERSIS */
@@ -308,10 +339,10 @@
     background-color: rgba(255, 255, 255, 0.20) !important;
 }
 
-table.table thead th {
+@*table.table thead th {
     background-color: rgba(0, 0, 0, 0.7) !important;
     color: #ffffff !important;
-}
+}*@
 
 table.table tbody td {
     background-color: transparent !important;
@@ -337,6 +368,11 @@ table.table-bordered > :not(caption) > * {
     background-color: rgba(255, 255, 255, 0.15) !important;
     font-weight: 700;
     box-shadow: 3px 0 8px rgba(0, 0, 0, 0.3);
+}
+
+/* EXTRA ROW - HIDDEN BY DEFAULT */
+.extra-row {
+    display: none;
 }
 
 /* CRITICAL OVERFLOW CONTROL - SAMA PERSIS */
@@ -411,7 +447,7 @@ main.pb-5 {
                     <select class="form-select form-select-sm" style="width: 70px;" id="SelectedYear" name="SelectedYear" asp-for="SelectedYear">
                             @for (int i = DateTime.Now.Year; i >= 2020; i--)
                             {
-                                <option value="@i">@i</option>
+                                    <option value="@i">@i</option>
                             }
                     </select>
                 </div>
@@ -441,27 +477,27 @@ main.pb-5 {
     <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100">
             @if (TempData["Error"] != null)
             {
-                <div id="errorToast" class="toast align-items-center text-bg-danger border-0 shadow" role="alert">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
+                    <div id="errorToast" class="toast align-items-center text-bg-danger border-0 shadow" role="alert">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
                             @TempData["Error"]
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
                         </div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
                     </div>
-                </div>
             }
             @if (TempData["Success"] != null)
             {
-                <div id="successToast" class="toast align-items-center text-bg-success border-0 shadow" role="alert">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <i class="fas fa-check-circle me-2"></i>
+                    <div id="successToast" class="toast align-items-center text-bg-success border-0 shadow" role="alert">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <i class="fas fa-check-circle me-2"></i>
                             @TempData["Success"]
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
                         </div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
                     </div>
-                </div>
             }
     </div>
 
@@ -473,29 +509,34 @@ main.pb-5 {
         </h5>
             @if (Model.ChartDataJson == "{}" || !Model.Categories.Any())
             {
-                <div class="alert alert-warning text-center mt-2" style="font-size: 0.75rem;">
-                    No data found for Fiscal Year @Model.SelectedYear. Please check if data exists in database.
-                </div>
+                    <div class="alert alert-warning text-center mt-2" style="font-size: 0.75rem;">
+                        No data found for Fiscal Year @Model.SelectedYear. Please check if data exists in database.
+                    </div>
             }
         <canvas id="monthlyLossChart" class="chart-canvas"></canvas>
     </div>
 
-    <!-- TABLE - SAMA PERSIS DENGAN PRODUCTION REPORT -->
+    <!-- TABLE - DENGAN TOGGLE FEATURE -->
     <div class="table-responsive">
         <table class="table table-bordered text-center align-middle w-100 mb-0" id="lossTimeTable">
             <thead class="sticky-top">
                 <tr>
-                    <th rowspan="2" class="align-middle">Loss Category</th>
+                    <th rowspan="2" class="align-middle toggle-header" id="toggleExtraRows">
+                        <div class="d-flex align-items-center">
+                            <i id="toggleIcon" class="bi bi-chevron-down me-2"></i>
+                            <span>Loss Category</span>
+                        </div>
+                    </th>
                         @foreach (var m in months)
                         {
-                            <th colspan="2">@m</th>
+                                <th colspan="2">@m</th>
                         }
                 </tr>
                 <tr>
                         @for (int i = 0; i < 12; i++)
                         {
-                            <th class="fw-bold small">BP</th>
-                            <th class="fw-bold small">Act</th>
+                                <th class="fw-bold small">BP</th>
+                                <th class="fw-bold small">Act</th>
                         }
                 </tr>
             </thead>
@@ -507,41 +548,43 @@ main.pb-5 {
                         foreach (var cat in Model.Categories)
                         {
                             string groupName = Model.GetCategoryGroup(cat);
+                            bool isWorkingLoss = groupName.Equals("WORKING LOSS", StringComparison.OrdinalIgnoreCase);
+                            string rowClass = isWorkingLoss ? "" : "extra-row";
 
                             if (groupName != currentGroup)
                             {
-                                        <tr class="table-secondary">
-                                            <td colspan="25" class="text-center fw-bold text-uppercase py-1" style="letter-spacing: 1px;">
+                                                    <tr class="table-secondary @rowClass">
+                                                        <td colspan="25" class="text-center fw-bold text-uppercase py-1" style="letter-spacing: 1px;">
                                         @groupName
-                                            </td>
-                                        </tr>
+                                                        </td>
+                                                    </tr>
                                 currentGroup = groupName;
                             }
 
-                                <tr>
-                                    <td class="text-start fw-bold">@cat</td>
+                                        <tr class="@rowClass">
+                                            <td class="text-start fw-bold">@cat</td>
                                 @for (int i = 0; i < 12; i++)
                                 {
                                     var planVal = Model.DetailPlans.ContainsKey(cat) ? Model.DetailPlans[cat][i] : 0;
                                     var actVal = Model.DetailActuals.ContainsKey(cat) ? Model.DetailActuals[cat][i] : 0;
 
-                                            <td class="text-center fw-bold">@planVal</td>
-                                            <td class="text-center fw-bold">@actVal</td>
+                                                        <td class="text-center fw-bold">@planVal</td>
+                                                        <td class="text-center fw-bold">@actVal</td>
                                 }
-                                </tr>
+                                        </tr>
                         }
-                        <tr class="table-dark fw-bold">
-                            <td class="text-start">TOTAL LOSS</td>
+                            <tr class="table-dark fw-bold extra-row">
+                                <td class="text-start">TOTAL LOSS</td>
                             @for (int i = 0; i < 12; i++)
                             {
-                                    <td>@Model.TotalPlanPerMonth[i].ToString("N1")</td>
-                                    <td>@Model.TotalActualPerMonth[i].ToString("N1")</td>
+                                            <td>@Model.TotalPlanPerMonth[i].ToString("N1")</td>
+                                            <td>@Model.TotalActualPerMonth[i].ToString("N1")</td>
                             }
-                        </tr>
+                            </tr>
                     }
                     else
                     {
-                        <tr><td colspan="25">No Data Available</td></tr>
+                            <tr><td colspan="25">No Data Available</td></tr>
                     }
             </tbody>
         </table>
@@ -593,6 +636,19 @@ main.pb-5 {
 <script src="~/js/chart.umd.min.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+        // TOGGLE EXTRA ROWS FUNCTIONALITY
+        document.getElementById('toggleExtraRows')?.addEventListener('click', function () {
+            const extraRows = document.querySelectorAll('.extra-row');
+            const icon = document.getElementById('toggleIcon');
+            const isVisible = extraRows[0]?.style.display === 'table-row';
+
+            extraRows.forEach(row => row.style.display = isVisible ? 'none' : 'table-row');
+
+            icon?.classList.toggle('bi-chevron-down', isVisible);
+            icon?.classList.toggle('bi-chevron-up', !isVisible);
+        });
+
+        // CHART RENDERING
         var chartData = @Html.Raw(Model.ChartDataJson);
         var ctx = document.getElementById('monthlyLossChart').getContext('2d');
 
@@ -666,6 +722,14 @@ main.pb-5 {
                 responsive: true,
                 maintainAspectRatio: false,
                 animation: { duration: 500 },
+               layout: {
+                    padding: {
+                        bottom: 0,
+                        top: 10,
+                        left: 5,
+                        right: 5
+                    }
+                },
                 plugins: {
                     tooltip: {
                         mode: 'index',
@@ -684,10 +748,39 @@ main.pb-5 {
                             }
                         }
                     },
-                    legend: { 
-                        display: false,
-                        labels: { color: '#ffffff' }
-                    }
+                   legend: { 
+    display: false,
+    position: 'bottom',
+    labels: { 
+        color: '#ffffff',
+        boxWidth: 12,
+        boxHeight: 12,
+        padding: 8,
+        font: {
+            size: 9
+        },
+        usePointStyle: false
+    },
+    maxHeight: 120,
+    align: 'start',
+    onClick: function(e, legendItem, legend) {
+        const index = legendItem.datasetIndex;
+        const chart = legend.chart;
+
+        // Toggle visibility menggunakan API yang benar
+        if (chart.isDatasetVisible(index)) {
+            chart.hide(index);
+        } else {
+            chart.show(index);
+        }
+    },
+    onHover: function(e, legendItem, legend) {
+        e.native.target.style.cursor = 'pointer';
+    },
+    onLeave: function(e, legendItem, legend) {
+        e.native.target.style.cursor = 'default';
+    }
+}
                 },
                 scales: {
                     x: {

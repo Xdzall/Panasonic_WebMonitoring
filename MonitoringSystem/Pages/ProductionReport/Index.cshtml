@@ -184,14 +184,52 @@
     vertical-align: middle;
 }
 
-.table th:first-child,
-.table td:first-child {
+/* STICKY HEADER - HEADER TETAP SAAT SCROLL */
+.table thead th {
+    position: sticky;
+    top: 0;
+    background-color: rgba(0, 0, 0, 0.7) !important;
+    color: #ffffff !important;
+    z-index: 20;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Kolom pertama header - STICKY HORIZONTAL DAN VERTIKAL */
+.table thead th:first-child {
+    position: sticky;
+    left: 0;
+    top: 0;
+    z-index: 21 !important;
+    background-color: rgba(0, 0, 0, 0.7) !important;
+    box-shadow: 3px 0 8px rgba(0, 0, 0, 0.3);
+    border-right: 2px solid rgba(255, 255, 255, 0.3) !important;
     min-width: 100px;
+    max-width: 100px;
     white-space: normal;
     text-align: left;
     padding-left: .5rem;
 }
 
+/* Kolom pertama body - STICKY HORIZONTAL */
+.table tbody td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 10;
+    background-color: rgba(255, 255, 255, 0.20) !important;
+    box-shadow: 3px 0 8px rgba(0, 0, 0, 0.3);
+    border-right: 2px solid rgba(255, 255, 255, 0.3) !important;
+    min-width: 100px;
+    max-width: 100px;
+    white-space: normal;
+    text-align: left;
+    padding-left: .5rem;
+}
+
+/* Row table-secondary tetap proper */
+.table-secondary td:first-child {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    font-weight: 700;
+}
 .extra-row {
     display: none;
 }
@@ -201,10 +239,15 @@
     background-color: rgba(255, 255, 255, 0.20) !important;
 }
 
+/* TABLE HEADER - SOLID BACKGROUND GAK TEMBUS PANDANG */
 table.table thead th {
-    background-color: rgba(0, 0, 0, 0.7) !important;
+    background-color: rgba(30, 40, 60, 1) !important;  /* SOLID 100% - GAK TRANSPARAN */
     color: #ffffff !important;
+    font-weight: 600;
+    border-bottom: 2px solid rgba(100, 181, 246, 0.5) !important;
 }
+
+
 
 table.table tbody td {
     background-color: transparent !important;
@@ -336,7 +379,13 @@ html, body {
     margin-left: 7px;
     margin-right: 7px;
     overflow-x: auto;
+    overflow-y: auto;
     max-height: calc(100vh - 480px);
+    position: relative;
+    border-radius: 8px;
+    scroll-behavior: smooth;
+    padding-bottom: 20px;      /* ← KUNCI 1: SPACING BAWAH */
+    margin-bottom: 30px;        /* ← KUNCI 2: EXTRA SPACE */
 }
 
 main.pb-5 {
