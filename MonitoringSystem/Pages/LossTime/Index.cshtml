@@ -9,14 +9,21 @@
         <div class="d-flex justify-content-between align-items-center">
             <form method="post" asp-page-handler="Filter" class="w-auto">
                 <div class="form-group d-flex align-items-center gap-3 flex-wrap">
+
                     <div class="d-flex gap-3 align-items-center">
-                        <label class="fw-bold fs-6">Start Date</label>
-                        <input type="date" class="form-control border-dark filter-control" id="StartSelectedDate" name="StartSelectedDate" value="@Model.StartSelectedDate.ToString("yyyy-MM-dd")">
+                        <label class="fw-bold fs-6">Month</label>
+                        <select class="form-select border-dark filter-control" id="SelectedMonth" name="SelectedMonth" asp-for="SelectedMonth">
+                            @for (int i = 1; i <= 12; i++)
+                            {
+                                <option value="@i">@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(i)</option>
+                            }
+                        </select>
                     </div>
                     <div class="d-flex gap-3 align-items-center">
-                        <label class="fw-bold fs-6">End Date</label>
-                        <input type="date" class="form-control border-dark filter-control" id="EndSelectedDate" name="EndSelectedDate" value="@Model.EndSelectedDate.ToString("yyyy-MM-dd")">
+                        <label class="fw-bold fs-6">Year</label>
+                        <input type="number" class="form-control border-dark filter-control" id="SelectedYear" name="SelectedYear" asp-for="SelectedYear" min="2020" max="2030" style="width: 100px;">
                     </div>
+
                     <div class="d-flex gap-3 align-items-center">
                         <label class="fw-bold fs-6">Machine Line</label>
                         <select class="form-select border-dark filter-control" id="MachineLine" name="MachineLine" asp-for="MachineLine">
@@ -67,6 +74,7 @@
             </div>
         </div>
     </div>
+
     <div class="col-md-7">
         <div class="card shadow-sm h-100">
             <div class="card-header bg-white">
@@ -81,7 +89,6 @@
                                 <tr>
                                     <th>No.</th>
                                     <th>Date</th>
-                                    @* <th>Loss Time</th> *@
                                     <th>Category</th>
                                     <th>Start Time</th>
                                     <th>End Time</th>
@@ -97,7 +104,6 @@
                                     <tr>
                                         <td>@item.Index</td>
                                         <td>@item.Data.Date.ToString("dd-MM-yyyy")</td>
-                                        @* <td>@item.Data.LossTime</td> *@
                                         <td>@item.Data.Category</td>
                                         <td>@item.Data.Start.ToString(@"hh\:mm\:ss")</td>
                                         <td>@item.Data.End.ToString(@"hh\:mm\:ss")</td>
@@ -124,7 +130,7 @@
                         <div class="text-center text-muted">
                             <i class="fas fa-inbox fa-3x mb-3"></i>
                             <h5>No Data Available</h5>
-                            <p>No records found for the selected criteria or all records are within break times.</p>
+                            <p>No records found for the selected criteria.</p>
                         </div>
                     </div>
                 }
@@ -140,36 +146,15 @@
                             <ul class="pagination mb-0">
                                 <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
                                     <form method="post" asp-page-handler="ChangePage">
-                                        <input type="hidden" name="pageNumber" value="1" />
-                                        <input type="hidden" name="pageSize" value="10" />
-                                        <input type="hidden" name="startSelectedDate" value="@Model.StartSelectedDate.ToString("yyyy-MM-dd")" />
-                                        <input type="hidden" name="endSelectedDate" value="@Model.EndSelectedDate.ToString("yyyy-MM-dd")" />
-                                        <input type="hidden" name="machineLine" value="@Model.MachineLine" />
-                                        @foreach (var shift in Model.SelectedShifts)
-                                        {
-                                            <input type="hidden" name="selectedShifts" value="@shift" />
-                                        }
-                                        @* <input type="hidden" name="excludeBreakTimes" value="@Model.ExcludeBreakTimes.ToString().ToLower()" /> *@
-                                        <input type="hidden" name="additionalBreakTime1Start" value="@Model.AdditionalBreakTime1Start" />
-                                        <input type="hidden" name="additionalBreakTime1End" value="@Model.AdditionalBreakTime1End" />
-                                        <input type="hidden" name="additionalBreakTime2Start" value="@Model.AdditionalBreakTime2Start" />
-                                        <input type="hidden" name="additionalBreakTime2End" value="@Model.AdditionalBreakTime2End" />
-                                        <button type="submit" class="page-link">&laquo;</button>
-                                    </form>
-                                </li>
-
-                                <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
-                                    <form method="post" asp-page-handler="ChangePage">
                                         <input type="hidden" name="pageNumber" value="@(Model.CurrentPage - 1)" />
                                         <input type="hidden" name="pageSize" value="10" />
-                                        <input type="hidden" name="startSelectedDate" value="@Model.StartSelectedDate.ToString("yyyy-MM-dd")" />
-                                        <input type="hidden" name="endSelectedDate" value="@Model.EndSelectedDate.ToString("yyyy-MM-dd")" />
+                                        <input type="hidden" name="selectedMonth" value="@Model.SelectedMonth" />
+                                        <input type="hidden" name="selectedYear" value="@Model.SelectedYear" />
                                         <input type="hidden" name="machineLine" value="@Model.MachineLine" />
                                         @foreach (var shift in Model.SelectedShifts)
                                         {
                                             <input type="hidden" name="selectedShifts" value="@shift" />
                                         }
-                                        @* <input type="hidden" name="excludeBreakTimes" value="@Model.ExcludeBreakTimes.ToString().ToLower()" /> *@
                                         <input type="hidden" name="additionalBreakTime1Start" value="@Model.AdditionalBreakTime1Start" />
                                         <input type="hidden" name="additionalBreakTime1End" value="@Model.AdditionalBreakTime1End" />
                                         <input type="hidden" name="additionalBreakTime2Start" value="@Model.AdditionalBreakTime2Start" />
@@ -177,52 +162,18 @@
                                         <button type="submit" class="page-link">&lsaquo;</button>
                                     </form>
                                 </li>
-
-                                @{
-                                    int startPage = Math.Max(1, Model.CurrentPage - 2);
-                                    int endPage = Math.Min(Model.TotalPages, startPage + 4);
-
-                                    if (endPage - startPage < 4)
-                                    {
-                                        startPage = Math.Max(1, endPage - 4);
-                                    }
-                                }
-
-                                @for (int i = startPage; i <= endPage; i++)
-                                {
-                                    <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
-                                        <form method="post" asp-page-handler="ChangePage">
-                                            <input type="hidden" name="pageNumber" value="@i" />
-                                            <input type="hidden" name="pageSize" value="10" />
-                                            <input type="hidden" name="startSelectedDate" value="@Model.StartSelectedDate.ToString("yyyy-MM-dd")" />
-                                            <input type="hidden" name="endSelectedDate" value="@Model.EndSelectedDate.ToString("yyyy-MM-dd")" />
-                                            <input type="hidden" name="machineLine" value="@Model.MachineLine" />
-                                            @foreach (var shift in Model.SelectedShifts)
-                                            {
-                                                <input type="hidden" name="selectedShifts" value="@shift" />
-                                            }
-                                            @* <input type="hidden" name="excludeBreakTimes" value="@Model.ExcludeBreakTimes.ToString().ToLower()" /> *@
-                                            <input type="hidden" name="additionalBreakTime1Start" value="@Model.AdditionalBreakTime1Start" />
-                                            <input type="hidden" name="additionalBreakTime1End" value="@Model.AdditionalBreakTime1End" />
-                                            <input type="hidden" name="additionalBreakTime2Start" value="@Model.AdditionalBreakTime2Start" />
-                                            <input type="hidden" name="additionalBreakTime2End" value="@Model.AdditionalBreakTime2End" />
-                                            <button type="submit" class="page-link">@i</button>
-                                        </form>
-                                    </li>
-                                }
-
+                                <li class="page-item active"><span class="page-link">@Model.CurrentPage</span></li>
                                 <li class="page-item @(Model.CurrentPage >= Model.TotalPages ? "disabled" : "")">
                                     <form method="post" asp-page-handler="ChangePage">
                                         <input type="hidden" name="pageNumber" value="@(Model.CurrentPage + 1)" />
                                         <input type="hidden" name="pageSize" value="10" />
-                                        <input type="hidden" name="startSelectedDate" value="@Model.StartSelectedDate.ToString("yyyy-MM-dd")" />
-                                        <input type="hidden" name="endSelectedDate" value="@Model.EndSelectedDate.ToString("yyyy-MM-dd")" />
+                                        <input type="hidden" name="selectedMonth" value="@Model.SelectedMonth" />
+                                        <input type="hidden" name="selectedYear" value="@Model.SelectedYear" />
                                         <input type="hidden" name="machineLine" value="@Model.MachineLine" />
                                         @foreach (var shift in Model.SelectedShifts)
                                         {
                                             <input type="hidden" name="selectedShifts" value="@shift" />
                                         }
-                                        @* <input type="hidden" name="excludeBreakTimes" value="@Model.ExcludeBreakTimes.ToString().ToLower()" /> *@
                                         <input type="hidden" name="additionalBreakTime1Start" value="@Model.AdditionalBreakTime1Start" />
                                         <input type="hidden" name="additionalBreakTime1End" value="@Model.AdditionalBreakTime1End" />
                                         <input type="hidden" name="additionalBreakTime2Start" value="@Model.AdditionalBreakTime2Start" />
@@ -230,35 +181,28 @@
                                         <button type="submit" class="page-link">&rsaquo;</button>
                                     </form>
                                 </li>
-
-                                <li class="page-item @(Model.CurrentPage >= Model.TotalPages ? "disabled" : "")">
-                                    <form method="post" asp-page-handler="ChangePage">
-                                        <input type="hidden" name="pageNumber" value="@Model.TotalPages" />
-                                        <input type="hidden" name="pageSize" value="10" />
-                                        <input type="hidden" name="startSelectedDate" value="@Model.StartSelectedDate.ToString("yyyy-MM-dd")" />
-                                        <input type="hidden" name="endSelectedDate" value="@Model.EndSelectedDate.ToString("yyyy-MM-dd")" />
-                                        <input type="hidden" name="machineLine" value="@Model.MachineLine" />
-                                        @foreach (var shift in Model.SelectedShifts)
-                                        {
-                                            <input type="hidden" name="selectedShifts" value="@shift" />
-                                        }
-                                        @* <input type="hidden" name="excludeBreakTimes" value="@Model.ExcludeBreakTimes.ToString().ToLower()" /> *@
-                                        <input type="hidden" name="additionalBreakTime1Start" value="@Model.AdditionalBreakTime1Start" />
-                                        <input type="hidden" name="additionalBreakTime1End" value="@Model.AdditionalBreakTime1End" />
-                                        <input type="hidden" name="additionalBreakTime2Start" value="@Model.AdditionalBreakTime2Start" />
-                                        <input type="hidden" name="additionalBreakTime2End" value="@Model.AdditionalBreakTime2End" />
-                                        <button type="submit" class="page-link">&raquo;</button>
-                                    </form>
-                                </li>
                             </ul>
                         </nav>
                     </div>
                 </div>
             }
-            
         </div>
     </div>
 </div>
+
+<div class="row mt-2">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0 fw-bold fs-8">Daily Loss Time (Current Month)</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="dailyLossChart" style="width: 100%; height: 350px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="detailedReasonModal" tabindex="-1" aria-labelledby="detailedReasonModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -275,125 +219,95 @@
         </div>
     </div>
 </div>
+
 <script src="~/js/chart.umd.min.js"></script>
 <script>
-    // Convert chart data from seconds to minutes
-    // Get chart data (already converted to minutes in the C# code)
-    let chartData;
+    // -----------------------------------------------------------------
+    // 1. CHART SUMMARY (Shift & Comparison)
+    // -----------------------------------------------------------------
+    let summaryChartData;
     try {
-        chartData = @Html.Raw(Json.Serialize(Model.ChartDataJson));
-        console.log("Chart data loaded:", chartData);
-
-        // Parse the JSON string if it's already serialized
-        if (typeof chartData === 'string') {
-            chartData = JSON.parse(chartData);
-        }
+        summaryChartData = @Html.Raw(Json.Serialize(Model.ChartDataJson));
+        if (typeof summaryChartData === 'string') summaryChartData = JSON.parse(summaryChartData);
     } catch (error) {
-        console.error("Error parsing chart data:", error);
-        chartData = {
-            labels: [],
-            shift1Data: [],
-            shift2Data: [],
-            shift3Data: []
-        };
+        console.error("Error parsing summary chart data:", error);
+        summaryChartData = { labels: [], shift1Data: [], shift2Data: [], shift3Data: [], lastMonthData: [] };
     }
 
-    // Create chart - data is already in minutes from backend
     document.addEventListener('DOMContentLoaded', function() {
-        try {
-            const ctx = document.getElementById('lossTimeChart').getContext('2d');
-            if (!ctx) {
-                console.error("Could not find chart canvas element");
-                return;
-            }
-
-            // Filter out the "Other" category to have only 4 categories as requested
-            @* const categories = chartData.labels.filter(label => label !== "Other"); *@
-            @* const shift1Data = chartData.shift1Data.filter((_, index) => chartData.labels[index] !== "Other"); *@
-            @* const shift2Data = chartData.shift2Data.filter((_, index) => chartData.labels[index] !== "Other"); *@
-            @* const shift3Data = chartData.shift3Data.filter((_, index) => chartData.labels[index] !== "Other"); *@
-
-            const lossTimeChart = new Chart(ctx, {
+        const ctxSummary = document.getElementById('lossTimeChart').getContext('2d');
+        if (ctxSummary) {
+            new Chart(ctxSummary, {
                 type: 'bar',
                 data: {
-                    labels: chartData.labels,
+                    labels: summaryChartData.labels,
                     datasets: [
-                        {
-                            label: 'Shift 1',
-                            data: chartData.shift1Data,
-                            backgroundColor: 'rgba(255, 99, 132, 0.7)',
-                            borderColor: 'rgba(255, 99, 132, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Shift 2',
-                            data: chartData.shift2Data,
-                            backgroundColor: 'rgba(54, 162, 235, 0.7)',
-                            borderColor: 'rgba(54, 162, 235, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Shift 3',
-                            data: chartData.shift3Data,
-                            backgroundColor: 'rgba(75, 192, 192, 0.7)',
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            borderWidth: 1
-                        }
+                        { label: 'Shift 1', data: summaryChartData.shift1Data, backgroundColor: 'rgba(255, 99, 132, 0.7)', stack: 'current' },
+                        { label: 'Shift 2', data: summaryChartData.shift2Data, backgroundColor: 'rgba(54, 162, 235, 0.7)', stack: 'current' },
+                        { label: 'Shift 3', data: summaryChartData.shift3Data, backgroundColor: 'rgba(75, 192, 192, 0.7)', stack: 'current' },
+                        { label: 'Last Month', data: summaryChartData.lastMonthData, backgroundColor: 'rgba(201, 203, 207, 0.7)', stack: 'last' }
                     ]
                 },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { tooltip: { callbacks: { label: function(c) { return `${c.dataset.label}: ${c.raw} min`; } } } },
+                    scales: { x: { stacked: true }, y: { beginAtZero: true, stacked: true, title: { display: true, text: 'Duration (Min)' } } }
+                }
+            });
+        }
+    });
+
+    // -----------------------------------------------------------------
+    // 2. CHART HARIAN (Daily Stacked) - CARD KETIGA
+    // -----------------------------------------------------------------
+    let dailyChartData;
+    try {
+        dailyChartData = @Html.Raw(Json.Serialize(Model.DailyChartDataJson));
+        if (typeof dailyChartData === 'string') dailyChartData = JSON.parse(dailyChartData);
+    } catch (error) {
+        console.error("Error parsing daily chart data:", error);
+        dailyChartData = { labels: [], datasets: [] };
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctxDaily = document.getElementById('dailyLossChart').getContext('2d');
+        if (ctxDaily) {
+            new Chart(ctxDaily, {
+                type: 'bar',
+                data: dailyChartData, // Struktur data sudah disiapkan di C#
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            position: 'top',
-                        },
+                        legend: { position: 'top' },
                         tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `${context.dataset.label}: ${context.raw} minutes`;
-                                }
-                            }
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: { label: function(c) { return `${c.dataset.label}: ${c.raw} min`; } }
                         }
                     },
                     scales: {
+                        x: {
+                            stacked: true,
+                            title: { display: true, text: 'Day of Month' }
+                        },
                         y: {
                             beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Duration (minutes)'
-                            },
-                            stacked: true
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Loss Time Categories'
-                            },
-                            stacked: true
+                            stacked: true,
+                            title: { display: true, text: 'Duration (Minutes)' }
                         }
                     }
                 }
             });
-            console.log("Chart created successfully");
-        } catch (error) {
-            console.error("Error creating chart:", error);
         }
     });
-    if (detailedReasonModal) {
+
+    if (typeof detailedReasonModal !== 'undefined' && detailedReasonModal) {
         detailedReasonModal.addEventListener('show.bs.modal', function (event) {
-
             var button = event.relatedTarget;
-
             var reason = button.getAttribute('data-reason');
-
             var modalBodyText = detailedReasonModal.querySelector('.modal-body p#detailedReasonText');
-
-            if (reason && reason.trim() !== '') {
-                modalBodyText.textContent = reason;
-            } else {
-                modalBodyText.textContent = 'No detailed reason provided.';
-            }
+            modalBodyText.textContent = (reason && reason.trim() !== '') ? reason : 'No detailed reason provided.';
         });
     }
 </script>
