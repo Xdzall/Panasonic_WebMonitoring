@@ -60,20 +60,18 @@ namespace MonitoringSystem.Pages.LossTime
 
         public bool IsFiltering { get; set; } = false;
         public Dictionary<string, int> CategorySummary { get; set; } = new Dictionary<string, int>();
-
-        // Property JSON untuk Chart
         public string ChartDataJson { get; set; }
-        public string DailyChartDataJson { get; set; } // Property Baru untuk Chart Harian
+        public string DailyChartDataJson { get; set; }
 
         public List<string> AllCategories { get; set; } = new List<string>
         {
-            "Change Model",
+            "Model Changing Loss",
             "Material Shortage External",
-            "MP Adjustment",
+            "Man Power Adjustment",
             "Material Shortage Internal",
             "Material Shortage Inhouse",
             "Quality Trouble",
-            "Machine Trouble",
+            "Machine & Tools Trouble",
             "Rework",
             "Morning Assembly",
             "Reason Not Fill"
@@ -81,13 +79,13 @@ namespace MonitoringSystem.Pages.LossTime
 
         private readonly Dictionary<string, string> CategoryColors = new Dictionary<string, string>
         {
-            { "Change Model", "#FF6384" },
+            { "Model Changing Loss", "#FF6384" },
             { "Material Shortage External", "#36A2EB" },
-            { "MP Adjustment", "#FFCE56" },
+            { "Man Power Adjustment", "#FFCE56" },
             { "Material Shortage Internal", "#4BC0C0" },
             { "Material Shortage Inhouse", "#9966FF" },
             { "Quality Trouble", "#FF9F40" },
-            { "Machine Trouble", "#C9CBCF" },
+            { "Machine & Tools Trouble", "#C9CBCF" },
             { "Rework", "#FF9F80" },
             { "Morning Assembly", "#198754" },
             { "Reason Not Fill", "#77DD77" }
@@ -435,13 +433,13 @@ namespace MonitoringSystem.Pages.LossTime
         private string CategorizeReason(string reason)
         {
             reason = reason?.ToLower() ?? "";
-            if (reason.Contains("change model")) return "Change Model";
+            if (reason.Contains("model changing loss")) return "Model Changing Loss";
             else if (reason.Contains("material shortage external")) return "Material Shortage External";
-            else if (reason.Contains("mp adjustment")) return "MP Adjustment";
+            else if (reason.Contains("man power adjustment")) return "Man Power Adjustment";
             else if (reason.Contains("material shortage internal")) return "Material Shortage Internal";
             else if (reason.Contains("material shortage inhouse")) return "Material Shortage Inhouse";
             else if (reason.Contains("quality trouble")) return "Quality Trouble";
-            else if (reason.Contains("machine trouble")) return "Machine Trouble";
+            else if (reason.Contains("machine & tools trouble")) return "Machine & Tools Trouble";
             else if (reason.Contains("rework")) return "Rework";
             else if (reason.Contains("morning assembly")) return "Morning Assembly";
             else return "Reason Not Fill";

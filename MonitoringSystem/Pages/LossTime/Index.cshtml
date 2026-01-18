@@ -222,9 +222,6 @@
 
 <script src="~/js/chart.umd.min.js"></script>
 <script>
-    // -----------------------------------------------------------------
-    // 1. CHART SUMMARY (Shift & Comparison)
-    // -----------------------------------------------------------------
     let summaryChartData;
     try {
         summaryChartData = @Html.Raw(Json.Serialize(Model.ChartDataJson));
@@ -257,9 +254,6 @@
         }
     });
 
-    // -----------------------------------------------------------------
-    // 2. CHART HARIAN (Daily Stacked) - CARD KETIGA
-    // -----------------------------------------------------------------
     let dailyChartData;
     try {
         dailyChartData = @Html.Raw(Json.Serialize(Model.DailyChartDataJson));
@@ -274,7 +268,7 @@
         if (ctxDaily) {
             new Chart(ctxDaily, {
                 type: 'bar',
-                data: dailyChartData, // Struktur data sudah disiapkan di C#
+                data: dailyChartData,
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
