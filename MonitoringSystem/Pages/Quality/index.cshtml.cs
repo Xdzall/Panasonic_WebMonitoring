@@ -8,7 +8,7 @@ namespace MonitoringSystem.Pages.Quality
 {
     public class QualityModel : PageModel
     {
-        public string connectionString = "Server=localhost\\SQLEXPRESS01;Database=PROMOSYS;Trusted_Connection=True;Encrypt=False;MultipleActiveResultSets=True";
+        public string connectionString = "Server=XDZALL\\SQLEXPRESS;Database=PROMOSYS;Trusted_Connection=True;Encrypt=False;MultipleActiveResultSets=True";
 
         public int TotalPlan { get; set; }
         public int DefectQuantity { get; set; }

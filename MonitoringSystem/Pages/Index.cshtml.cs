@@ -12,7 +12,7 @@ namespace MonitoringSystem.Pages
 {
     public class IndexModel : PageModel
     {
-        //public string connectionString = "Server=localhost\\SQLEXPRESS01;Database=PROMOSYS;Trusted_Connection=True;Encrypt=False";
+        //public string connectionString = "Server=XDZALL\\SQLEXPRESS;Database=PROMOSYS;Trusted_Connection=True;Encrypt=False";
         private readonly string connectionString = "Data Source=DESKTOP-NBPATD6\\MSSQLSERVERR;trusted_connection=true;trustservercertificate=True;Database=LatestPROMOSYS;Integrated Security=True;Encrypt=False";
         private readonly ILogger<IndexModel> _logger;
         private bool IsValidInput(int month, int year) => month >= 1 && month <= 12 && year > 0;

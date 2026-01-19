@@ -413,7 +413,8 @@ input[type="checkbox"]:checked + .shift-button {
     <div class="col-md-8">
         <div class="card shadow-sm h-100">
             <div class="card-header bg-transparent">
-                <h5 class="card-title mb-0 fw-bold fs-8 text-white">Loss Time Categories (in Minutes)</h5>
+                <h5 class="card-title mb-0 fw-bold fs-8 text-white">
+                    Loss Time Categories @System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(Model.SelectedMonth)</h5>
             </div>
             <div class="card-body">
                 <canvas id="lossTimeChart" style="width: 100%; height: 350px;"></canvas>
@@ -540,7 +541,7 @@ input[type="checkbox"]:checked + .shift-button {
     <div class="col-12">
         <div class="card shadow-sm">
             <div class="card-header bg-transparent">
-                <h5 class="card-title mb-0 fw-bold fs-8 text-white">Daily Loss Time (Current Month)</h5>
+                <h5 class="card-title mb-0 fw-bold fs-8 text-white">Daily Loss Time @System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(Model.SelectedMonth)</h5>
             </div>
             <div class="card-body">
                 <canvas id="dailyLossChart" style="width: 100%; height: 350px;"></canvas>
@@ -549,7 +550,7 @@ input[type="checkbox"]:checked + .shift-button {
     </div>
 </div>
 <style>
-/* LOSS TIME SUMMARY - COMPACT & MODERN */
+LOSS TIME SUMMARY - COMPACT & MODERN
 .loss-summary-compact {
     font-size: 10px;
 }
@@ -617,7 +618,7 @@ input[type="checkbox"]:checked + .shift-button {
 }
 </style>
 
-<div class="row mt-2 loss-summary-compact">
+@*<div class="row mt-2 loss-summary-compact">
     <div class="col-12">
         <div class="card shadow-sm">
             <div class="card-body" style="padding: 12px;">
@@ -695,7 +696,7 @@ input[type="checkbox"]:checked + .shift-button {
             </div>
         </div>
     </div>
-</div>
+</div>*@
 
 <script src="~/js/chart.umd.min.js"></script>
 <script>
@@ -712,40 +713,51 @@ input[type="checkbox"]:checked + .shift-button {
         summaryChartData = { labels: [], shift1Data: [], shift2Data: [], shift3Data: [], lastMonthData: [] };
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const ctxSummary = document.getElementById('lossTimeChart').getContext('2d');
-        if (ctxSummary) {
-            new Chart(ctxSummary, {
-                type: 'bar',
-                data: {
-                    labels: summaryChartData.labels,
-                    datasets: [
-                        { label: 'Shift 1', data: summaryChartData.shift1Data, backgroundColor: 'rgba(255, 99, 132, 0.95)', stack: 'current' },
-                        { label: 'Shift 2', data: summaryChartData.shift2Data, backgroundColor: 'rgba(54, 162, 235, 0.95)', stack: 'current' },
-                        { label: 'Shift 3', data: summaryChartData.shift3Data, backgroundColor: 'rgba(75, 192, 192, 0.95)', stack: 'current' },
-                        { label: 'Last Month', data: summaryChartData.lastMonthData, backgroundColor: 'rgba(201, 203, 207, 0.95)', stack: 'last' }
-                    ]
+    document.addEventListener('DOMContentLoaded', function () {
+    const ctxSummary = document.getElementById('lossTimeChart').getContext('2d');
+    if (ctxSummary) {
+        new Chart(ctxSummary, {
+            type: 'bar',
+            data: {
+                labels: summaryChartData.labels,
+                datasets: [
+                    { label: 'Last Month', data: summaryChartData.lastMonthData, backgroundColor: 'rgba(201, 203, 207, 0.95)', stack: 'last' },
+                    { label: 'Shift 1', data: summaryChartData.shift1Data, backgroundColor: 'rgba(255, 99, 132, 0.95)', stack: 'current' },
+                    { label: 'Shift 2', data: summaryChartData.shift2Data, backgroundColor: 'rgba(54, 162, 235, 0.95)', stack: 'current' },
+                    { label: 'Shift 3', data: summaryChartData.shift3Data, backgroundColor: 'rgba(75, 192, 192, 0.95)', stack: 'current' }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: chartTextColor } },
+                    tooltip: {
+                        callbacks: {
+                            title: function (context) {
+                                return summaryChartData.fullLabels[context[0].dataIndex];
+                            },
+                            label: function (c) {
+                                return `${c.dataset.label}: ${c.raw} min`;
+                            }
+                        }
+                    }
                 },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { labels: { color: chartTextColor } },
-                        tooltip: { callbacks: { label: function(c) { return `${c.dataset.label}: ${c.raw} min`; } } } 
-                    },
-                    scales: { 
-                        x: { stacked: true, ticks: { color: chartTextColor }, grid: { color: chartGridColor } }, 
-                        y: { 
-                            beginAtZero: true, 
-                            stacked: true, 
-                            ticks: { color: chartTextColor },
-                            grid: { color: chartGridColor },
-                            title: { display: true, text: 'Duration (Min)', color: chartTextColor } 
-                        } 
+                scales: {
+                    x: { stacked: true, ticks: { color: chartTextColor }, grid: { color: chartGridColor } },
+                    y: {
+                        beginAtZero: true,
+                        stacked: true,
+                        ticks: { color: chartTextColor },
+                        grid: { color: chartGridColor },
+                        title: { display: true, text: 'Duration (Min)', color: chartTextColor }
                     }
                 }
-            });
-        }
-    });
+            }
+        });
+    }
+});
+
 
     let dailyChartData;
     try {

@@ -77,6 +77,21 @@ namespace MonitoringSystem.Pages.LossTime
             "Reason Not Fill"
         };
 
+        public Dictionary<string, string> CategoryAbbreviations = new()
+        {
+            { "Model Changing Loss", "Mdl Change" },
+            { "Material Shortage External", "Mtrl Shortage Ex" },
+            { "Man Power Adjustment", "MP Adjust" },
+            { "Material Shortage Internal", "Mtrl Shortage Int" },
+            { "Material Shortage Inhouse", "Mtrl Shortage Inhs" },
+            { "Quality Trouble", "Quality" },
+            { "Machine & Tools Trouble", "MC Trouble" },
+            { "Rework", "Rework" },
+            { "Morning Assembly", "Morning Assy" },
+            { "Reason Not Fill", "Reason NF" }
+        };
+
+
         private readonly Dictionary<string, string> CategoryColors = new Dictionary<string, string>
         {
             { "Model Changing Loss", "#FF6384" },
@@ -99,7 +114,7 @@ namespace MonitoringSystem.Pages.LossTime
             (new TimeSpan(18, 15, 0), new TimeSpan(18, 45, 0))
         };
 
-        public string connectionString = "Server=localhost\\SQLEXPRESS01;Database=PROMOSYS;Trusted_Connection=True;Encrypt=False";
+        public string connectionString = "Server=XDZALL\\SQLEXPRESS;Database=PROMOSYS;Trusted_Connection=True;Encrypt=False";
 
         public void OnGet(int pageNumber = 1, int pageSize = 10)
         {
@@ -279,7 +294,15 @@ namespace MonitoringSystem.Pages.LossTime
 
                 var chartData = new
                 {
-                    labels = sortedStats.Select(x => x.Name).ToArray(),
+                    labels = sortedStats
+                    .Select(x => CategoryAbbreviations.ContainsKey(x.Name)
+                        ? CategoryAbbreviations[x.Name]
+                        : x.Name)
+                    .ToArray(),
+
+                                fullLabels = sortedStats
+                    .Select(x => x.Name)
+                    .ToArray(),
                     shift1Data = sortedStats.Select(x => Math.Round(x.S1 / 60.0, 2)).ToArray(),
                     shift2Data = sortedStats.Select(x => Math.Round(x.S2 / 60.0, 2)).ToArray(),
                     shift3Data = sortedStats.Select(x => Math.Round(x.S3 / 60.0, 2)).ToArray(),
