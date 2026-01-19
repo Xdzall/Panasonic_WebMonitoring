@@ -7,11 +7,12 @@
 
 <style>
 /* FILTER AREA WITH LINES - SUPER COMPACT */
+/* FILTER AREA WITH LINES - SUPER COMPACT */
 .filter-area-with-lines {
     position: relative;
     padding: 1px 0;
     margin-bottom: 8px;
-    margin-top: 0px;
+    margin-top: -20px;
     min-height: 10px;
     width: calc(100% - 14px);
     margin-left: 7px;
@@ -21,16 +22,15 @@
 .panamon-bottom-line,
 .panamon-bottomm-line {
     position: absolute !important;
-    left: 7px !important;
+    left: 7px !important;  /* ← Ke container, bukan ke page */
     right: 7px !important;
-    width: calc(100% - 14px) !important; 
+   
     height: 2px !important;
     background: rgba(255, 255, 255, 0.04) !important;
     z-index: 999 !important;
     pointer-events: none !important;
     display: block !important;
 }
-
 .panamon-bottom-line {
     top: 0 !important;
     border-top: 2px solid rgba(255, 255, 255, 0.08) !important;

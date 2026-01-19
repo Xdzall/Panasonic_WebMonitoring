@@ -9,7 +9,7 @@ namespace MonitoringSystem.Pages.Performance
 {
 	public class PerformanceModel : PageModel
 	{
-		public string connectionString = "Server=XDZALL\\SQLEXPRESS;Database=PROMOSYS;Trusted_Connection=True;Encrypt=False";
+		public string connectionString = "Server=localhost\\SQLEXPRESS01;Database=PROMOSYS;Trusted_Connection=True;Encrypt=False";
 		//public string connectionString = "Data Source=DESKTOP-NBPATD6\\MSSQLSERVERR;trusted_connection=true;trustservercertificate=True;Database=PROMOSYS;Integrated Security=True;Encrypt=False";
 		public string errorMessage = "";
 
