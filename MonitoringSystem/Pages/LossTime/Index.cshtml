@@ -85,11 +85,15 @@
     margin-left: -8px;
     margin-right: 7px;
 }
+/* Tambahkan di bagian style */
+.filter-content .form-select.selected {
+    font-weight: 700 !important; /* Bold saat dipilih */
+}
 .filter-content .form-select,
 .filter-content .form-control {
-    height: 20px;
+    height: 28px;
     padding: 0 22px 0 8px;
-    font-size: 10px;
+    font-size: 12px;
     line-height: 20px;  /* ← Pastikan ini sama dengan height */
     border-radius: 999px;
     background-color: rgba(255, 255, 255, 0.05);
@@ -105,12 +109,12 @@
 }
 
 .filter-content .form-select {
-    height: 20px;
+    height: 28px;
     padding: 0 !important;  /* ← RESET semua padding */
     padding-left: 12px !important;
     padding-right: 28px !important;
     padding-top: -2px !important;  /* ← NEGATIVE padding, ini trik nya! */
-    font-size: 10px;
+    font-size: 12px;
     line-height: 16px;  /* ← UBAH dari 20px jadi 16px */
     border-radius: 999px;
     background-color: rgba(255, 255, 255, 0.05);
@@ -149,7 +153,7 @@
 
 .filter-content label {
     color: rgba(255, 255, 255, 0.85);
-    font-size: 10px;
+    font-size: 14px;
     line-height: 20px;
     font-weight: 600;
 }
@@ -174,10 +178,10 @@
 }
 
 .filter-content .btn {
-    height: 20px;
+    height: 28px;
     min-height: 20px;
     padding: 0 12px;
-    font-size: 10px;
+    font-size: 12px;
     line-height: 20px;
     border-radius: 999px !important;
     font-weight: 600;
@@ -271,19 +275,19 @@ input[type="checkbox"]:checked + .shift-button {
 }
 /* TABEL LOSS TIME DATA - SAMAIN WARNA DENGAN CARD */
 #lossTimeTable {
-    font-size: 10px;
+    font-size: 12px;
     background-color: transparent !important;  /* ← TAMBAH ini */
 }
 
 #lossTimeTable thead th {
-    font-size: 10px;
+    font-size: 11px;
     background-color: rgba(0, 0, 0, 0.5) !important;  /* ← UBAH background header */
     color: #ffffff !important;
     border-color: rgba(255, 255, 255, 0.2) !important;
 }
 
 #lossTimeTable tbody td {
-    font-size: 9px;
+    font-size: 11px;
     padding: 4px 6px;
     background-color: transparent !important;  /* ← TAMBAH ini */
     color: #ffffff !important;  /* ← UBAH dari default jadi putih */
@@ -310,16 +314,38 @@ input[type="checkbox"]:checked + .shift-button {
     background-color: rgba(255, 255, 255, 0.05) !important;  /* ← Stripe tipis */
 }
 /* BIAR TABEL NGIKUTIN TINGGI CARD */
+/* BIAR TABEL NGIKUTIN TINGGI CARD DAN ADA SCROLL VERTIKAL */
 .col-md-4 .card-body {
     height: 100%;
     display: flex;
     flex-direction: column;
+    padding: 0 !important; /* Hilangkan padding biar table full */
 }
 
 .col-md-4 .table-responsive {
     flex: 1;
-    overflow-y: auto;
-    height: 100% !important;
+    overflow-y: auto !important;  /* ← INI YANG PENTING, SCROLL VERTIKAL */
+    overflow-x: hidden !important; /* Gak ada scroll horizontal */
+    max-height: 350px !important; /* Batasi tinggi biar gak numbuh */
+}
+
+/* Biar scrollbar keliatan */
+.col-md-4 .table-responsive::-webkit-scrollbar {
+    width: 8px;
+}
+
+.col-md-4 .table-responsive::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.col-md-4 .table-responsive::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+}
+
+.col-md-4 .table-responsive::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
 }
 /* PAGINATION STYLING - DARK THEME */
 .pagination .page-link {
@@ -368,7 +394,7 @@ input[type="checkbox"]:checked + .shift-button {
 
             <div class="d-flex align-items-center gap-2">
                 <label class="mb-0">Month</label>
-                <select class="form-select" style="width: 90px;" id="SelectedMonth" name="SelectedMonth" asp-for="SelectedMonth">
+                <select class="form-select" style="width: 110px;" id="SelectedMonth" name="SelectedMonth" asp-for="SelectedMonth">
                     @for (int i = 1; i <= 12; i++)
                     {
                                 <option value="@i">@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(i)</option>
@@ -378,7 +404,7 @@ input[type="checkbox"]:checked + .shift-button {
 
             <div class="d-flex align-items-center gap-2">
                 <label class="mb-0">Year</label>
-                <select class="form-select" style="width: 70px;" id="SelectedYear" name="SelectedYear" asp-for="SelectedYear">
+                <select class="form-select" style="width: 80px;" id="SelectedYear" name="SelectedYear" asp-for="SelectedYear">
                     @for (int i = DateTime.Now.Year; i >= 2020; i--)
                     {
                                 <option value="@i">@i</option>
@@ -401,9 +427,9 @@ input[type="checkbox"]:checked + .shift-button {
             </div>
 
             <button type="submit" class="btn btn-primary">Search</button>
-            <button type="submit" asp-page-handler="ExportExcel" class="btn btn-success">
-                <i class="fas fa-file-excel"></i> Export CSV
-            </button>
+           <button type="submit" asp-page-handler="ExportExcel" class="btn btn-success">
+    <i class="fas fa-file-excel me-1"></i> Export CSV
+</button>
             <button type="submit" asp-page-handler="Reset" class="btn btn-danger">Reset</button>
         </form>
     </div>
@@ -827,4 +853,32 @@ LOSS TIME SUMMARY - COMPACT & MODERN
             });
         });
     });
+
+
+    document.addEventListener('DOMContentLoaded', function() {
+    // Function untuk set bold pada dropdown yang sudah dipilih
+    function updateDropdownStyle() {
+        const dropdowns = document.querySelectorAll('.filter-content .form-select');
+
+        dropdowns.forEach(dropdown => {
+            // Cek apakah bukan nilai default
+            const isSelected = dropdown.value && dropdown.value !== 'All' && dropdown.value !== '';
+
+            if (isSelected) {
+                dropdown.classList.add('selected');
+            } else {
+                dropdown.classList.remove('selected');
+            }
+        });
+    }
+
+    // Jalankan saat halaman load
+    updateDropdownStyle();
+
+    // Jalankan saat dropdown berubah
+    const dropdowns = document.querySelectorAll('.filter-content .form-select');
+    dropdowns.forEach(dropdown => {
+        dropdown.addEventListener('change', updateDropdownStyle);
+    });
+});
 </script>

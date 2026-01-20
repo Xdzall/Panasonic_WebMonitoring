@@ -114,7 +114,7 @@ namespace MonitoringSystem.Pages.LossTime
             (new TimeSpan(18, 15, 0), new TimeSpan(18, 45, 0))
         };
 
-        public string connectionString = "Server=XDZALL\\SQLEXPRESS;Database=PROMOSYS;Trusted_Connection=True;Encrypt=False";
+        public string connectionString = "Server=AldinoMatasik\\SQLEXPRESS01;Database=PROMOSYS;Trusted_Connection=True;Encrypt=False";
 
         public void OnGet(int pageNumber = 1, int pageSize = 10)
         {
@@ -275,7 +275,7 @@ namespace MonitoringSystem.Pages.LossTime
             }
             return records;
         }
-
+       
         private void PrepareSummaryChartData(List<LossTimeRecord> currentRecords, List<LossTimeRecord> lastMonthRecords)
         {
             try
@@ -517,7 +517,7 @@ namespace MonitoringSystem.Pages.LossTime
         public int Duration { get; set; }
         public string Location { get; set; }
         public string Shift { get; set; }
-        public string Category { get; set; }
+        public string Category { get; set; }    
         public string DetailedReason { get; set; }
     }
 }
