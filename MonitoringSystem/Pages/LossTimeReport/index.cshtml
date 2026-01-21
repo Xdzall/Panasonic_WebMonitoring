@@ -7,11 +7,12 @@
 
 <style>
 /* FILTER AREA WITH LINES - SUPER COMPACT */
+/* FILTER AREA WITH LINES - SUPER COMPACT */
 .filter-area-with-lines {
     position: relative;
     padding: 1px 0;
     margin-bottom: 8px;
-    margin-top: 0px;
+    margin-top: -20px;
     min-height: 10px;
     width: calc(100% - 14px);
     margin-left: 7px;
@@ -21,16 +22,15 @@
 .panamon-bottom-line,
 .panamon-bottomm-line {
     position: absolute !important;
-    left: 7px !important;
+    left: 7px !important;  /* ← Ke container, bukan ke page */
     right: 7px !important;
-    width: calc(100% - 14px) !important; 
+   
     height: 2px !important;
     background: rgba(255, 255, 255, 0.04) !important;
     z-index: 999 !important;
     pointer-events: none !important;
     display: block !important;
 }
-
 .panamon-bottom-line {
     top: 0 !important;
     border-top: 2px solid rgba(255, 255, 255, 0.08) !important;
@@ -50,11 +50,15 @@
     margin-left: 7px;
     margin-right: 7px;
 }
+/* Bold style untuk dropdown yang sudah dipilih */
+.filter-content .form-select-sm.selected {
+    font-weight: 700 !important;
+}
 
 .filter-content .form-select-sm {
-    height: 20px;
+    height: 28px;
     padding: 0 22px 0 8px;
-    font-size: 10px;
+    font-size: 12px;
     line-height: 20px;
     border-radius: 999px;
     background-color: rgba(255, 255, 255, 0.05);
@@ -68,6 +72,7 @@
 
 .filter-content label {
     color: rgba(255, 255, 255, 0.85);
+
 }
 
 .filter-content .form-select-sm option {
@@ -90,9 +95,9 @@
 
 .filter-content .btn {
     border-radius: 999px !important;
-    height: 20px;
+    height: 28px;
     min-height: 20px;
-    font-size: 10px;
+    font-size: 12px;
     line-height: 20px;
     padding: 0 12px;
     display: flex;
@@ -102,19 +107,19 @@
 
 .filter-content .form-select-sm,
 .filter-content .btn-sm {
-    height: 20px;
+    height: 28px;
     min-height: 20px;
-    font-size: 10px;
+    font-size: 12px;
     line-height: 20px;
 }
 
 .filter-content .form-select-sm {
-    height: 20px;
+    height: 28px;
     padding: 0;
     padding-left: 12px;
     padding-right: 28px;
     padding-top: -2px;
-    font-size: 10px;
+    font-size: 12px;
     line-height: 16px;
     border-radius: 999px;
     background-color: rgba(255, 255, 255, 0.05);
@@ -154,7 +159,7 @@
 
 .filter-content label,
 .filter-content .form-check-label {
-    font-size: 10px;
+    font-size: 12px;
     line-height: 20px;
 }
 
@@ -444,7 +449,7 @@ main.pb-5 {
                 <!-- YEAR -->
                 <div class="d-flex align-items-center gap-2">
                     <label class="mb-0 text-white small">Year</label>
-                    <select class="form-select form-select-sm" style="width: 70px;" id="SelectedYear" name="SelectedYear" asp-for="SelectedYear">
+                    <select class="form-select form-select-sm" style="width: 80px;" id="SelectedYear" name="SelectedYear" asp-for="SelectedYear">
                             @for (int i = DateTime.Now.Year; i >= 2020; i--)
                             {
                                     <option value="@i">@i</option>
@@ -462,12 +467,12 @@ main.pb-5 {
                     </select>
                 </div>
 
-                <button type="submit" class="btn btn-sm btn-primary">
-                    <i class="fas fa-filter"></i> Apply
+               <button type="submit" class="btn btn-sm btn-primary">
+                    <i class="fas fa-filter me-2"></i>Apply
                 </button>
 
                 <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#uploadModal">
-                    <i class="fas fa-file-excel"></i> Manage BP
+                    <i class="fas fa-file-excel me-2"></i>Manage BP
                 </button>
             </form>
         </div>
@@ -812,6 +817,41 @@ main.pb-5 {
                     }
                 }
             }
+        });
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+        // Function untuk set bold pada dropdown yang sudah dipilih
+        function updateDropdownStyle() {
+            const dropdowns = document.querySelectorAll('.filter-content .form-select-sm');
+
+            dropdowns.forEach(dropdown => {
+                const dropdownId = dropdown.id;
+                const dropdownValue = dropdown.value;
+
+                // Logic untuk masing-masing dropdown
+                if (dropdownId === 'SelectedYear') {
+                    // Year selalu bold setelah dipilih
+                    if (dropdownValue) {
+                        dropdown.classList.add('selected');
+                    }
+                } else if (dropdown.name === 'MachineLine') {
+                    // Machine Line bold jika bukan "All"
+                    if (dropdownValue && dropdownValue !== 'All') {
+                        dropdown.classList.add('selected');
+                    } else {
+                        dropdown.classList.remove('selected');
+                    }
+                }
+            });
+        }
+
+        // Jalankan saat halaman load
+        updateDropdownStyle();
+
+        // Jalankan saat dropdown berubah
+        const dropdowns = document.querySelectorAll('.filter-content .form-select-sm');
+        dropdowns.forEach(dropdown => {
+            dropdown.addEventListener('change', updateDropdownStyle);
         });
     });
 </script>

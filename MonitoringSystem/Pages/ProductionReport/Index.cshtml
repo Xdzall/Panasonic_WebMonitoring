@@ -12,7 +12,7 @@
     position: relative;
     padding: 1px 0;
     margin-bottom: 8px;
-    margin-top: 0px;
+    margin-top: -20px;
     min-height: 10px;
      width: calc(100% - 14px);
     margin-left: 7px;
@@ -52,11 +52,14 @@
     margin-right: 7px;
 
 }
+.filter-content .form-select-sm.selected {
+    font-weight: 700 !important;
+}
 
 .filter-content .form-select-sm {
-    height: 20px;
+    height: 28px;
     padding: 0 22px 0 8px;
-    font-size: 10px;
+    font-size: 12px;
     line-height: 20px;
     border-radius: 999px;
     background-color: rgba(255, 255, 255, 0.05);
@@ -307,19 +310,19 @@ table.table-bordered > :not(caption) > * {
 /* COMPACT FILTER */
 .filter-content .form-select-sm,
 .filter-content .btn-sm {
-    height: 20px;
+    height: 28px;
     min-height: 20px;
-    font-size: 10px;
+    font-size: 12px;
     line-height: 20px;
 }
 
 .filter-content .form-select-sm {
-    height: 20px;
+    height: 28px;
     padding: 0;
     padding-left: 12px;
     padding-right: 28px;
     padding-top: -2px;
-    font-size: 10px;
+    font-size: 12px;
     line-height: 16px;
     border-radius: 999px;
     background-color: rgba(255, 255, 255, 0.05);
@@ -350,7 +353,7 @@ table.table-bordered > :not(caption) > * {
 
 .filter-content label,
 .filter-content .form-check-label {
-    font-size: 10px;
+    font-size: 12px;
     line-height: 20px;
 }
 
@@ -513,7 +516,7 @@ input[type="checkbox"]:checked + .shift-button {
         <!-- MONTH -->
         <div class="d-flex align-items-center gap-2">
             <label class="mb-0 text-white small">Month</label>
-            <select class="form-select form-select-sm" style="width: 90px;" id="SelectedMonth" name="SelectedMonth" asp-for="SelectedMonth">
+            <select class="form-select form-select-sm" style="width: 110px;" id="SelectedMonth" name="SelectedMonth" asp-for="SelectedMonth">
                                     @for (int i = 1; i <= 12; i++)
                                     {
                             <option value="@i">@CultureInfo.GetCultureInfo("en-US").DateTimeFormat.GetMonthName(i)</option>
@@ -524,7 +527,7 @@ input[type="checkbox"]:checked + .shift-button {
         <!-- YEAR -->
         <div class="d-flex align-items-center gap-2">
             <label class="mb-0 text-white small">Year</label>
-            <select class="form-select form-select-sm" style="width: 70px;" id="SelectedYear" name="SelectedYear" asp-for="SelectedYear">
+            <select class="form-select form-select-sm" style="width: 80px;" id="SelectedYear" name="SelectedYear" asp-for="SelectedYear">
                                     @for (int i = DateTime.Now.Year; i >= 2000; i--)
                                     {
                             <option value="@i">@i</option>
@@ -551,13 +554,13 @@ input[type="checkbox"]:checked + .shift-button {
         <button type="submit" name="submitButton" value="reset" class="btn btn-sm btn-danger">Reset</button>
 
         <div class="ms-auto d-flex gap-2">
-            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
-                <i class="bi bi-upload"></i> Upload
-            </button>
-            <button type="button" id="downloadPdfButton" class="btn btn-sm btn-danger">
-                <i class="bi bi-download"></i> Download
-            </button>
-        </div>
+    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
+        <i class="bi bi-upload me-2"></i>Upload
+    </button>
+    <button type="button" id="downloadPdfButton" class="btn btn-sm btn-danger">
+        <i class="bi bi-download me-2"></i>Download
+    </button>
+</div>
     </form>
 </div>
                 </div>
@@ -571,6 +574,7 @@ input[type="checkbox"]:checked + .shift-button {
                     <canvas id="dayChart"></canvas>
                 </div>
             </div>
+
 
             <!-- TOTAL INFO - NO EXTRA BOX -->
             <div class="total-info-text">
@@ -843,12 +847,12 @@ input[type="checkbox"]:checked + .shift-button {
                                 data: {
                                     labels: chartLabels,
                                     datasets: [
-                                        { type: 'line', label: 'Rasio Actual (%)', data: ratioActualData, borderColor: 'rgba(255, 215, 0, 1)', backgroundColor: 'rgba(255, 215, 0, 0.2)', tension: 0.1, yAxisID: 'y1' },
-                                        { type: 'line', label: 'Rasio Plan (%)', data: ratioPlanData, borderColor: 'rgba(255, 69, 0, 1)', backgroundColor: 'rgba(255, 69, 0, 0.2)', tension: 0.1, yAxisID: 'y1' },
-                                        { label: 'Original Plan', data: originalPlanData, backgroundColor: '#67C090', borderColor: '#67C090', barThickness: 15, stack: 'OriginalPlan', yAxisID: 'y' },
-                                        { label: 'Plan', data: planData, backgroundColor: '#9ECAD6', borderColor: '#9ECAD6', barThickness: 15, stack: 'Plan', yAxisID: 'y' },
-                                        { label: 'Normal', data: normalData, backgroundColor: '#640D5F', borderColor: '#640D5F', barThickness: 15, stack: 'Actual', yAxisID: 'y' },
-                                        { label: 'Overtime', data: overtimeData, backgroundColor: '#FF6384', borderColor: '#FF6384', barThickness: 15, stack: 'Actual', yAxisID: 'y' }
+                                            { type: 'line', label: 'Rasio Actual (%)', data: ratioActualData, borderColor: '#FACC15', backgroundColor: 'rgba(255, 215, 0, 0.2)', tension: 0.1, yAxisID: 'y1' },
+                                                    { type: 'line', label: 'Rasio Plan (%)', data: ratioPlanData, borderColor: '#FFFFFF', backgroundColor: 'rgba(255, 255, 255, 0.2) ', tension: 0.1, yAxisID: 'y1' },
+                                                        { label: 'SAP Plan', data: originalPlanData, backgroundColor: '#a32ca3', borderColor: '#a32ca3', barThickness: 15, stack: 'OriginalPlan', yAxisID: 'y' },
+                                                        { label: 'Change Plan', data: planData, backgroundColor: '#3cb9fc', borderColor: '#3cb9fc', barThickness: 15, stack: 'Plan', yAxisID: 'y' },
+                                                { label: 'Normal', data: normalData, backgroundColor: '#35FF00', borderColor: '#35FF00', barThickness: 15, stack: 'Actual', yAxisID: 'y' },
+                                                        { label: 'Overtime', data: overtimeData, backgroundColor: '#FF0000', borderColor: '#FF0000', barThickness: 15, stack: 'Actual', yAxisID: 'y' }
                                     ]
                                 },
                                 options: {
@@ -891,7 +895,7 @@ input[type="checkbox"]:checked + .shift-button {
                                         const pageWidth = doc.internal.pageSize.getWidth();
 
                                         doc.setFontSize(18);
-                                        doc.text('Production Report', 40, 50);
+                                        doc.text('Production Achivment', 40, 50);
                                         doc.setFontSize(10);
                                         doc.setTextColor(100);
                                         doc.text(`Period: ${document.getElementById('SelectedMonth').selectedOptions[0].text} ${document.getElementById('SelectedYear').value}`, 40, 70);
@@ -927,5 +931,41 @@ input[type="checkbox"]:checked + .shift-button {
                                 }, 100);
                             });
                         });
+                            // TAMBAHKAN KODE INI DI BAWAH
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function untuk set bold pada dropdown yang sudah dipilih
+            function updateDropdownStyle() {
+                const dropdowns = document.querySelectorAll('.filter-content .form-select-sm');
+
+                dropdowns.forEach(dropdown => {
+                    const dropdownId = dropdown.id;
+                    const dropdownValue = dropdown.value;
+
+                    // Logic untuk masing-masing dropdown
+                    if (dropdownId === 'SelectedYear') {
+                        // Year selalu bold setelah dipilih
+                        if (dropdownValue) {
+                            dropdown.classList.add('selected');
+                        }
+                    } else if (dropdown.name === 'MachineLine') {
+                        // Machine Line bold jika bukan "All"
+                        if (dropdownValue && dropdownValue !== 'All') {
+                            dropdown.classList.add('selected');
+                        } else {
+                            dropdown.classList.remove('selected');
+                        }
+                    }
+                });
+            }
+
+            // Jalankan saat halaman load
+            updateDropdownStyle();
+
+            // Jalankan saat dropdown berubah
+            const dropdowns = document.querySelectorAll('.filter-content .form-select-sm');
+            dropdowns.forEach(dropdown => {
+                dropdown.addEventListener('change', updateDropdownStyle);
+            });
+        });
                     </script>
 }
