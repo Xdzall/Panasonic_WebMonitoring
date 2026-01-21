@@ -307,6 +307,10 @@ table.table-bordered > :not(caption) > * {
     margin-left: 3px;
 }
 
+.total-info-text span,
+.total-info-text strong {
+    color: #ffffff !important;
+}
 /* COMPACT FILTER */
 .filter-content .form-select-sm,
 .filter-content .btn-sm {
@@ -466,6 +470,34 @@ input[type="checkbox"]:checked + .shift-button {
     padding-left: 0 !important;
     padding-right: 0 !important;
 }
+/* HEADER DI DALAM BOX */
+.chart-box-header {
+    position: relative;
+    padding-bottom: 6px;
+    margin-bottom: 6px;
+}
+
+/* TEKS JUDUL */
+.chart-box-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 0.3px;
+    padding-left: 2px;
+}
+
+/* GARIS BAWAH */
+.chart-box-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: rgba(0, 0, 0, 0.4);
+    );
+    border-radius: 1px;
+}
+
 </style>
 
 <div id="reportContainer">
@@ -568,7 +600,15 @@ input[type="checkbox"]:checked + .shift-button {
         </div>
 
         <!-- CHART WITH BOX -->
+         <!-- CHART HEADER -->
+    
         <div id="dayDiv">
+            <div class="chart-box-header">
+        <span class="chart-box-title">
+            Production Achievement
+        </span>
+        <div class="chart-box-line"></div>
+    </div>
             <div class="row">
                 <div class="col-12">
                     <canvas id="dayChart"></canvas>
