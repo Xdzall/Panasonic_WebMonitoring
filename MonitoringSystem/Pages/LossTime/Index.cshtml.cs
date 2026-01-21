@@ -166,6 +166,7 @@ namespace MonitoringSystem.Pages.LossTime
 
         public IActionResult OnPostReset()
         {
+            ModelState.Clear();
             SelectedMonth = DateTime.Today.Month;
             SelectedYear = DateTime.Today.Year;
             SetDatesFromMonthYear();
