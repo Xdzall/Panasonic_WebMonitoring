@@ -258,7 +258,7 @@ table.table tbody td {
 }
 
 table.table-bordered > :not(caption) > * {
-    border-color: rgba(255, 255, 255, 0.2) !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
 }
 
 /* CHART CONTAINER - SUPER COMPACT */
@@ -886,10 +886,10 @@ input[type="checkbox"]:checked + .shift-button {
                                     datasets: [
                                             { type: 'line', label: 'Rasio Actual (%)', data: ratioActualData, borderColor: '#FACC15', backgroundColor: 'rgba(255, 215, 0, 0.2)', tension: 0.1, yAxisID: 'y1' },
                                                     { type: 'line', label: 'Rasio Plan (%)', data: ratioPlanData, borderColor: '#FFFFFF', backgroundColor: 'rgba(255, 255, 255, 0.2) ', tension: 0.1, yAxisID: 'y1' },
-                                                        { label: 'SAP Plan', data: originalPlanData, backgroundColor: '#a32ca3', borderColor: '#a32ca3', barThickness: 15, stack: 'OriginalPlan', yAxisID: 'y' },
-                                                        { label: 'Change Plan', data: planData, backgroundColor: '#3cb9fc', borderColor: '#3cb9fc', barThickness: 15, stack: 'Plan', yAxisID: 'y' },
+                                                                { label: 'SAP Plan', data: originalPlanData, backgroundColor: '#3cb9fc', borderColor: '#3cb9fc', barThickness: 15, stack: 'OriginalPlan', yAxisID: 'y' },
+                                                                { label: 'Change Plan', data: planData, backgroundColor: '#a32ca3', borderColor: '#a32ca3', barThickness: 15, stack: 'Plan', yAxisID: 'y' },
                                                 { label: 'Normal', data: normalData, backgroundColor: '#35FF00', borderColor: '#35FF00', barThickness: 15, stack: 'Actual', yAxisID: 'y' },
-                                                        { label: 'Overtime', data: overtimeData, backgroundColor: '#FF0000', borderColor: '#FF0000', barThickness: 15, stack: 'Actual', yAxisID: 'y' }
+                                                                        { label: 'Overtime', data: overtimeData, backgroundColor: '#006330', borderColor: '#006330', barThickness: 15, stack: 'Actual', yAxisID: 'y' }
                                     ]
                                 },
                                 options: {
