@@ -41,6 +41,126 @@
     </style>
 </head>
 <body>
+   <div class="row g-3 align-items-center justify-content-between flex-wrap">
+    <div class="col-auto">
+        <form method="post" class="row g-3 align-items-center">
+            <div class="col-auto">
+                <select class="form-select form-select-sm">
+                    @for (int i = 1; i <= 12; i++)
+                    {
+                        @* <option value="@i">@CultureInfo.GetCultureInfo("en-US").DateTimeFormat.GetMonthName(i)</option> *@
+                    }
+                </select>
+            </div>
+            <div class="col-auto">
+                <select class="form-select form-select-sm">
+                    @for (int i = DateTime.Now.Year; i >= 2020; i--)
+                    {
+                        <option value="@i">@i</option>
+                    }
+                </select>
+            </div>
+            <div class="col-auto d-flex gap-4 align-items-center">
+                <label class="fs-10">Machine Line</label>
+                <select class="form-select form-select-sm border-dark filter-control">
+                    <option value="MCH1-01">CU</option>
+                    <option value="MCH1-02">CS</option>
+                </select>
+            </div>
+            <div class="col-auto d-flex gap-3 align-items-center">
+                <label class="fs-10">Shift</label>
+                <div class="d-flex gap-2">
+                    <div class="form-check">
+                        <input class="form-check-input filter-control" type="checkbox" id="Shift1" name="SelectedShifts" value="1" >
+                        <label class="form-check-label" for="Shift1">1</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input filter-control" type="checkbox" id="Shift2" name="SelectedShifts" value="2" >
+                        <label class="form-check-label" for="Shift2">2</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input filter-control" type="checkbox" id="Shift3" name="SelectedShifts" value="3">
+                        <label class="form-check-label" for="Shift3">3</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input filter-control" type="checkbox" id="Shift3" name="SelectedShifts" value="4">
+                        <label class="form-check-label" for="NonShift">Non Shift</label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-auto d-flex gap-2">
+                <button type="submit" name="submitButton" value="search" class="btn btn-sm fw-bold fs-6 text-white" style="background-color: rgb(61, 121, 176);">Search</button>
+                <button type="submit" name="submitButton" value="reset" class="btn btn-sm fw-bold fs-6 text-white" style="background-color: rgb(176, 61, 61);">Reset</button>
+            </div>
+        </form>
+    </div>
+    <div class="col-auto ms-auto">
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                Upload
+            </button>
+        </div>
+    </div>
+    <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header d-flex justify-content-between align-items-center">
+                    <h5 class="modal-title" id="uploadModalLabel">Upload Plan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3 text-center">
+                        <div class="d-flex justify-content-center gap-2">
+                            <a asp-page-handler="DownloadTemplate" asp-route-type="cu" class="btn btn-sm btn-outline-success d-flex align-items-center gap-1">
+                                <i class="bi bi-file-earmark-excel-fill"></i>
+                                Template CU
+                            </a>
+                            <a asp-page-handler="DownloadTemplate" asp-route-type="cs" class="btn btn-sm btn-outline-info d-flex align-items-center gap-1">
+                                <i class="bi bi-file-earmark-excel-fill"></i>
+                                Template CS
+                            </a>
+                        </div>
+                    </div>
+                    <hr />
+                    <form method="post" enctype="multipart/form-data" asp-page-handler="Upload">
+                        <div class="form-group mb-3">
+                            <label for="UploadedFile" class="form-label">Pilih File Plan:</label>
+                            <input type="file" id="UploadedFile" name="UploadedFile" class="form-control" required>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="TargetMachine" class="form-label">Untuk Mesin:</label>
+                            <select id="TargetMachine" name="TargetMachine" class="form-select" required>
+                                <option value="MCH1-01">CU</option>
+                                <option value="MCH1-02">CS</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 form-group mb-3">
+                                <label for="TargetMonth" class="form-label">Untuk Bulan:</label>
+                                <select id="TargetMonth" name="TargetMonth" class="form-select" required>
+                                    @for (int i = 1; i <= 12; i++)
+                                    {
+                                        @* <option value="@i">@CultureInfo.GetCultureInfo("en-US").DateTimeFormat.GetMonthName(i)</option> *@
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-6 form-group mb-3">
+                                <label for="TargetYear" class="form-label">Untuk Tahun:</label>
+                                <select id="TargetYear" name="TargetYear" class="form-select" required>
+                                    @for (int i = DateTime.Now.Year; i <= DateTime.Now.Year + 5; i++)
+                                    {
+                                        <option value="@i">@i</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success">Upload dan Simpan</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+   </div>
     <div class="card">
         <form method="post" asp-page-handler="InsertProductionRecord">
             <div class="card-header">
@@ -65,7 +185,6 @@
                         <th colspan="3" class="w-35">Original</th>
                         <th colspan="7" class="w-55">Current</th>
                     </tr>
-
                     <tr class="text-center">
                         <th scope="col" class="w-5">No</th>
                         <th scope="col" class="w-20">Model Name</th>
@@ -78,84 +197,103 @@
                         <th scope="col" class="w-20">Remarks</th>
                         <th scope="col">Action</th>
                     </tr>
-                <tbody>
-                        @for (int i = 0; i <= 16; i++)
-                        {
-                            var record = Model.listRecords.Count > i ? Model.listRecords[i] : null;
-                            <tr>
-                            <th scope="row" class="text-center align-middle">@(i + 1)</th>
+                </thead>
+                <tbody id="production-table-body">
+                    @{
+                        // LOGIC: Default 5 baris, atau mengikuti jumlah data jika lebih dari 5
+                        int minRows = 5;
+                        int dataCount = Model.listRecords.Count;
+                        int totalRows = dataCount > minRows ? dataCount : minRows;
+                    }
+
+                    @for (int i = 0; i < totalRows; i++)
+                    {
+                        var record = dataCount > i ? Model.listRecords[i] : null;
+                        <tr>
+                            <th scope="row" class="text-center align-middle row-number">@(i + 1)</th>
+                            @* Kolom Original (Read Only / Disabled) *@
                             <td>
                                 <div class="input-group m-1">
                                     <input disabled type="hidden" name="IdModel[@i]" value="@(record?.Id)" />
-                                    <input disabled type="text" class="form-control" name="OriginalModelName[@i]" value="@(record?.ModelName)" placeholder="Silahkan Pilih Model" autocomplete="off" />
+                                    <input disabled type="text" class="form-control" name="OriginalModelName[@i]" value="@(record?.ModelName)" placeholder="-" />
                                 </div>
                             </td>
                             <td>
                                 <div class="m-1">
-                                    <input disabled type="text" class="form-control" name="OriginalQuantity[@i]" data-quantity="@(record?.Quantity.ToString())" value="@(record?.Quantity.ToString())" placeholder="Masukkan Qty" autocomplete="off" />
+                                    <input disabled type="text" class="form-control" name="OriginalQuantity[@i]" value="@(record?.Quantity.ToString())" placeholder="-" />
                                 </div>
                             </td>
+
+                            @* Kolom Current (Input User) *@
                             <td>
-                                <div class="input-group m-1">
+                                <div class="input-group m-1 position-relative">
                                     <input type="hidden" name="IdModel[@i]" value="@(record?.Id)" />
-                                    <input type="text" class="form-control productInput" name="ModelName[@i]" value="@(record?.ModelName)" placeholder="Silahkan Pilih Model" autocomplete="off" />
-                                    <a class="btn btn-primary input-group-text" id="choose_option" data-bs-toggle="modal" data-bs-target="#new-model-modal">Tambahkan Opsi</a>
-                                </div>
-                                <div id="dropdown" class="dropdown"></div>
-                            </td>
-                            <td>
-                                <div class="m-1">
-                                    <input type="text" class="form-control" name="Quantity[@i]" data-quantity="@(record?.Quantity.ToString())" value="@(record?.Quantity.ToString())" id="quantity" placeholder="Masukkan Quantity" autocomplete="off" />
+                                    @* Tambahkan class 'productInput' agar terdeteksi JS *@
+                                    <input type="text" class="form-control productInput" name="ModelName[@i]" value="@(record?.ModelName)" placeholder="Pilih Model" autocomplete="off" />
+                                    <a class="btn btn-primary input-group-text" data-bs-toggle="modal" data-bs-target="#new-model-modal">Opsi</a>
+                                    @* Dropdown Container *@
+                                    <div class="dropdown custom-dropdown" style="top: 100%; left: 0; width: 100%;"></div>
                                 </div>
                             </td>
                             <td>
                                 <div class="m-1">
-                                    <input type="text" class="form-control" name="QtyHour[@i]" value="@(record?.QtyHour.ToString())" id="qtyhour" placeholder="Masukkan Qty/Hour" autocomplete="off" />
+                                    <input type="text" class="form-control" name="Quantity[@i]" value="@(record?.Quantity.ToString())" placeholder="Qty" autocomplete="off" />
                                 </div>
                             </td>
                             <td>
                                 <div class="m-1">
-                                    <input type="text" class="form-control" name="Hour[@i]" value="@(record?.Hour ?? 0)" id="hour" autocomplete="off" readonly />
+                                    <input type="text" class="form-control" name="QtyHour[@i]" value="@(record?.QtyHour.ToString())" placeholder="Qty/Hr" autocomplete="off" />
                                 </div>
                             </td>
                             <td>
                                 <div class="m-1">
-                                    <input type="text" class="form-control" name="Lot[@i]" value="@(record?.Lot)" id="lot" placeholder="Masukkan LOT" autocomplete="off" />
+                                    <input type="text" class="form-control" name="Hour[@i]" value="@(record?.Hour ?? 0)" readonly />
                                 </div>
                             </td>
                             <td>
                                 <div class="m-1">
-                                    <input type="text" class="form-control" name="Remark[@i]" value="@(record?.Remark)" id="remarks" placeholder="Masukkan Remarks" autocomplete="off" />
+                                    <input type="text" class="form-control" name="Lot[@i]" value="@(record?.Lot)" placeholder="LOT" autocomplete="off" />
                                 </div>
                             </td>
                             <td>
-                                <div class="d-flex">
+                                <div class="m-1">
+                                    <input type="text" class="form-control" name="Remark[@i]" value="@(record?.Remark)" placeholder="Remarks" autocomplete="off" />
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex justify-content-center">
                                     @if (record != null)
                                     {
-                                       <a class="btn btn-warning mt-1 me-2" data-bs-toggle="modal" data-bs-target="#edit-model" onclick="setModalData(this)">Edit</a>
-                                       <a class="btn btn-danger mt-1" data-bs-toggle="modal" data-bs-target="#delete-model" onclick="setDeleteRecordId(@(record?.Id))">Delete</a>
+                                        <a class="btn btn-warning btn-sm mt-1 me-1" data-bs-toggle="modal" data-bs-target="#edit-model" onclick="setModalData(this)">Edit</a>
+                                        <a class="btn btn-danger btn-sm mt-1" data-bs-toggle="modal" data-bs-target="#delete-model" onclick="setDeleteRecordId(@(record?.Id))">Del</a>
                                     }
                                     else
                                     {
-                                       <a class="btn btn-warning mt-1 me-2 disabled">Edit</a>
-                                       <a class="btn btn-danger mt-1 disabled">Delete</a>
+                                        // Tombol Hapus Baris (Client Side)
+                                        <button type="button" class="btn btn-danger btn-sm mt-1" onclick="removeRow(this)">X</button>
                                     }
                                 </div>
                             </td>
-                            </tr>
-                        }
-                    <tr>
-                        <td colspan="2" class="align-top text-end">
-                            <p class="mt-2 me-5 fw-bold">Comment</p>
-                        </td>
-                        <td colspan="6">
-                            <div class="m-2">
-                                <textarea class="form-control" name="comment" id="comment" placeholder="Masukkan Komentar">@Model.Comment</textarea>
-                            </div>
-                        </td>
-                    </tr>
+                        </tr>
+                    }
                 </tbody>
             </table>
+
+            @* Tombol Tambah Baris & Kolom Komentar *@
+            <div class="row">
+                <div class="col-12 mb-3">
+                    <button type="button" class="btn btn-success btn-sm" onclick="addNewRow()">
+                        <i class="bi bi-plus-circle"></i> Add Row
+                    </button>
+                </div>
+
+                <div class="col-12">
+                    <div class="d-flex align-items-start gap-3">
+                        <p class="fw-bold mt-2" style="min-width: 100px;">Comment</p>
+                        <textarea class="form-control" name="comment" id="comment" placeholder="Masukkan Komentar" rows="2">@Model.Comment</textarea>
+                    </div>
+                </div>
+            </div>
             <div class="d-flex align-middle justify-content-center pb-3">
                 <button  id="submit" class="btn btn-primary me-3">Submit</button>
                 <a class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delete-all-model">Reset</a>
@@ -224,7 +362,6 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         <button type="submit" class="btn btn-primary">Save</button> 
-                    </div>
                 </form>
             </div>
         </div>
@@ -276,6 +413,9 @@
         </div>
     </div>
 
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/sweetalert2.min.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
@@ -300,134 +440,175 @@
         });
     </script>
 
-<script src="~/lib/jquery/dist/jquery.min.js"></script>
-<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        // --- 1. SETUP DATA PRODUCT (Server to Client) ---
+        const productNames = @Html.Raw(Model.ProductNames);
+        const productNameStrings = productNames.map(product => product.Name);
 
-<script>
-    const buttonSubmit = document.getElementById("submitBtn");
-    
-            console.log(buttonSubmit);
+        // Variabel untuk melacak index baris (dimulai dari total baris yang dirender server)
+        // Kita gunakan logic Razor untuk menentukan angka awal
+        let currentIndex = document.querySelectorAll('#production-table-body tr').length;
 
-    buttonSubmit.addEventListener("click", async function () {
-      await updateSubmitCounter();
-    });
+        // --- 2. FUNGSI MENAMBAH BARIS BARU ---
+        function addNewRow() {
+            const tableBody = document.getElementById('production-table-body');
 
-        document.getElementById("submitBtn").addEventListener("click", async function (event) {
-        event.preventDefault(); 
+            // Template baris baru
+            const newRowHtml = `
+                <tr>
+                    <th scope="row" class="text-center align-middle row-number">${currentIndex + 1}</th>
+                    <td>
+                        <div class="input-group m-1">
+                             <input disabled type="text" class="form-control" placeholder="-" />
+                        </div>
+                    </td>
+                    <td>
+                        <div class="m-1">
+                            <input disabled type="text" class="form-control" placeholder="-" />
+                        </div>
+                    </td>
+                    <td>
+                        <div class="input-group m-1 position-relative">
+                            <input type="hidden" name="IdModel[${currentIndex}]" value="" />
+                            <input type="text" class="form-control productInput" name="ModelName[${currentIndex}]" placeholder="Pilih Model" autocomplete="off" />
+                            <a class="btn btn-primary input-group-text" data-bs-toggle="modal" data-bs-target="#new-model-modal">Opsi</a>
+                            <div class="dropdown custom-dropdown" style="top: 100%; left: 0; width: 100%;"></div>
+                        </div>
+                    </td>
+                    <td><div class="m-1"><input type="text" class="form-control" name="Quantity[${currentIndex}]" placeholder="Qty" /></div></td>
+                    <td><div class="m-1"><input type="text" class="form-control" name="QtyHour[${currentIndex}]" placeholder="Qty/Hr" /></div></td>
+                    <td><div class="m-1"><input type="text" class="form-control" name="Hour[${currentIndex}]" value="0" readonly /></div></td>
+                    <td><div class="m-1"><input type="text" class="form-control" name="Lot[${currentIndex}]" placeholder="LOT" /></div></td>
+                    <td><div class="m-1"><input type="text" class="form-control" name="Remark[${currentIndex}]" placeholder="Remarks" /></div></td>
+                    <td>
+                        <div class="d-flex justify-content-center">
+                            <button type="button" class="btn btn-danger btn-sm mt-1" onclick="removeRow(this)">X</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
 
-        await sendSubmitCounter();
+            // Masukkan ke tabel
+            tableBody.insertAdjacentHTML('beforeend', newRowHtml);
 
-        document.querySelector("form").submit();
-    });
+            // Ambil elemen input yang baru saja dibuat untuk dipasang Event Listener Dropdown
+            const newRow = tableBody.lastElementChild;
+            const newInput = newRow.querySelector('.productInput');
+            const newDropdown = newRow.querySelector('.custom-dropdown');
 
-    async function updateSubmitCounter() {
-        try {
-            let counter = 0;
-            let response = await fetch("?handler=GetSubmitCounter");
-            let result = await response.json();
-             counter++;
-            if (result.success) {
-                document.getElementById("counter").textContent = counter.toString();
-            }
-        } catch (error) {
-            console.error("Error fetching submit counter:", error);
+            // Pasang fungsi autocomplete ke baris baru
+            attachDropdownEvent(newInput, newDropdown);
+
+            currentIndex++;
         }
-    }
 
-    async function sendSubmitCounter() {
-        try {
-            let response = await fetch("/Final/ProductionPlanCU?handler=SubmitCounter", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ SubmitCounter: 1 })
+        // --- 3. FUNGSI HAPUS BARIS ---
+        function removeRow(button) {
+            const row = button.closest('tr');
+            row.remove();
+            reindexRows(); // Opsional: urutkan ulang nomor
+        }
+
+        function reindexRows() {
+            const rows = document.querySelectorAll('#production-table-body tr');
+            rows.forEach((row, index) => {
+                const th = row.querySelector('.row-number');
+                if (th) th.innerText = index + 1;
             });
+        }
 
-            let result = await response.json();
-            if (result.success) {
-                await updateSubmitCounter();
+        // --- 4. LOGIC DROPDOWN / AUTOCOMPLETE ---
+
+        // Fungsi pembantu untuk menampilkan list
+        function showDropdown(input, dropdown, filteredNames) {
+            dropdown.innerHTML = '';
+            if (filteredNames.length > 0) {
+                filteredNames.forEach(name => {
+                    const div = document.createElement('div');
+                    div.textContent = name;
+                    // Styling inline agar mirip dengan CSS Anda sebelumnya
+                    div.style.padding = '10px';
+                    div.style.cursor = 'pointer';
+                    div.onmouseover = () => { div.style.backgroundColor = '#f0f0f0'; };
+                    div.onmouseout = () => { div.style.backgroundColor = 'white'; };
+
+                    div.onclick = () => {
+                        input.value = name;
+                        dropdown.style.display = 'none';
+                    };
+                    dropdown.appendChild(div);
+                });
+                dropdown.style.display = 'block';
             } else {
-                alert("Failed to update submit counter!");
-            }
-        } catch (error) {
-            console.error("Error updating submit counter:", error);
-        }
-    }
-</script>
-
-
-<script>
-
-    const productNames = @Html.Raw(Model.ProductNames);
-    const productNameStrings = productNames.map(product => product.Name);
-
-    const productInputs = document.querySelectorAll('.productInput');
-    const dropdowns = document.querySelectorAll('.dropdown');
-
-    function showDropdown(input, dropdown, filteredNames) {
-        dropdown.innerHTML = '';
-        if (filteredNames.length > 0) {
-            filteredNames.forEach(name => {
-                const div = document.createElement('div');
-                div.textContent = name;
-                div.onclick = () => {
-                    input.value = name;
-                    dropdown.style.display = 'none';
-                };
-                dropdown.appendChild(div);
-            });
-            dropdown.style.display = 'block';
-        } else {
-            dropdown.style.display = 'none';
-        }
-    }
-
-    productInputs.forEach((input, index) => {
-        const dropdown = dropdowns[index];
-
-        input.addEventListener('click', () => {
-            const query = input.value.toLowerCase();
-            const filteredNames = productNameStrings.filter(name => name.toLowerCase().includes(query));
-            showDropdown(input, dropdown, filteredNames);
-        });
-
-        input.addEventListener('input', () => {
-            const query = input.value.toLowerCase();
-            const filteredNames = productNameStrings.filter(name => name.toLowerCase().includes(query));
-            showDropdown(input, dropdown, filteredNames);
-        });
-    });
-
-    document.addEventListener('click', (event) => {
-        productInputs.forEach((input, index) => {
-            const dropdown = dropdowns[index];
-            if (!input.contains(event.target) && !dropdown.contains(event.target)) {
                 dropdown.style.display = 'none';
             }
+        }
+
+        // Fungsi inti untuk memasang event listener ke Input
+        function attachDropdownEvent(input, dropdown) {
+            // Event saat mengetik
+            input.addEventListener('input', () => {
+                const query = input.value.toLowerCase();
+                const filteredNames = productNameStrings.filter(name => name.toLowerCase().includes(query));
+                showDropdown(input, dropdown, filteredNames);
+            });
+
+            // Event saat diklik (menampilkan semua atau filter)
+            input.addEventListener('click', () => {
+                const query = input.value.toLowerCase();
+                const filteredNames = productNameStrings.filter(name => name.toLowerCase().includes(query));
+                showDropdown(input, dropdown, filteredNames);
+            });
+        }
+
+        // Inisialisasi awal untuk baris yang sudah ada dari server
+        document.addEventListener("DOMContentLoaded", function() {
+            const existingInputs = document.querySelectorAll('.productInput');
+            existingInputs.forEach(input => {
+                // Cari div dropdown yang satu level (sibling) dengan input ini
+                const dropdown = input.parentNode.querySelector('.custom-dropdown');
+                if(dropdown) {
+                    attachDropdownEvent(input, dropdown);
+                }
+            });
         });
-    });
 
-    function setModalData(button) {
-        var row = button.closest('tr');
+        // Menutup dropdown jika klik di luar
+        document.addEventListener('click', (event) => {
+            const isInput = event.target.classList.contains('productInput');
+            const isDropdownItem = event.target.closest('.custom-dropdown');
 
-        var id = row.querySelector('input[name^="IdModel"]').value;
-        var modelName = row.querySelector('input[name^="ModelName"]').value;
-        var quantity = row.querySelector('input[name^="Quantity"]').value;
-        var qtyHour = row.querySelector('input[name^="QtyHour"]').value;
-        var lot = row.querySelector('input[name^="Lot"]').value;
-        var remark = row.querySelector('input[name^="Remark"]').value;
+            if (!isInput && !isDropdownItem) {
+                document.querySelectorAll('.custom-dropdown').forEach(d => d.style.display = 'none');
+            }
+        });
 
-        document.querySelector('#edit-model input[name="Id"]').value = id
-        document.querySelector('#edit-model input[name="ProductName"]').value = modelName;
-        document.querySelector('#edit-model input[name="Quantity"]').value = quantity;
-        document.querySelector('#edit-model input[name="QtyHour"]').value = qtyHour;
-        document.querySelector('#edit-model input[name="Lot"]').value = lot;
-        document.querySelector('#edit-model input[name="Remark"]').value = remark;
-    }
+        // --- 5. DATA MODAL ---
+        function setModalData(button) {
+            var row = button.closest('tr');
+            // Menggunakan selector yang lebih aman (mencari input di dalam row tersebut)
+            var id = row.querySelector('input[name^="IdModel"]').value;
+            var modelName = row.querySelector('input[name^="ModelName"]').value;
+            var quantity = row.querySelector('input[name^="Quantity"]').value;
+            var qtyHour = row.querySelector('input[name^="QtyHour"]').value;
+            var lot = row.querySelector('input[name^="Lot"]').value;
+            var remark = row.querySelector('input[name^="Remark"]').value;
 
-    function setDeleteRecordId(recordId) {
-        document.getElementById("delete-record-id").value = recordId;
-    }
-</script>
+            // Set value ke Modal Edit
+            const modalForm = document.querySelector('#edit-model form');
+            if(modalForm) {
+                if(modalForm.querySelector('input[name="Id"]')) modalForm.querySelector('input[name="Id"]').value = id;
+                if(modalForm.querySelector('input[name="ProductName"]')) modalForm.querySelector('input[name="ProductName"]').value = modelName;
+                if(modalForm.querySelector('input[name="Quantity"]')) modalForm.querySelector('input[name="Quantity"]').value = quantity;
+                if(modalForm.querySelector('input[name="QtyHour"]')) modalForm.querySelector('input[name="QtyHour"]').value = qtyHour;
+                if(modalForm.querySelector('input[name="Lot"]')) modalForm.querySelector('input[name="Lot"]').value = lot;
+                if(modalForm.querySelector('input[name="Remark"]')) modalForm.querySelector('input[name="Remark"]').value = remark;
+            }
+        }
+
+        function setDeleteRecordId(recordId) {
+            document.getElementById("delete-record-id").value = recordId;
+        }
+    </script>
 </body>
 </html>
