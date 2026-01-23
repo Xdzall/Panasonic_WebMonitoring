@@ -559,6 +559,10 @@ namespace MonitoringSystem.Pages.Shared
             public int Id { get; set; }
             public string? ModelName { get; set; }
             public int? Quantity { get; set; }
+            public int? Overtime { get; set; }
+            public int? NoDirectOfWorker { get; set; }
+            public int? NoDirectOfWorkerOvertime { get; set; }
+            public string? Shift { get; set; }
             public int? QtyHour { get; set; }
             public double? Hour { get; set; }
             public string? Lot { get; set; }

@@ -67,27 +67,6 @@
                     <option value="MCH1-02">CS</option>
                 </select>
             </div>
-            <div class="col-auto d-flex gap-3 align-items-center">
-                <label class="fs-10">Shift</label>
-                <div class="d-flex gap-2">
-                    <div class="form-check">
-                        <input class="form-check-input filter-control" type="checkbox" id="Shift1" name="SelectedShifts" value="1" >
-                        <label class="form-check-label" for="Shift1">1</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input filter-control" type="checkbox" id="Shift2" name="SelectedShifts" value="2" >
-                        <label class="form-check-label" for="Shift2">2</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input filter-control" type="checkbox" id="Shift3" name="SelectedShifts" value="3">
-                        <label class="form-check-label" for="Shift3">3</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input filter-control" type="checkbox" id="Shift3" name="SelectedShifts" value="4">
-                        <label class="form-check-label" for="NonShift">Non Shift</label>
-                    </div>
-                </div>
-            </div>
             <div class="col-auto d-flex gap-2">
                 <button type="submit" name="submitButton" value="search" class="btn btn-sm fw-bold fs-6 text-white" style="background-color: rgb(61, 121, 176);">Search</button>
                 <button type="submit" name="submitButton" value="reset" class="btn btn-sm fw-bold fs-6 text-white" style="background-color: rgb(176, 61, 61);">Reset</button>
@@ -182,22 +161,34 @@
             <table class="table table-bordered">
                 <thead>
                     <tr class="text-center">
-                        <th colspan="3" class="w-35">Original</th>
-                        <th colspan="7" class="w-55">Current</th>
+                        <th colspan="3">Original</th>
+                        <th colspan="8">Current</th>
                     </tr>
+
                     <tr class="text-center">
-                        <th scope="col" class="w-5">No</th>
-                        <th scope="col" class="w-20">Model Name</th>
-                        <th scope="col" class="w-15">Quantity</th>
-                        <th scope="col" class="w-20">Model Name</th>
-                        <th scope="col" class="w-15">Quantity</th>
-                        <th scope="col" class="w-15">Qty/Hour</th>
-                        <th scope="col" class="w-10">Hour</th>
-                        <th scope="col" class="w-20">LOT</th>
-                        <th scope="col" class="w-20">Remarks</th>
-                        <th scope="col">Action</th>
+                        <th rowspan="2">No</th>
+                        <th rowspan="2">Model Name</th>
+                        <th rowspan="2">Quantity</th>
+                        <th rowspan="2">Model Name</th>
+
+                        <th colspan="2">Plan</th>
+                        
+                        <th colspan="2">No Of Direct Worker</th>
+
+                        <th rowspan="2">Shift</th>
+                        <th rowspan="2">Qty/Hour</th>
+                        <th rowspan="2">Hour</th>
+                        <th rowspan="2">Action</th>
+                    </tr>
+
+                    <tr class="text-center">
+                        <th>Quantity</th>
+                        <th>Overtime</th>
+                        <th>Normal</th>
+                        <th>Overtime</th>
                     </tr>
                 </thead>
+
                 <tbody id="production-table-body">
                     @{
                         // LOGIC: Default 5 baris, atau mengikuti jumlah data jika lebih dari 5
@@ -242,22 +233,66 @@
                             </td>
                             <td>
                                 <div class="m-1">
+                                    <input type="text" class="form-control" name="Overtime[@i]" value="@(record?.Overtime.ToString())" placeholder="Ovt" autocomplete="off" />
+                                </div>
+                            </td>
+                            <td>
+                                <div class="m-1">
+                                    <input type="text" class="form-control" name="NoOfDirectWorker" value="@(record?.NoDirectOfWorker.ToString())" placeholder="Worker" autocomplete="off" />
+                                </div>
+                            </td>
+                            <td>
+                                <div class="m-1">
+                                    <input type="text" class="form-control" name="NoOfDirectWorkerOvertime" value="@(record?.NoDirectOfWorkerOvertime.ToString())" placeholder="Ovt" autocomplete="off" />
+                                </div>
+                            </td>
+                            <td class="align-middle">
+                                <div class="d-flex flex-wrap gap-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               name="Shift[@i]"
+                                               value="1"
+                                        @(record?.Shift?.Contains("1") == true ? "checked" : "")>
+                                        <label class="form-check-label">S1</label>
+                                    </div>
+
+                                    <div class="form-check">
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               name="Shift[@i]"
+                                               value="2"
+                                        @(record?.Shift?.Contains("2") == true ? "checked" : "")>
+                                        <label class="form-check-label">S2</label>
+                                    </div>
+
+                                    <div class="form-check">
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               name="Shift[@i]"
+                                               value="3"
+                                        @(record?.Shift?.Contains("3") == true ? "checked" : "")>
+                                        <label class="form-check-label">S3</label>
+                                    </div>
+
+                                    <div class="form-check">
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               name="Shift[@i]"
+                                               value="NS"
+                                        @(record?.Shift?.Contains("NS") == true ? "checked" : "")>
+                                        <label class="form-check-label">NS</label>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="m-1">
                                     <input type="text" class="form-control" name="QtyHour[@i]" value="@(record?.QtyHour.ToString())" placeholder="Qty/Hr" autocomplete="off" />
                                 </div>
                             </td>
                             <td>
                                 <div class="m-1">
                                     <input type="text" class="form-control" name="Hour[@i]" value="@(record?.Hour ?? 0)" readonly />
-                                </div>
-                            </td>
-                            <td>
-                                <div class="m-1">
-                                    <input type="text" class="form-control" name="Lot[@i]" value="@(record?.Lot)" placeholder="LOT" autocomplete="off" />
-                                </div>
-                            </td>
-                            <td>
-                                <div class="m-1">
-                                    <input type="text" class="form-control" name="Remark[@i]" value="@(record?.Remark)" placeholder="Remarks" autocomplete="off" />
                                 </div>
                             </td>
                             <td>
@@ -270,7 +305,7 @@
                                     else
                                     {
                                         // Tombol Hapus Baris (Client Side)
-                                        <button type="button" class="btn btn-danger btn-sm mt-1" onclick="removeRow(this)">X</button>
+                                        <button type="button" class="btn btn-danger btn-sm mt-1" onclick="removeRow(this)">Del</button>
                                     }
                                 </div>
                             </td>
@@ -351,17 +386,76 @@
                             <input type="text" class="form-control" name="QtyHour" id="qtyhour" placeholder="Masukkan Quantity/Hour" autocomplete="off" />
                         </div>
                         <div class="mb-3">
-                            <label for="message-text" class="col-form-label">Lot:</label>
-                            <input type="text" class="form-control" name="Lot" id="lot" placeholder="Masukkan LOT" autocomplete="off" />
+                            <label class="col-form-label fw-bold">No Of Direct Worker</label>
+
+                            <div class="row">
+                                <div class="col-6">
+                                    <label class="form-label">Normal</label>
+                                    <input type="number"
+                                           class="form-control"
+                                           name="NoOfDirectWorker"
+                                           id="noOfDirectWorker"
+                                           placeholder="Normal"
+                                           autocomplete="off" />
+                                </div>
+
+                                <div class="col-6">
+                                    <label class="form-label">Overtime</label>
+                                    <input type="number"
+                                           class="form-control"
+                                           name="NoOfDirectWorkerOvertime"
+                                           id="noOfDirectWorkerOvertime"
+                                           placeholder="Overtime"
+                                           autocomplete="off" />
+                                </div>
+                            </div>
                         </div>
                         <div class="mb-3">
-                            <label for="message-text" class="col-form-label">Remark:</label>
-                            <input type="text" class="form-control" name="Remark" id="remarks" placeholder="Masukkan Remarks" autocomplete="off" />
+                            <label class="col-form-label fw-bold">Shift:</label>
+
+                            <div class="d-flex gap-3 flex-wrap">
+                                <div class="form-check">
+                                    <input class="form-check-input edit-shift"
+                                           type="checkbox"
+                                           name="Shift"
+                                           value="1"
+                                           id="editShift1">
+                                    <label class="form-check-label" for="editShift1">S1</label>
+                                </div>
+
+                                <div class="form-check">
+                                    <input class="form-check-input edit-shift"
+                                           type="checkbox"
+                                           name="Shift"
+                                           value="2"
+                                           id="editShift2">
+                                    <label class="form-check-label" for="editShift2">S2</label>
+                                </div>
+
+                                <div class="form-check">
+                                    <input class="form-check-input edit-shift"
+                                           type="checkbox"
+                                           name="Shift"
+                                           value="3"
+                                           id="editShift3">
+                                    <label class="form-check-label" for="editShift3">S3</label>
+                                </div>
+
+                                <div class="form-check">
+                                    <input class="form-check-input edit-shift"
+                                           type="checkbox"
+                                           name="Shift"
+                                           value="NS"
+                                           id="editShiftNS">
+                                    <label class="form-check-label" for="editShiftNS">NS</label>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         <button type="submit" class="btn btn-primary">Save</button> 
+                    </div>
                 </form>
             </div>
         </div>
@@ -449,57 +543,104 @@
         // Kita gunakan logic Razor untuk menentukan angka awal
         let currentIndex = document.querySelectorAll('#production-table-body tr').length;
 
-        // --- 2. FUNGSI MENAMBAH BARIS BARU ---
         function addNewRow() {
             const tableBody = document.getElementById('production-table-body');
 
-            // Template baris baru
             const newRowHtml = `
-                <tr>
-                    <th scope="row" class="text-center align-middle row-number">${currentIndex + 1}</th>
-                    <td>
-                        <div class="input-group m-1">
-                             <input disabled type="text" class="form-control" placeholder="-" />
+            <tr>
+                <th scope="row" class="text-center align-middle row-number">${currentIndex + 1}</th>
+
+                <!-- Original -->
+                <td><input disabled class="form-control m-1" placeholder="-" /></td>
+                <td><input disabled class="form-control m-1" placeholder="-" /></td>
+
+                <!-- Current Model -->
+                <td>
+                    <div class="input-group m-1 position-relative">
+                        <input type="hidden" name="IdModel[${currentIndex}]" />
+                        <input type="text"
+                               class="form-control productInput"
+                               name="ModelName[${currentIndex}]"
+                               placeholder="Pilih Model"
+                               autocomplete="off" />
+                        <a class="btn btn-primary input-group-text"
+                           data-bs-toggle="modal"
+                           data-bs-target="#new-model-modal">Opsi</a>
+                        <div class="dropdown custom-dropdown"></div>
+                    </div>
+                </td>
+
+                <!-- Plan -->
+                <td><input class="form-control m-1" name="Quantity[${currentIndex}]" placeholder="Qty" /></td>
+                <td><input class="form-control m-1" name="Overtime[${currentIndex}]" placeholder="Ovt" /></td>
+
+                <!-- Worker -->
+                <td><input class="form-control m-1" name="NoOfDirectWorker[${currentIndex}]" placeholder="Normal" /></td>
+                <td><input class="form-control m-1" name="NoOfDirectWorkerOvertime[${currentIndex}]" placeholder="Overtime" /></td>
+
+                <!-- Shift -->
+                <td class="align-middle">
+                    <div class="d-flex flex-wrap gap-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox"
+                                   name="Shift[${currentIndex}]" value="1">
+                            <label class="form-check-label">S1</label>
                         </div>
-                    </td>
-                    <td>
-                        <div class="m-1">
-                            <input disabled type="text" class="form-control" placeholder="-" />
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox"
+                                   name="Shift[${currentIndex}]" value="2">
+                            <label class="form-check-label">S2</label>
                         </div>
-                    </td>
-                    <td>
-                        <div class="input-group m-1 position-relative">
-                            <input type="hidden" name="IdModel[${currentIndex}]" value="" />
-                            <input type="text" class="form-control productInput" name="ModelName[${currentIndex}]" placeholder="Pilih Model" autocomplete="off" />
-                            <a class="btn btn-primary input-group-text" data-bs-toggle="modal" data-bs-target="#new-model-modal">Opsi</a>
-                            <div class="dropdown custom-dropdown" style="top: 100%; left: 0; width: 100%;"></div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox"
+                                   name="Shift[${currentIndex}]" value="3">
+                            <label class="form-check-label">S3</label>
                         </div>
-                    </td>
-                    <td><div class="m-1"><input type="text" class="form-control" name="Quantity[${currentIndex}]" placeholder="Qty" /></div></td>
-                    <td><div class="m-1"><input type="text" class="form-control" name="QtyHour[${currentIndex}]" placeholder="Qty/Hr" /></div></td>
-                    <td><div class="m-1"><input type="text" class="form-control" name="Hour[${currentIndex}]" value="0" readonly /></div></td>
-                    <td><div class="m-1"><input type="text" class="form-control" name="Lot[${currentIndex}]" placeholder="LOT" /></div></td>
-                    <td><div class="m-1"><input type="text" class="form-control" name="Remark[${currentIndex}]" placeholder="Remarks" /></div></td>
-                    <td>
-                        <div class="d-flex justify-content-center">
-                            <button type="button" class="btn btn-danger btn-sm mt-1" onclick="removeRow(this)">X</button>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox"
+                                   name="Shift[${currentIndex}]" value="NS">
+                            <label class="form-check-label">NS</label>
                         </div>
-                    </td>
-                </tr>
+                    </div>
+                </td>
+
+                <!-- Qty/Hour -->
+                <td><input class="form-control m-1" name="QtyHour[${currentIndex}]" placeholder="Qty/Hr" /></td>
+
+                <!-- Hour -->
+                <td><input class="form-control m-1" name="Hour[${currentIndex}]" value="0" readonly /></td>
+
+                <!-- Action -->
+                <td class="text-center">
+                    <button type="button" class="btn btn-danger btn-sm"
+                            onclick="removeRow(this)">Del</button>
+                </td>
+            </tr>
             `;
 
-            // Masukkan ke tabel
             tableBody.insertAdjacentHTML('beforeend', newRowHtml);
 
-            // Ambil elemen input yang baru saja dibuat untuk dipasang Event Listener Dropdown
             const newRow = tableBody.lastElementChild;
-            const newInput = newRow.querySelector('.productInput');
-            const newDropdown = newRow.querySelector('.custom-dropdown');
-
-            // Pasang fungsi autocomplete ke baris baru
-            attachDropdownEvent(newInput, newDropdown);
+            attachDropdownEvent(
+                newRow.querySelector('.productInput'),
+                newRow.querySelector('.custom-dropdown')
+            );
 
             currentIndex++;
+        }
+
+        function openEditModal(btn) {
+            document.querySelectorAll('.edit-shift').forEach(cb => cb.checked = false);
+
+            const shiftData = btn.getAttribute('data-shift');
+            if (!shiftData) return;
+
+            const shifts = shiftData.split(',');
+
+            shifts.forEach(s => {
+                const checkbox = document.querySelector(`.edit-shift[value="${s}"]`);
+                if (checkbox) checkbox.checked = true;
+            });
         }
 
         // --- 3. FUNGSI HAPUS BARIS ---
@@ -583,28 +724,20 @@
             }
         });
 
-        // --- 5. DATA MODAL ---
-        function setModalData(button) {
-            var row = button.closest('tr');
-            // Menggunakan selector yang lebih aman (mencari input di dalam row tersebut)
-            var id = row.querySelector('input[name^="IdModel"]').value;
-            var modelName = row.querySelector('input[name^="ModelName"]').value;
-            var quantity = row.querySelector('input[name^="Quantity"]').value;
-            var qtyHour = row.querySelector('input[name^="QtyHour"]').value;
-            var lot = row.querySelector('input[name^="Lot"]').value;
-            var remark = row.querySelector('input[name^="Remark"]').value;
+                function setModalData(button) {
+            const row = button.closest('tr');
 
-            // Set value ke Modal Edit
-            const modalForm = document.querySelector('#edit-model form');
-            if(modalForm) {
-                if(modalForm.querySelector('input[name="Id"]')) modalForm.querySelector('input[name="Id"]').value = id;
-                if(modalForm.querySelector('input[name="ProductName"]')) modalForm.querySelector('input[name="ProductName"]').value = modelName;
-                if(modalForm.querySelector('input[name="Quantity"]')) modalForm.querySelector('input[name="Quantity"]').value = quantity;
-                if(modalForm.querySelector('input[name="QtyHour"]')) modalForm.querySelector('input[name="QtyHour"]').value = qtyHour;
-                if(modalForm.querySelector('input[name="Lot"]')) modalForm.querySelector('input[name="Lot"]').value = lot;
-                if(modalForm.querySelector('input[name="Remark"]')) modalForm.querySelector('input[name="Remark"]').value = remark;
-            }
+            const getVal = name =>
+                row.querySelector(`input[name^="${name}"]`)?.value ?? '';
+
+            const modal = document.querySelector('#edit-model form');
+
+            modal.querySelector('input[name="Id"]').value = getVal("IdModel");
+            modal.querySelector('input[name="ProductName"]').value = getVal("ModelName");
+            modal.querySelector('input[name="Quantity"]').value = getVal("Quantity");
+            modal.querySelector('input[name="QtyHour"]').value = getVal("QtyHour");
         }
+
 
         function setDeleteRecordId(recordId) {
             document.getElementById("delete-record-id").value = recordId;
