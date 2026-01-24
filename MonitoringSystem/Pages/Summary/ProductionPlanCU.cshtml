@@ -30,130 +30,126 @@
             width: 200px;
         }
 
-        .dropdown div {
-            padding: 10px;
-            cursor: pointer;
-        }
+            .dropdown div {
+                padding: 10px;
+                cursor: pointer;
+            }
 
-        .dropdown div:hover {
-            background-color: #f0f0f0;
-        }
+                .dropdown div:hover {
+                    background-color: #f0f0f0;
+                }
     </style>
 </head>
 <body>
-   <div class="row g-3 align-items-center justify-content-between flex-wrap">
-    <div class="col-auto">
-        <form method="post" class="row g-3 align-items-center">
-            <div class="col-auto">
-                <select class="form-select form-select-sm">
-                    @for (int i = 1; i <= 12; i++)
-                    {
-                        @* <option value="@i">@CultureInfo.GetCultureInfo("en-US").DateTimeFormat.GetMonthName(i)</option> *@
-                    }
-                </select>
-            </div>
-            <div class="col-auto">
-                <select class="form-select form-select-sm">
-                    @for (int i = DateTime.Now.Year; i >= 2020; i--)
-                    {
-                        <option value="@i">@i</option>
-                    }
-                </select>
-            </div>
-            <div class="col-auto d-flex gap-4 align-items-center">
-                <label class="fs-10">Machine Line</label>
-                <select class="form-select form-select-sm border-dark filter-control">
-                    <option value="MCH1-01">CU</option>
-                    <option value="MCH1-02">CS</option>
-                </select>
-            </div>
-            <div class="col-auto d-flex gap-2">
-                <button type="submit" name="submitButton" value="search" class="btn btn-sm fw-bold fs-6 text-white" style="background-color: rgb(61, 121, 176);">Search</button>
-                <button type="submit" name="submitButton" value="reset" class="btn btn-sm fw-bold fs-6 text-white" style="background-color: rgb(176, 61, 61);">Reset</button>
-            </div>
-        </form>
-    </div>
-    <div class="col-auto ms-auto">
-        <div class="d-flex gap-2">
-            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
-                Upload
-            </button>
-        </div>
-    </div>
-    <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header d-flex justify-content-between align-items-center">
-                    <h5 class="modal-title" id="uploadModalLabel">Upload Plan</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="row g-3 align-items-center justify-content-between flex-wrap">
+        <div class="col-auto">
+            <form method="get" class="row g-3 align-items-center">
+                <div class="col-auto d-flex gap-2 align-items-center">
+                    <label class="fs-10 fw-bold">Date:</label>
+                    <input type="date" class="form-control form-control-sm border-dark"
+                           name="FilterDate"
+                           value="@Model.CurrentDate.ToString("yyyy-MM-dd")" />
                 </div>
-                <div class="modal-body">
-                    <div class="mb-3 text-center">
-                        <div class="d-flex justify-content-center gap-2">
-                            <a asp-page-handler="DownloadTemplate" asp-route-type="cu" class="btn btn-sm btn-outline-success d-flex align-items-center gap-1">
-                                <i class="bi bi-file-earmark-excel-fill"></i>
-                                Template CU
-                            </a>
-                            <a asp-page-handler="DownloadTemplate" asp-route-type="cs" class="btn btn-sm btn-outline-info d-flex align-items-center gap-1">
-                                <i class="bi bi-file-earmark-excel-fill"></i>
-                                Template CS
-                            </a>
-                        </div>
+
+                <div class="col-auto d-flex gap-2 align-items-center">
+                    <label class="fs-10 fw-bold">Machine:</label>
+                    <select class="form-select form-select-sm border-dark filter-control" name="FilterMachineCode" asp-for="FilterMachineCode">
+                        <option value="MCH1-01">CU</option>
+                        <option value="MCH1-02">CS</option>
+                    </select>
+                </div>
+
+                <div class="col-auto d-flex gap-2">
+                    <button type="submit" class="btn btn-sm fw-bold fs-6 text-white" style="background-color: rgb(61, 121, 176);">Search</button>
+                    <a href="/Final/ProductionPlanCU" class="btn btn-sm fw-bold fs-6 text-white" style="background-color: rgb(176, 61, 61);">Reset</a>
+                </div>
+            </form>
+        </div>
+        <div class="col-auto ms-auto">
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                    Upload
+                </button>
+            </div>
+        </div>
+        <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header d-flex justify-content-between align-items-center">
+                        <h5 class="modal-title" id="uploadModalLabel">Upload Plan</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <hr />
-                    <form method="post" enctype="multipart/form-data" asp-page-handler="Upload">
-                        <div class="form-group mb-3">
-                            <label for="UploadedFile" class="form-label">Pilih File Plan:</label>
-                            <input type="file" id="UploadedFile" name="UploadedFile" class="form-control" required>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="TargetMachine" class="form-label">Untuk Mesin:</label>
-                            <select id="TargetMachine" name="TargetMachine" class="form-select" required>
-                                <option value="MCH1-01">CU</option>
-                                <option value="MCH1-02">CS</option>
-                            </select>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 form-group mb-3">
-                                <label for="TargetMonth" class="form-label">Untuk Bulan:</label>
-                                <select id="TargetMonth" name="TargetMonth" class="form-select" required>
-                                    @for (int i = 1; i <= 12; i++)
-                                    {
-                                        @* <option value="@i">@CultureInfo.GetCultureInfo("en-US").DateTimeFormat.GetMonthName(i)</option> *@
-                                    }
-                                </select>
-                            </div>
-                            <div class="col-md-6 form-group mb-3">
-                                <label for="TargetYear" class="form-label">Untuk Tahun:</label>
-                                <select id="TargetYear" name="TargetYear" class="form-select" required>
-                                    @for (int i = DateTime.Now.Year; i <= DateTime.Now.Year + 5; i++)
-                                    {
-                                        <option value="@i">@i</option>
-                                    }
-                                </select>
+                    <div class="modal-body">
+                        <div class="mb-3 text-center">
+                            <div class="d-flex justify-content-center gap-2">
+                                <a asp-page-handler="DownloadTemplate" asp-route-type="cu" class="btn btn-sm btn-outline-success d-flex align-items-center gap-1">
+                                    <i class="bi bi-file-earmark-excel-fill"></i>
+                                    Template CU
+                                </a>
+                                <a asp-page-handler="DownloadTemplate" asp-route-type="cs" class="btn btn-sm btn-outline-info d-flex align-items-center gap-1">
+                                    <i class="bi bi-file-earmark-excel-fill"></i>
+                                    Template CS
+                                </a>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-success">Upload dan Simpan</button>
-                    </form>
+                        <hr />
+                        <form method="post" enctype="multipart/form-data" asp-page-handler="Upload">
+                            <div class="form-group mb-3">
+                                <label for="UploadedFile" class="form-label">Pilih File Plan:</label>
+                                <input type="file" id="UploadedFile" name="UploadedFile" class="form-control" required>
+                            </div>
+                            <div class="form-group mb-3">
+                                <label for="TargetMachine" class="form-label">Untuk Mesin:</label>
+                                <select id="TargetMachine" name="TargetMachine" class="form-select" required>
+                                    <option value="MCH1-01">CU</option>
+                                    <option value="MCH1-02">CS</option>
+                                </select>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 form-group mb-3">
+                                    <label for="TargetMonth" class="form-label">Untuk Bulan:</label>
+                                    <select id="TargetMonth" name="TargetMonth" class="form-select" required>
+                                        @for (int i = 1; i <= 12; i++)
+                                        {
+                                            @* <option value="@i">@CultureInfo.GetCultureInfo("en-US").DateTimeFormat.GetMonthName(i)</option> *@
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-6 form-group mb-3">
+                                    <label for="TargetYear" class="form-label">Untuk Tahun:</label>
+                                    <select id="TargetYear" name="TargetYear" class="form-select" required>
+                                        @for (int i = DateTime.Now.Year; i <= DateTime.Now.Year + 5; i++)
+                                        {
+                                            <option value="@i">@i</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-success">Upload dan Simpan</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-   </div>
     <div class="card">
-        <form method="post" asp-page-handler="InsertProductionRecord">
+        <form id="form-production-plan" method="post" asp-page-handler="InsertProductionRecord">
+            <input type="hidden" name="FilterMachineCode" value="@Model.FilterMachineCode" />
+            <input type="hidden" name="TargetDate" value="@Model.CurrentDate.ToString("yyyy-MM-dd")" />
             <div class="card-header">
                 <div class="row">
                     <div class="col-6">
                         <div class="card text-center" style="background-color:#87bbfa">
-                            <p class="pt-2 fs-7">Current Date :</p>
-                            <p class="fs-4 fw-bold">@formattedDate</p>
+                            <p class="pt-2 fs-7">Date :</p>
+                            <p class="fs-4 fw-bold">
+                                @Model.CurrentDate.ToString("dd MMM yyyy", new System.Globalization.CultureInfo("en-US"))
+                            </p>
                         </div>
                     </div>
                     <div class="col-6">
                         <div class="card text-center" style="background-color:#87bbfa">
                             <p class="pt-2 fs-7">Total Quantity :</p>
-                            <p class="fs-4 fw-bold">@(Model.TotalQuantityCU != null ? Model.TotalQuantityCU : "0")</p>
+                            <p class="fs-4 fw-bold">@(Model.GrandTotal != null ? Model.GrandTotal : "0")</p>
                         </div>
                     </div>
                 </div>
@@ -172,7 +168,7 @@
                         <th rowspan="2">Model Name</th>
 
                         <th colspan="2">Plan</th>
-                        
+
                         <th colspan="2">No Of Direct Worker</th>
 
                         <th rowspan="2">Shift</th>
@@ -238,12 +234,12 @@
                             </td>
                             <td>
                                 <div class="m-1">
-                                    <input type="text" class="form-control" name="NoOfDirectWorker" value="@(record?.NoDirectOfWorker.ToString())" placeholder="Worker" autocomplete="off" />
+                                    <input type="number" class="form-control" name="NoOfDirectWorker[@i]" value="@(record?.NoDirectOfWorker.ToString())" placeholder="Worker" autocomplete="off" />
                                 </div>
                             </td>
                             <td>
                                 <div class="m-1">
-                                    <input type="text" class="form-control" name="NoOfDirectWorkerOvertime" value="@(record?.NoDirectOfWorkerOvertime.ToString())" placeholder="Ovt" autocomplete="off" />
+                                    <input type="number" class="form-control" name="NoOfDirectWorkerOvertime[@i]" value="@(record?.NoDirectOfWorkerOvertime.ToString())" placeholder="Ovt" autocomplete="off" />
                                 </div>
                             </td>
                             <td class="align-middle">
@@ -330,7 +326,7 @@
                 </div>
             </div>
             <div class="d-flex align-middle justify-content-center pb-3">
-                <button  id="submit" class="btn btn-primary me-3">Submit</button>
+                <button type="button" id="btn-validate-submit" class="btn btn-primary me-3" onclick="validateAndSubmit()">Submit</button>
                 <a class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delete-all-model">Reset</a>
                 <span id="submitCounter" class="ms-3">Submitted <span id="counter">0</span> time(s)</span>
             </div>
@@ -371,6 +367,8 @@
                 </div>
                 <form method="post" asp-page-handler="UpdateProduct">
                     <input type="hidden" name="Id" />
+                    <input type="hidden" name="TargetDate" value="@Model.CurrentDate.ToString("yyyy-MM-dd")" />
+                    <input type="hidden" name="FilterMachineCode" value="@Model.FilterMachineCode" />
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="" class="col-form-label">Product Name:</label>
@@ -380,6 +378,10 @@
                         <div class="mb-3">
                             <label for="message-text" class="col-form-label">Quantity:</label>
                             <input type="text" class="form-control" name="Quantity" id="quantity" placeholder="Masukkan Quantity" autocomplete="off" />
+                        </div>
+                        <div class="mb-3">
+                            <label for="message-text" class="col-form-label">Overtime:</label>
+                            <input type="text" class="form-control" name="Overtime" id="overtime" placeholder="Masukkan Overtime" autocomplete="off" />
                         </div>
                         <div class="mb-3">
                             <label for="message-text" class="col-form-label">QtyHour:</label>
@@ -454,7 +456,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Save</button> 
+                        <button type="submit" class="btn btn-primary">Save</button>
                     </div>
                 </form>
             </div>
@@ -512,6 +514,7 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/sweetalert2.min.js"></script>
     <script>
+        // 1. Event Listener untuk Pesan SweetAlert (Status Message dari Backend)
         document.addEventListener("DOMContentLoaded", function () {
             var statusMessage = '@TempData["StatusMessage"]';
             var message = '@TempData["Message"]';
@@ -532,6 +535,85 @@
                 });
             }
         });
+
+        // 2. Fungsi Validasi & Submit (Dikeluarkan dari DOMContentLoaded agar bisa dipanggil tombol)
+        function validateAndSubmit() {
+            // HAPUS BARIS INI (Ini penyebab error submit duluan):
+            // document.getElementById('form-production-plan').submit();
+
+            const rows = document.querySelectorAll('#production-table-body tr');
+            let hasData = false;       // Penanda ada minimal 1 baris yang diisi
+            let isValid = true;        // Penanda semua data valid
+            let errorMsg = "";         // Pesan error spesifik
+
+            // Loop setiap baris untuk validasi
+            rows.forEach((row, index) => {
+                // Ambil element input
+                const modelName = row.querySelector('input[name^="ModelName"]').value.trim();
+                const quantity = row.querySelector('input[name^="Quantity"]').value.trim();
+                const worker = row.querySelector('input[name^="NoOfDirectWorker"]').value.trim(); // Worker Normal
+
+                // Cek apakah baris ini dianggap "Diisi" (salah satu kolom terisi)
+                const isRowFilled = modelName !== "" || quantity !== "" || worker !== "";
+
+                if (isRowFilled) {
+                    hasData = true;
+
+                    // Aturan Validasi:
+                    // Jika salah satu diisi, maka KETIGANYA (Model, Qty, Worker) WAJIB diisi.
+                    if (modelName === "" || quantity === "" || worker === "") {
+                        isValid = false;
+                        // Highlight baris yang error (opsional)
+                        row.style.backgroundColor = "#ffe6e6";
+                        errorMsg = `Baris ke-${index + 1} tidak lengkap! \nModel Name, Quantity, dan Worker (Normal) wajib diisi.`;
+                        return; // Stop checking row ini
+                    } else {
+                        // Reset warna jika valid
+                        row.style.backgroundColor = "";
+                    }
+                }
+            });
+
+            // Validasi 1: Tidak ada data sama sekali
+            if (!hasData) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Data Kosong',
+                    text: 'Silakan isi minimal satu baris data (Model, Qty, dan Worker) sebelum submit.',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+
+            // Validasi 2: Data tidak lengkap
+            if (!isValid) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Data Tidak Lengkap',
+                    text: errorMsg,
+                    confirmButtonText: 'Perbaiki'
+                });
+                return;
+            }
+
+            // Jika semua lolos, lakukan Submit Form
+            Swal.fire({
+                title: 'Menyimpan Data...',
+                text: 'Mohon tunggu sebentar',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            const form = document.getElementById('form-production-plan');
+            if (form) {
+                form.submit();
+            } else {
+                console.error("Form tidak ditemukan! Pastikan ID form sudah benar.");
+                Swal.fire('Error', 'Terjadi kesalahan sistem: Form tidak ditemukan.', 'error');
+            }
+        }
     </script>
 
     <script>
@@ -547,84 +629,66 @@
             const tableBody = document.getElementById('production-table-body');
 
             const newRowHtml = `
-            <tr>
-                <th scope="row" class="text-center align-middle row-number">${currentIndex + 1}</th>
+                    <tr>
+                        <th scope="row" class="text-center align-middle row-number">${currentIndex + 1}</th>
 
-                <!-- Original -->
-                <td><input disabled class="form-control m-1" placeholder="-" /></td>
-                <td><input disabled class="form-control m-1" placeholder="-" /></td>
+                        <td>
+                            <div class="input-group m-1">
+                                 <input disabled type="text" class="form-control" placeholder="-" />
+                            </div>
+                        </td>
+                        <td><div class="m-1"><input disabled type="text" class="form-control" placeholder="-" /></div></td>
 
-                <!-- Current Model -->
-                <td>
-                    <div class="input-group m-1 position-relative">
-                        <input type="hidden" name="IdModel[${currentIndex}]" />
-                        <input type="text"
-                               class="form-control productInput"
-                               name="ModelName[${currentIndex}]"
-                               placeholder="Pilih Model"
-                               autocomplete="off" />
-                        <a class="btn btn-primary input-group-text"
-                           data-bs-toggle="modal"
-                           data-bs-target="#new-model-modal">Opsi</a>
-                        <div class="dropdown custom-dropdown"></div>
-                    </div>
-                </td>
+                        <td>
+                            <div class="input-group m-1 position-relative">
+                                <input type="hidden" name="IdModel[${currentIndex}]" value="" />
+                                <input type="text" class="form-control productInput" name="ModelName[${currentIndex}]" placeholder="Pilih Model" autocomplete="off" />
+                                <a class="btn btn-primary input-group-text" data-bs-toggle="modal" data-bs-target="#new-model-modal">Opsi</a>
+                                <div class="dropdown custom-dropdown" style="top: 100%; left: 0; width: 100%;"></div>
+                            </div>
+                        </td>
 
-                <!-- Plan -->
-                <td><input class="form-control m-1" name="Quantity[${currentIndex}]" placeholder="Qty" /></td>
-                <td><input class="form-control m-1" name="Overtime[${currentIndex}]" placeholder="Ovt" /></td>
+                        <td><div class="m-1"><input type="number" class="form-control" name="Quantity[${currentIndex}]" placeholder="Qty" /></div></td>
+                        <td><div class="m-1"><input type="number" class="form-control" name="Overtime[${currentIndex}]" placeholder="Ovt" /></div></td>
 
-                <!-- Worker -->
-                <td><input class="form-control m-1" name="NoOfDirectWorker[${currentIndex}]" placeholder="Normal" /></td>
-                <td><input class="form-control m-1" name="NoOfDirectWorkerOvertime[${currentIndex}]" placeholder="Overtime" /></td>
+                        <td><div class="m-1"><input type="number" class="form-control" name="NoOfDirectWorker[${currentIndex}]" placeholder="Normal" /></div></td>
+                        <td><div class="m-1"><input type="number" class="form-control" name="NoOfDirectWorkerOvertime[${currentIndex}]" placeholder="Overtime" /></div></td>
 
-                <!-- Shift -->
-                <td class="align-middle">
-                    <div class="d-flex flex-wrap gap-2">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox"
-                                   name="Shift[${currentIndex}]" value="1">
-                            <label class="form-check-label">S1</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox"
-                                   name="Shift[${currentIndex}]" value="2">
-                            <label class="form-check-label">S2</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox"
-                                   name="Shift[${currentIndex}]" value="3">
-                            <label class="form-check-label">S3</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox"
-                                   name="Shift[${currentIndex}]" value="NS">
-                            <label class="form-check-label">NS</label>
-                        </div>
-                    </div>
-                </td>
+                        <td class="align-middle">
+                            <div class="d-flex flex-wrap gap-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="Shift[${currentIndex}]" value="1"><label class="form-check-label">S1</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="Shift[${currentIndex}]" value="2"><label class="form-check-label">S2</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="Shift[${currentIndex}]" value="3"><label class="form-check-label">S3</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="Shift[${currentIndex}]" value="NS"><label class="form-check-label">NS</label>
+                                </div>
+                            </div>
+                        </td>
 
-                <!-- Qty/Hour -->
-                <td><input class="form-control m-1" name="QtyHour[${currentIndex}]" placeholder="Qty/Hr" /></td>
+                        <td><div class="m-1"><input type="number" class="form-control" name="QtyHour[${currentIndex}]" placeholder="Qty/Hr" /></div></td>
+                        <td><div class="m-1"><input type="text" class="form-control" name="Hour[${currentIndex}]" value="0" readonly /></div></td>
 
-                <!-- Hour -->
-                <td><input class="form-control m-1" name="Hour[${currentIndex}]" value="0" readonly /></td>
-
-                <!-- Action -->
-                <td class="text-center">
-                    <button type="button" class="btn btn-danger btn-sm"
-                            onclick="removeRow(this)">Del</button>
-                </td>
-            </tr>
-            `;
+                        <td>
+                            <div class="d-flex justify-content-center">
+                                <button type="button" class="btn btn-danger btn-sm mt-1" onclick="removeRow(this)">X</button>
+                            </div>
+                        </td>
+                    </tr>
+                    `;
 
             tableBody.insertAdjacentHTML('beforeend', newRowHtml);
 
+            // Re-attach events
             const newRow = tableBody.lastElementChild;
-            attachDropdownEvent(
-                newRow.querySelector('.productInput'),
-                newRow.querySelector('.custom-dropdown')
-            );
+            const newInput = newRow.querySelector('.productInput');
+            const newDropdown = newRow.querySelector('.custom-dropdown');
+            attachDropdownEvent(newInput, newDropdown);
 
             currentIndex++;
         }
@@ -703,12 +767,12 @@
         }
 
         // Inisialisasi awal untuk baris yang sudah ada dari server
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
             const existingInputs = document.querySelectorAll('.productInput');
             existingInputs.forEach(input => {
                 // Cari div dropdown yang satu level (sibling) dengan input ini
                 const dropdown = input.parentNode.querySelector('.custom-dropdown');
-                if(dropdown) {
+                if (dropdown) {
                     attachDropdownEvent(input, dropdown);
                 }
             });
@@ -724,20 +788,44 @@
             }
         });
 
-                function setModalData(button) {
+        function setModalData(button) {
             const row = button.closest('tr');
 
-            const getVal = name =>
-                row.querySelector(`input[name^="${name}"]`)?.value ?? '';
+            // Fungsi helper untuk ambil value dari input row
+            const getVal = name => {
+                const input = row.querySelector(`input[name^="${name}"]`);
+                return input ? input.value : '';
+            };
 
             const modal = document.querySelector('#edit-model form');
 
+            // 1. Set ID & Basic Data
             modal.querySelector('input[name="Id"]').value = getVal("IdModel");
             modal.querySelector('input[name="ProductName"]').value = getVal("ModelName");
             modal.querySelector('input[name="Quantity"]').value = getVal("Quantity");
+            modal.querySelector('input[name="Overtime"]').value = getVal("Overtime");
             modal.querySelector('input[name="QtyHour"]').value = getVal("QtyHour");
-        }
 
+            // 2. Set Worker Data (Baru)
+            const wNorm = modal.querySelector('input[name="NoOfDirectWorker"]');
+            if (wNorm) wNorm.value = getVal("NoOfDirectWorker");
+
+            const wOvt = modal.querySelector('input[name="NoOfDirectWorkerOvertime"]');
+            if (wOvt) wOvt.value = getVal("NoOfDirectWorkerOvertime");
+
+            // 3. Set Shift Checkboxes
+            // Reset dulu semua checkbox di modal
+            modal.querySelectorAll('.edit-shift').forEach(cb => cb.checked = false);
+
+            // Cari checkbox yang tercentang di ROW tabel
+            const checkedShiftsInRow = row.querySelectorAll('input[name^="Shift"]:checked');
+            checkedShiftsInRow.forEach(cb => {
+                const val = cb.value; // 1, 2, 3, atau NS
+                // Cari checkbox yang sesuai di MODAL dan centang
+                const modalCb = modal.querySelector(`.edit-shift[value="${val}"]`);
+                if (modalCb) modalCb.checked = true;
+            });
+        }
 
         function setDeleteRecordId(recordId) {
             document.getElementById("delete-record-id").value = recordId;
