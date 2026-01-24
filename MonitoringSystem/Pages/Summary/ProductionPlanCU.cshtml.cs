@@ -4,6 +4,9 @@ using Microsoft.Data.SqlClient;
 using System.Text.Json;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq;
+
+
 namespace MonitoringSystem.Pages.Shared
 {
     public class ProductionPlanCUModel : PageModel
@@ -16,17 +19,33 @@ namespace MonitoringSystem.Pages.Shared
 
         public string? ProductNames { get; set; }
         public string? MachineCode { get; set; }
-        public string? TotalQuantityCU { get; set; }
+        public string? TotalQuantity { get; set; }
+        public string? TotalOvertime { get; set; }
+        public string? GrandTotal { get; set; }
         public string? Comment { get; set; }
         public DateTime CurrentDate { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string? FilterMachineCode { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public DateTime? FilterDate { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public List<string>? FilterShifts { get; set; }
+
 
         bool allFieldsEmpty = true;
 
         public void OnGet()
         {
+            if (string.IsNullOrEmpty(FilterMachineCode)) FilterMachineCode = "MCH1-01";
+
+            CurrentDate = FilterDate.HasValue ? FilterDate.Value.Date : DateTime.Now.Date;
+
             getListModelName();
             InsertProductionPlanNow();
-            getTotalQuantityCU();
+            getTotalQuantity();
         }
 
         public IActionResult getListModelName()
@@ -36,16 +55,15 @@ namespace MonitoringSystem.Pages.Shared
                 using (SqlConnection connection = new SqlConnection(dbcon))
                 {
                     connection.Open();
-                    string query = @"SELECT ProductName FROM Product WHERE MachineCode = 'MCH1-01';";
+                    string query = @"SELECT ProductName FROM Product WHERE MachineCode = @MachineCode;";
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
+                        command.Parameters.AddWithValue("@MachineCode", FilterMachineCode ?? "MCH1-01");
                         using (SqlDataReader dataReader = command.ExecuteReader())
                         {
                             while (dataReader.Read())
                             {
-                                ProductName productName = new ProductName();
-                                productName.Name = dataReader.GetString(0);
-                                listProducts.Add(productName);
+                                listProducts.Add(new ProductName { Name = dataReader.GetString(0) });
                             }
                         }
                     }
@@ -60,27 +78,49 @@ namespace MonitoringSystem.Pages.Shared
             }
         }
 
-        public void getTotalQuantityCU()
+        public void getTotalQuantity()
         {
-            CurrentDate = DateTime.Now.Date;
             try
             {
                 using (SqlConnection connection = new SqlConnection(dbcon))
                 {
                     connection.Open();
 
-                    string query = @"SELECT SUM(Quantity) AS Qty FROM ProductionRecords
-                                     INNER JOIN ProductionPlan ON ProductionRecords.PlanId = ProductionPlan.Id
-                                     WHERE ProductionPlan.CurrentDate = @CurrentDate AND ProductionRecords.MachineCode = 'MCH1-01';";
+                    // Ambil SUM Quantity dan SUM Overtime
+                    string query = @"
+                    SELECT 
+                        SUM(PR.Quantity) as TotalNormal, 
+                        SUM(PR.Overtime) as TotalOvt 
+                    FROM ProductionRecords PR
+                    INNER JOIN ProductionPlan PP ON PR.PlanId = PP.Id
+                    WHERE PP.CurrentDate = @CurrentDate 
+                    AND PR.MachineCode = @MachineCode;";
 
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
                         command.Parameters.AddWithValue("@CurrentDate", CurrentDate);
-                        using (SqlDataReader dataReader = command.ExecuteReader())
+                        command.Parameters.AddWithValue("@MachineCode", FilterMachineCode ?? "MCH1-01");
+
+                        using (SqlDataReader reader = command.ExecuteReader())
                         {
-                            while (dataReader.Read())
+                            if (reader.Read())
                             {
-                                TotalQuantityCU = dataReader.GetInt32(0).ToString();
+                                // Ambil nilai (handle null dengan 0)
+                                int normal = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
+                                int ovt = reader.IsDBNull(1) ? 0 : reader.GetInt32(1);
+
+                                // Set Properti
+                                TotalQuantity = normal.ToString();
+                                TotalOvertime = ovt.ToString();
+
+                                // GABUNGKAN (JUMLAHKAN)
+                                GrandTotal = (normal + ovt).ToString();
+                            }
+                            else
+                            {
+                                TotalQuantity = "0";
+                                TotalOvertime = "0";
+                                GrandTotal = "0";
                             }
                         }
                     }
@@ -94,13 +134,13 @@ namespace MonitoringSystem.Pages.Shared
 
         public void InsertProductionPlanNow()
         {
-            CurrentDate = DateTime.Now.Date;
             try
             {
                 using (SqlConnection connection = new SqlConnection(dbcon))
                 {
                     connection.Open();
 
+                    // 1. Pastikan Plan Hari ini ada
                     string queryCheck = @"SELECT COUNT(1) FROM ProductionPlan WHERE CurrentDate = @CurrentDate;";
                     using (SqlCommand commandCheck = new SqlCommand(queryCheck, connection))
                     {
@@ -115,46 +155,73 @@ namespace MonitoringSystem.Pages.Shared
                                 commandInsert.ExecuteNonQuery();
                             }
                         }
-                        else
+                    }
+
+                    // 2. AMBIL DATA (SELECT) DENGAN FILTER
+                    // Kita akan membangun query dinamis berdasarkan FilterShifts
+                    string shiftCondition = "";
+                    if (FilterShifts != null && FilterShifts.Count > 0)
+                    {
+                        // Logic filter shift agak kompleks karena data di DB string (csv). 
+                        // Untuk simpelnya, kita filter di Memory atau asumsikan user ingin melihat semua data mesin tersebut.
+                        // Disini saya filter berdasarkan Machine Code dulu.
+                    }
+
+                    string querySelectAllData = @"
+                        SELECT 
+                            PR.Id, PR.ProductName, PR.Quantity, MD.QtyHour, 
+                            ROUND(CAST(PR.Quantity As float)/CAST(MD.QtyHour AS float), 2) AS Hour, 
+                            PR.Lot, PR.Remark,
+                            PR.Overtime, PR.NoDirectOfWorker, PR.NoDirectOfWorkerOvertime, PR.Shift
+                        FROM ProductionRecords PR
+                        LEFT JOIN MasterData MD ON PR.ProductName = MD.ProductName
+                        INNER JOIN ProductionPlan PP ON PR.PlanId = PP.Id 
+                        WHERE PP.CurrentDate = @CurrentDate 
+                        AND PR.MachineCode = @MachineCode
+                        ORDER BY PR.Id DESC;"; // Order desc agar data baru diatas
+
+                    using (SqlCommand commandSelectAll = new SqlCommand(querySelectAllData, connection))
+                    {
+                        commandSelectAll.Parameters.AddWithValue("@CurrentDate", CurrentDate);
+                        commandSelectAll.Parameters.AddWithValue("@MachineCode", FilterMachineCode ?? "MCH1-01");
+
+                        using (SqlDataReader dataReader = commandSelectAll.ExecuteReader())
                         {
-                            string querySelectAllData = @"SELECT ProductionRecords.Id, ProductionRecords.ProductName, ProductionRecords.Quantity, MasterData.QtyHour, 
-                                                          ROUND(CAST(ProductionRecords.Quantity As float)/CAST(MasterData.QtyHour AS float), 2) AS Hour, ProductionRecords.Lot, 
-                                                          ProductionRecords.Remark FROM ProductionRecords INNER JOIN MasterData ON ProductionRecords.ProductName = MasterData.ProductName
-                                                          INNER JOIN ProductionPlan ON ProductionRecords.PlanId = ProductionPlan.Id WHERE ProductionPlan.CurrentDate = @CurrentDate 
-                                                          AND ProductionRecords.MachineCode = 'MCH1-01'  ORDER BY Id;";
-
-                            using (SqlCommand commandSelectAll = new SqlCommand(querySelectAllData, connection))
+                            while (dataReader.Read())
                             {
-                                commandSelectAll.Parameters.AddWithValue("@CurrentDate", CurrentDate);
-                                using (SqlDataReader dataReader = commandSelectAll.ExecuteReader())
-                                {
-                                    while (dataReader.Read())
-                                    {
-                                        ProductionRecord record = new ProductionRecord();
-                                        record.Id = dataReader.GetInt32(0);
-                                        record.ModelName = dataReader.GetString(1);
-                                        record.Quantity = dataReader.GetInt32(2);
-                                        record.QtyHour = dataReader.GetInt32(3);
-                                        record.Hour = dataReader.GetDouble(4);
-                                        record.Lot = dataReader.GetString(5);
-                                        record.Remark = dataReader.GetString(6);
+                                ProductionRecord record = new ProductionRecord();
+                                record.Id = dataReader.GetInt32(0);
+                                record.ModelName = dataReader.IsDBNull(1) ? "" : dataReader.GetString(1);
+                                record.Quantity = dataReader.IsDBNull(2) ? 0 : dataReader.GetInt32(2);
+                                record.QtyHour = dataReader.IsDBNull(3) ? 0 : dataReader.GetInt32(3);
+                                record.Hour = dataReader.IsDBNull(4) ? 0 : dataReader.GetDouble(4);
+                                record.Lot = dataReader.IsDBNull(5) ? "" : dataReader.GetString(5);
+                                record.Remark = dataReader.IsDBNull(6) ? "" : dataReader.GetString(6);
 
-                                        listRecords.Add(record);
-                                    }
-                                }
+                                // Mapping Kolom Baru
+                                record.Overtime = dataReader.IsDBNull(7) ? null : dataReader.GetInt32(7);
+                                record.NoDirectOfWorker = dataReader.IsDBNull(8) ? null : dataReader.GetInt32(8);
+                                record.NoDirectOfWorkerOvertime = dataReader.IsDBNull(9) ? null : dataReader.GetInt32(9);
+                                record.Shift = dataReader.IsDBNull(10) ? "" : dataReader.GetString(10);
+
+                                listRecords.Add(record);
                             }
+                        }
+                    }
 
-                            string querySelectComment = @"SELECT Comment_CU FROM ProductionPlan WHERE CurrentDate = @CurrentDate";
-                            using (SqlCommand commandSelectComment = new SqlCommand(querySelectComment, connection))
+                    string commentColumn = (FilterMachineCode == "MCH1-02") ? "Comment_CS" : "Comment_CU";
+
+                    // Gunakan variable commentColumn di dalam query
+                    string querySelectComment = $"SELECT {commentColumn} FROM ProductionPlan WHERE CurrentDate = @CurrentDate";
+
+                    using (SqlCommand commandSelectComment = new SqlCommand(querySelectComment, connection))
+                    {
+                        commandSelectComment.Parameters.AddWithValue("@CurrentDate", CurrentDate);
+                        using (SqlDataReader dataComment = commandSelectComment.ExecuteReader())
+                        {
+                            if (dataComment.Read() && !dataComment.IsDBNull(0))
                             {
-                                commandSelectComment.Parameters.AddWithValue("@CurrentDate", CurrentDate);
-                                using (SqlDataReader dataComment = commandSelectComment.ExecuteReader())
-                                {
-                                    while (dataComment.Read())
-                                    {
-                                        Comment = dataComment.GetString(0);
-                                    }
-                                }
+                                Comment = dataComment.GetString(0);
                             }
                         }
                     }
@@ -162,7 +229,7 @@ namespace MonitoringSystem.Pages.Shared
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Exception: " + ex.ToString());
+                Console.WriteLine("Exception Load Data: " + ex.ToString());
             }
         }
 
@@ -204,134 +271,222 @@ namespace MonitoringSystem.Pages.Shared
         }
 
         public IActionResult OnPostInsertProductionRecord(
-            List<int?> IdModel,
-            List<string> ModelName,
-            List<int?> Quantity,
-            List<int?> QtyHour,
-            List<string> Lot,
-            List<string> Remark,
-            string Comment
-        )
+    List<int?> IdModel,
+    List<string> ModelName,
+    List<int?> Quantity,
+    List<int?> QtyHour,
+    List<string> Lot,
+    List<string> Remark,
+    List<int?> Overtime, // Opsional
+    List<int?> NoOfDirectWorker, // Wajib (Normal)
+    List<int?> NoOfDirectWorkerOvertime, // Opsional
+    string Comment,
+    DateTime TargetDate
+)
         {
             int planId = 0;
-            CurrentDate = DateTime.Now.Date;
+            CurrentDate = TargetDate != DateTime.MinValue ? TargetDate : DateTime.Now.Date;
+
+            // Tangkap Filter dari Hidden Input
+            string filterMachine = Request.Form["FilterMachineCode"];
+            if (!string.IsNullOrEmpty(filterMachine)) FilterMachineCode = filterMachine;
+
+            // Flag untuk tracking status simpan
+            bool hasInvalidRows = false;
+            int savedRowsCount = 0;
 
             try
             {
                 using (SqlConnection connection = new SqlConnection(dbcon))
                 {
                     connection.Open();
+
+                    // 1. Dapatkan atau Buat Plan ID
                     string querySelectPlanId = @"SELECT TOP 1 Id FROM ProductionPlan WHERE CurrentDate = @CurrentDate;";
                     using (SqlCommand commandSelectId = new SqlCommand(querySelectPlanId, connection))
                     {
                         commandSelectId.Parameters.AddWithValue("@CurrentDate", CurrentDate);
-                        using (SqlDataReader dataReader = commandSelectId.ExecuteReader())
+                        var res = commandSelectId.ExecuteScalar();
+                        if (res != null) planId = (int)res;
+                        else
                         {
-                            while (dataReader.Read()) { planId = dataReader.GetInt32(0); }
+                            string qInsPlan = @"INSERT INTO ProductionPlan (CurrentDate) VALUES (@CurrentDate); SELECT SCOPE_IDENTITY();";
+                            using (SqlCommand cIns = new SqlCommand(qInsPlan, connection))
+                            {
+                                cIns.Parameters.AddWithValue("@CurrentDate", CurrentDate);
+                                planId = Convert.ToInt32(cIns.ExecuteScalar());
+                            }
                         }
                     }
 
-                    if (!string.IsNullOrEmpty(Comment))
+                    // 2. Update Komentar
+                    if (!string.IsNullOrEmpty(Comment) && planId > 0)
                     {
-                        string queryUpdate = @"UPDATE ProductionPlan SET Comment_CU = @Comment WHERE Id = @Id;";
-                        using (SqlCommand commandUpdate = new SqlCommand(queryUpdate, connection))
+                        string targetColumn = (FilterMachineCode == "MCH1-02") ? "Comment_CS" : "Comment_CU";
+                        string queryUpdate = $"UPDATE ProductionPlan SET {targetColumn} = @Comment WHERE Id = @Id;";
+                        using (SqlCommand cmd = new SqlCommand(queryUpdate, connection))
                         {
-                            commandUpdate.Parameters.AddWithValue("@Id", planId);
-                            commandUpdate.Parameters.AddWithValue("@Comment", Comment);
-
-                            commandUpdate.ExecuteNonQuery();
+                            cmd.Parameters.AddWithValue("@Id", planId);
+                            cmd.Parameters.AddWithValue("@Comment", Comment);
+                            cmd.ExecuteNonQuery();
                         }
                     }
 
+                    // 3. Loop Data (SAFE LOOP)
                     for (int i = 0; i < ModelName.Count; i++)
                     {
-                        bool isModelNameEmpty = string.IsNullOrEmpty(ModelName[i]);
-                        bool isQuantityEmpty = !Quantity[i].HasValue;
-                        bool isLotEmpty = string.IsNullOrEmpty(Lot[i]);
-                        bool isRemarkEmpty = string.IsNullOrEmpty(Remark[i]);
+                        // --- SAFE ACCESSORS ---
+                        string safeModelName = (ModelName != null && ModelName.Count > i) ? ModelName[i] : "";
+                        int? safeQty = (Quantity != null && Quantity.Count > i) ? Quantity[i] : null;
+                        int? safeWorker = (NoOfDirectWorker != null && NoOfDirectWorker.Count > i) ? NoOfDirectWorker[i] : null;
 
-                        if (isModelNameEmpty && isQuantityEmpty && isLotEmpty && isRemarkEmpty)
+                        // Data Opsional / Lainnya
+                        int? safeQtyHour = (QtyHour != null && QtyHour.Count > i) ? QtyHour[i] : null;
+                        string safeLot = (Lot != null && Lot.Count > i) ? Lot[i] : null;
+                        string safeRemark = (Remark != null && Remark.Count > i) ? Remark[i] : null;
+                        int? safeOvertime = (Overtime != null && Overtime.Count > i) ? Overtime[i] : null;
+                        int? safeWorkerOvt = (NoOfDirectWorkerOvertime != null && NoOfDirectWorkerOvertime.Count > i) ? NoOfDirectWorkerOvertime[i] : null;
+
+                        // A. Cek Apakah Baris Kosong Total (User tidak isi apa-apa) -> Skip Silent
+                        bool isRowEmpty = string.IsNullOrEmpty(safeModelName) &&
+                                          (!safeQty.HasValue || safeQty == 0) &&
+                                          (!safeWorker.HasValue);
+
+                        if (isRowEmpty) continue;
+
+                        // B. VALIDASI WAJIB: Product Name, Quantity, dan Worker Normal HARUS ADA
+                        bool isRowValid = !string.IsNullOrEmpty(safeModelName) &&
+                                          (safeQty.HasValue && safeQty > 0) &&
+                                          safeWorker.HasValue;
+
+                        if (!isRowValid)
                         {
+                            // Jika data tidak lengkap, tandai error dan LEWATI baris ini
+                            hasInvalidRows = true;
                             continue;
                         }
 
-                        allFieldsEmpty = false;
-                        if (QtyHour[i].HasValue)
+                        // C. LOGIC SHIFT OTOMATIS (Default "NS")
+                        string shiftValue = "NS"; // Default value
+                        string shiftKey = $"Shift[{i}]";
+                        if (Request.Form.ContainsKey(shiftKey))
                         {
-                            string queryUpdate = @"UPDATE MasterData SET QtyHour = @QtyHour WHERE ProductName = @ProductName;";
-                            using (SqlCommand commandUpdate = new SqlCommand(queryUpdate, connection))
-                            {
-                                commandUpdate.Parameters.AddWithValue("@QtyHour", QtyHour[i]);
-                                commandUpdate.Parameters.AddWithValue("@ProductName", ModelName[i]);
+                            // Jika user mencentang checkbox, gunakan nilainya
+                            shiftValue = string.Join(",", Request.Form[shiftKey]);
+                        }
+                        // Double check jika string kosong, paksa "NS"
+                        if (string.IsNullOrEmpty(shiftValue)) shiftValue = "NS";
 
-                                commandUpdate.ExecuteNonQuery();
+
+                        // D. Update Master Data QtyHour
+                        if (safeQtyHour.HasValue && !string.IsNullOrEmpty(safeModelName))
+                        {
+                            string qUpdMaster = @"UPDATE MasterData SET QtyHour = @QtyHour WHERE ProductName = @ProductName;";
+                            using (SqlCommand cmd = new SqlCommand(qUpdMaster, connection))
+                            {
+                                cmd.Parameters.AddWithValue("@QtyHour", safeQtyHour);
+                                cmd.Parameters.AddWithValue("@ProductName", safeModelName);
+                                cmd.ExecuteNonQuery();
                             }
                         }
 
-                        if (IdModel[i].HasValue)
-                        {
-                            string queryUpdateRecord = @"UPDATE ProductionRecords SET ProductName = @ProductName, Quantity = @Quantity, Lot = @Lot, Remark = @Remark 
-                                                         WHERE Id = @Id";
-                            using (SqlCommand commandUpdatePR = new SqlCommand(queryUpdateRecord, connection))
-                            {
-                                commandUpdatePR.Parameters.AddWithValue("@Id", IdModel[i]);
-                                commandUpdatePR.Parameters.AddWithValue("@ProductName", ModelName[i]);
-                                commandUpdatePR.Parameters.AddWithValue("@Quantity", Quantity[i]);
-                                commandUpdatePR.Parameters.AddWithValue("@Lot", Lot[i] ?? string.Empty);
-                                commandUpdatePR.Parameters.AddWithValue("@Remark", Remark[i] ?? string.Empty);
+                        // E. EKSEKUSI SQL (INSERT / UPDATE)
+                        int? safeId = (IdModel != null && IdModel.Count > i) ? IdModel[i] : null;
 
-                                commandUpdatePR.ExecuteNonQuery();
-                            }
+                        // Tentukan Query
+                        string querySQL = "";
+                        if (safeId.HasValue && safeId > 0)
+                        {
+                            querySQL = @"UPDATE ProductionRecords 
+                                 SET ProductName=@Pn, Quantity=@Qty, Lot=@Lot, Remark=@Rem, 
+                                     Overtime=@Ovt, NoDirectOfWorker=@WNorm, NoDirectOfWorkerOvertime=@WOvt, Shift=@Sh
+                                 WHERE Id=@Id";
                         }
                         else
                         {
-                            string querySelectCode = @"SELECT MachineCode FROM Product WHERE ProductName = @ProductName";
-                            using (SqlCommand commandMachineCode = new SqlCommand(querySelectCode, connection))
-                            {
-                                commandMachineCode.Parameters.AddWithValue("@ProductName", ModelName[i]);
-                                using (SqlDataReader reader = commandMachineCode.ExecuteReader())
-                                {
-                                    while (reader.Read())
-                                    {
-                                        MachineCode = reader.GetString(0);
-                                    }
-                                }
-                            }
-                            string queryInsertRecords = @"INSERT INTO ProductionRecords (PlanID, ProductName, MachineCode, Quantity, Lot, Remark) 
-                                                        VALUES (@PlanID, @ProductName, @MachineCode, @Quantity, @Lot, @Remark);";
-                            using (SqlCommand commandInsertPR = new SqlCommand(queryInsertRecords, connection))
-                            {
-                                commandInsertPR.Parameters.AddWithValue("@PlanID", planId);
-                                commandInsertPR.Parameters.AddWithValue("@ProductName", ModelName[i]);
-                                commandInsertPR.Parameters.AddWithValue("@MachineCode", MachineCode);
-                                commandInsertPR.Parameters.AddWithValue("@Quantity", Quantity[i]);
-                                commandInsertPR.Parameters.AddWithValue("@Lot", Lot[i] ?? string.Empty);
-                                commandInsertPR.Parameters.AddWithValue("@Remark", Remark[i] ?? string.Empty);
+                            querySQL = @"INSERT INTO ProductionRecords 
+                                (PlanID, ProductName, MachineCode, Quantity, Lot, Remark, Overtime, NoDirectOfWorker, NoDirectOfWorkerOvertime, Shift) 
+                                VALUES (@Pid, @Pn, @Mc, @Qty, @Lot, @Rem, @Ovt, @WNorm, @WOvt, @Sh);";
+                        }
 
-                                commandInsertPR.ExecuteNonQuery();
+                        using (SqlCommand cmd = new SqlCommand(querySQL, connection))
+                        {
+                            // Parameter Wajib
+                            cmd.Parameters.AddWithValue("@Pn", safeModelName);
+                            cmd.Parameters.AddWithValue("@Qty", safeQty);
+                            cmd.Parameters.AddWithValue("@WNorm", safeWorker);
+                            cmd.Parameters.AddWithValue("@Sh", shiftValue); // Shift otomatis NS
+
+                            // Parameter Opsional (Bisa Null)
+                            cmd.Parameters.AddWithValue("@Ovt", (object)safeOvertime ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@WOvt", (object)safeWorkerOvt ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@Lot", (object)safeLot ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@Rem", (object)safeRemark ?? DBNull.Value);
+
+                            // Parameter Kondisional (Id vs Insert)
+                            if (safeId.HasValue && safeId > 0)
+                            {
+                                cmd.Parameters.AddWithValue("@Id", safeId);
                             }
+                            else
+                            {
+                                cmd.Parameters.AddWithValue("@Pid", planId);
+                                // Cari Machine Code
+                                string mCode = FilterMachineCode ?? "MCH1-01";
+                                string qM = "SELECT TOP 1 MachineCode FROM Product WHERE ProductName = @Pn";
+                                using (SqlCommand cM = new SqlCommand(qM, connection))
+                                {
+                                    cM.Parameters.AddWithValue("@Pn", safeModelName);
+                                    var resM = cM.ExecuteScalar();
+                                    if (resM != null) mCode = resM.ToString();
+                                }
+                                cmd.Parameters.AddWithValue("@Mc", mCode);
+                            }
+
+                            cmd.ExecuteNonQuery();
+                            savedRowsCount++;
+                        }
+                    } // End Loop
+
+                    // 4. FEEDBACK MESSAGE
+                    if (savedRowsCount > 0)
+                    {
+                        if (hasInvalidRows)
+                        {
+                            // Berhasil sebagian
+                            TempData["StatusMessage"] = "warning"; // Icon Warning (Kuning)
+                            TempData["Message"] = "Data Saved, but some rows were SKIPPED because Product Name, Quantity, or Normal Worker were empty.";
+                        }
+                        else
+                        {
+                            // Berhasil semua
+                            TempData["StatusMessage"] = "success";
+                            TempData["Message"] = "All Production Plan saved successfully!";
+                        }
+                    }
+                    else
+                    {
+                        // Tidak ada yang tersimpan sama sekali
+                        if (hasInvalidRows)
+                        {
+                            TempData["StatusMessage"] = "error";
+                            TempData["Message"] = "Action Failed! Please fill in Product Name, Quantity, and Worker (Normal) for at least one row.";
+                        }
+                        else
+                        {
+                            TempData["StatusMessage"] = "info";
+                            TempData["Message"] = "No data to save.";
                         }
                     }
 
-                    if (allFieldsEmpty)
-                    {
-                        TempData["StatusMessage"] = "error";
-                        TempData["Message"] = "Please input at least one model with quantity.";
-                        return RedirectToPage();
-                    }
-
-                    TempData["StatusMessage"] = "success";
-                    TempData["Message"] = "Production Plan successfully updated!";
-                    return RedirectToPage();
+                    return RedirectToPage(new { FilterDate = CurrentDate.ToString("yyyy-MM-dd"), FilterMachineCode = FilterMachineCode });
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Exception: " + ex.ToString());
-
                 TempData["StatusMessage"] = "error";
-                TempData["Message"] = "Error inserting product: " + ex.Message;
-                return Page();
+                TempData["Message"] = "Error: " + ex.Message;
+                return RedirectToPage(new { FilterDate = CurrentDate.ToString("yyyy-MM-dd"), FilterMachineCode = FilterMachineCode });
             }
         }
 
@@ -369,7 +524,11 @@ namespace MonitoringSystem.Pages.Shared
 
                 TempData["StatusMessage"] = "error";
                 TempData["Message"] = "Error deleting records: " + ex.Message;
-                return Page();
+                return RedirectToPage(new
+                {
+                    FilterDate = CurrentDate.ToString("yyyy-MM-dd"),
+                    FilterMachineCode = FilterMachineCode
+                });
             }
         }
 
@@ -407,7 +566,11 @@ namespace MonitoringSystem.Pages.Shared
                         {
                             TempData["StatusMessage"] = "error";
                             TempData["Message"] = "Data not found";
-                            return RedirectToPage();
+                            return RedirectToPage(new
+                            {
+                                FilterDate = CurrentDate.ToString("yyyy-MM-dd"),
+                                FilterMachineCode = FilterMachineCode
+                            });
                         }
                     }
                 }
@@ -424,12 +587,29 @@ namespace MonitoringSystem.Pages.Shared
 
         public IActionResult OnPostUpdateProduct()
         {
-            string id = Request.Form["id"];
+            string id = Request.Form["Id"];
             string ProductName = Request.Form["ProductName"];
             string Quantity = Request.Form["Quantity"];
             string QtyHour = Request.Form["QtyHour"];
-            string Lot = Request.Form["Lot"];
-            string Remark = Request.Form["Remark"];
+            string Lot = Request.Form["Lot"]; // Jika ada input Lot di modal
+            string Remark = Request.Form["Remark"]; // Jika ada input Remark di modal
+
+            // Tangkap Kolom Baru
+            string Overtime = Request.Form["Overtime"];
+            string NoOfDirectWorker = Request.Form["NoOfDirectWorker"];
+            string NoOfDirectWorkerOvertime = Request.Form["NoOfDirectWorkerOvertime"];
+
+            string targetDateString = Request.Form["TargetDate"];
+            DateTime targetDate = DateTime.Now.Date; // Default fallback
+            if (DateTime.TryParse(targetDateString, out DateTime parsedDate))
+            {
+                targetDate = parsedDate;
+            }
+            string shiftValue = "";
+            if (Request.Form.ContainsKey("Shift"))
+            {
+                shiftValue = string.Join(",", Request.Form["Shift"]);
+            }
 
             try
             {
@@ -437,40 +617,54 @@ namespace MonitoringSystem.Pages.Shared
                 {
                     connection.Open();
 
-                    if (QtyHour != null)
+                    // Update Master Data QtyHour
+                    if (!string.IsNullOrEmpty(QtyHour))
                     {
                         string queryUpdate = @"UPDATE MasterData SET QtyHour = @QtyHour WHERE ProductName = @ProductName;";
                         using (SqlCommand commandUpdate = new SqlCommand(queryUpdate, connection))
                         {
                             commandUpdate.Parameters.AddWithValue("@QtyHour", QtyHour);
                             commandUpdate.Parameters.AddWithValue("@ProductName", ProductName);
-
                             commandUpdate.ExecuteNonQuery();
                         }
-
                     }
 
-                    string query = @"UPDATE ProductionRecords SET ProductName = @ProductName, Quantity = @Quantity, Lot = @Lot, Remark = @Remark WHERE Id = @Id";
+                    // Update ProductionRecords (LENGKAP)
+                    string query = @"UPDATE ProductionRecords 
+                             SET ProductName = @ProductName, 
+                                 Quantity = @Quantity,
+                                 Overtime = @Overtime,
+                                 NoDirectOfWorker = @WNorm,
+                                 NoDirectOfWorkerOvertime = @WOvt,
+                                 Shift = @Shift
+                             WHERE Id = @Id";
+
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
                         command.Parameters.AddWithValue("@Id", id);
-                        command.Parameters.AddWithValue("@ProductName", ProductName ?? string.Empty);
-                        command.Parameters.AddWithValue("@Quantity", Quantity ?? string.Empty);
-                        command.Parameters.AddWithValue("@Lot", Lot ?? string.Empty);
-                        command.Parameters.AddWithValue("@Remark", Remark ?? string.Empty);
+                        command.Parameters.AddWithValue("@ProductName", ProductName ?? (object)DBNull.Value);
+                        command.Parameters.AddWithValue("@Quantity", Quantity ?? (object)DBNull.Value);
+                        command.Parameters.AddWithValue("@Overtime", Overtime ?? (object)DBNull.Value);
+                        command.Parameters.AddWithValue("@WNorm", NoOfDirectWorker ?? (object)DBNull.Value);
+                        command.Parameters.AddWithValue("@WOvt", NoOfDirectWorkerOvertime ?? (object)DBNull.Value);
+                        command.Parameters.AddWithValue("@Shift", shiftValue);
 
                         command.ExecuteNonQuery();
                     }
                 }
                 TempData["StatusMessage"] = "success";
-                TempData["Message"] = "Production Plan successfully updated!";
-                return RedirectToPage();
+                TempData["Message"] = "Data successfully updated!";
+                return RedirectToPage(new { FilterDate = targetDate.ToString("yyyy-MM-dd"), FilterMachineCode = FilterMachineCode });
             }
             catch (Exception ex)
             {
                 TempData["StatusMessage"] = "error";
                 TempData["Message"] = "Error updating data: " + ex.Message;
-                return Page();
+                return RedirectToPage(new
+                {
+                    FilterDate = targetDate.ToString("yyyy-MM-dd"),
+                    FilterMachineCode = FilterMachineCode
+                });
             }
         }
 
@@ -559,6 +753,10 @@ namespace MonitoringSystem.Pages.Shared
             public int Id { get; set; }
             public string? ModelName { get; set; }
             public int? Quantity { get; set; }
+            public int? Overtime { get; set; }
+            public int? NoDirectOfWorker { get; set; }
+            public int? NoDirectOfWorkerOvertime { get; set; }
+            public string? Shift { get; set; }
             public int? QtyHour { get; set; }
             public double? Hour { get; set; }
             public string? Lot { get; set; }
