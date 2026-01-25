@@ -8,7 +8,7 @@ namespace MonitoringSystem.Pages.Quality
 {
     public class QualityModel : PageModel
     {
-        public string connectionString = "Server=10.83.33.103;Database=PROMOSYS;User Id=sa;Password=sa;Trusted_Connection=False;Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=True";
+        public string connectionString = "Server=10.83.33.103;User Id=sa;Password=sa;Database=PROMOSYS;Trusted_Connection=False;TrustServerCertificate=True;Encrypt=False;MultipleActiveResultSets=True";
 
         public int TotalPlan { get; set; }
         public int DefectQuantity { get; set; }
