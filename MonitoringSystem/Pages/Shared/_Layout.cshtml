@@ -515,6 +515,43 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
+@*     <script>
+$(document).ready(function () {
+    var currentPath = window.location.pathname.toLowerCase();
+
+            // Normalisasi currentPath: hilangkan '/index' di akhir jika ada, agar konsisten
+            if (currentPath.endsWith('/index')) {
+                currentPath = currentPath.substring(0, currentPath.length - 6);
+            }
+            // Jika kosong setelah dihapus index (misal root), jadikan '/'
+            if (currentPath === '') currentPath = '/';
+
+            // 2. Reset semua active class
+            $('#bdSidebar .nav-item a').removeClass('active');
+
+            // 3. Cek setiap link
+            $('#bdSidebar .nav-item a').each(function () {
+                var $this = $(this);
+                var href = $this.attr('href');
+
+                // Skip jika href tidak valid
+                if (!href || href === '#') return;
+
+                // 4. Bersihkan href dari '~' dan '/index' agar bisa dibandingkan apple-to-apple
+                // Contoh: "~/LossTime/index" menjadi "/losstime"
+                var linkPath = href.replace('~', '').toLowerCase();
+
+                if (linkPath.endsWith('/index')) {
+                    linkPath = linkPath.substring(0, linkPath.length - 6);
+                }
+                if (linkPath === '') linkPath = '/';
+
+        if (pageName && currentPath.includes(pageName)) {
+            $(this).addClass('active');
+        }
+    });
+});
+</script> *@
     <script>
         $(document).ready(function () {
             // 1. Ambil path saat ini dan bersihkan
@@ -562,7 +599,6 @@
             });
         });
     </script>
-
     <script>
         function updateDateTime() {
             const now = new Date();
