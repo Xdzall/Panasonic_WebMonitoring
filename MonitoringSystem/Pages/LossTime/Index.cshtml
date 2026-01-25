@@ -1,10 +1,13 @@
-﻿@page
+@page
+@using System.Globalization;
 @model MonitoringSystem.Pages.LossTime.IndexModel
 @{
     ViewData["Title"] = "Loss Time";
+    /* Pa Adan Disini */
 }
 
 <style>
+    /*Kita dikejar pa Daniel Februari minggu pertama*/
 
 
 /* CONTAINER FLUID PADDING - SAMA DENGAN PRODUCTION REPORT */
@@ -382,61 +385,65 @@ input[type="checkbox"]:checked + .shift-button {
     <div class="panamon-bottomm-line"></div>
 
     <div class="filter-content">
-        <form method="post" asp-page-handler="Filter" class="d-flex flex-wrap align-items-center gap-3">
-            <div class="d-flex align-items-center gap-2">
-                <label class="mb-0">Line</label>
-                <select class="form-select" style="width: 60px;" id="MachineLine" name="MachineLine" asp-for="MachineLine">
-                    <option value="All">All</option>
-                    <option value="MCH1-01">CU</option>
-                    <option value="MCH1-02">CS</option>
-                </select>
-            </div>
+            <form method="post" asp-page-handler="Filter" class="d-flex flex-wrap align-items-center gap-3">
+                <div class="d-flex align-items-center gap-2">
+                    <label class="mb-0">Line</label>
+                    <select class="form-select" style="width: 60px;" id="MachineLine" name="MachineLine" asp-for="MachineLine">
+                        <option value="All">All</option>
+                        <option value="MCH1-01">CU</option>
+                        <option value="MCH1-02">CS</option>
+                    </select>
+                </div>
 
-            <div class="d-flex align-items-center gap-2">
-                <label class="mb-0">Month</label>
-                <select class="form-select" style="width: 110px;" id="SelectedMonth" name="SelectedMonth" asp-for="SelectedMonth">
-                    @for (int i = 1; i <= 12; i++)
-                    {
-                                <option value="@i">@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(i)</option>
-                    }
-                </select>
-            </div>
+                <div class="d-flex align-items-center gap-2">
+                    <label class="mb-0">Month</label>
+                    <select class="form-select" style="width: 110px;" id="SelectedMonth" name="SelectedMonth" asp-for="SelectedMonth">
+                        @for (int i = 1; i <= 12; i++)
+                        {
+                          <option value="@i">@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(i)</option>
+                        }
+                    </select>
+                </div>
 
-            <div class="d-flex align-items-center gap-2">
-                <label class="mb-0">Year</label>
-                <select class="form-select" style="width: 80px;" id="SelectedYear" name="SelectedYear" asp-for="SelectedYear">
-                    @for (int i = DateTime.Now.Year; i >= 2020; i--)
-                    {
-                                <option value="@i">@i</option>
-                    }
-                </select>
-            </div>
-<div class="d-flex align-items-center gap-2">
-    <label class="mb-0">Shift</label>
-    <div class="d-flex gap-2 shift-buttons-container">
-        <input type="checkbox" id="Shift1" name="SelectedShifts" value="1" 
-                    @(Model.SelectedShifts != null && Model.SelectedShifts.Contains("1") ? "checked" : "") 
-               style="display: none;">
-        <label for="Shift1" class="shift-button">1</label>
+                <div class="d-flex align-items-center gap-2">
+                    <label class="mb-0">Year</label>
+                    <select class="form-select" style="width: 80px;" id="SelectedYear" name="SelectedYear" asp-for="SelectedYear">
+                    @for (int i = DateTime.Now.Year - 3; i <= DateTime.Now.Year + 5; i++)
+                        {
+                          <option value="@i">@i</option>
+                        }
+                    </select>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <label class="mb-0">Shift</label>
+                            <div class="d-flex gap-2 shift-buttons-container">
+                                <input type="checkbox" id="Shift1" name="SelectedShifts" value="1" 
+                                            @(Model.SelectedShifts != null && Model.SelectedShifts.Contains("1") ? "checked" : "") 
+                                       style="display: none;">
+                                <label for="Shift1" class="shift-button">1</label>
 
-        <input type="checkbox" id="Shift2" name="SelectedShifts" value="2" 
-                    @(Model.SelectedShifts != null && Model.SelectedShifts.Contains("2") ? "checked" : "") 
-               style="display: none;">
-        <label for="Shift2" class="shift-button">2</label>
+                                <input type="checkbox" id="Shift2" name="SelectedShifts" value="2" 
+                                            @(Model.SelectedShifts != null && Model.SelectedShifts.Contains("2") ? "checked" : "") 
+                                       style="display: none;">
+                                <label for="Shift2" class="shift-button">2</label>
 
-        <input type="checkbox" id="Shift3" name="SelectedShifts" value="3" 
-                    @(Model.SelectedShifts != null && Model.SelectedShifts.Contains("3") ? "checked" : "") 
-               style="display: none;">
-        <label for="Shift3" class="shift-button">3</label>
-    </div>
-</div>
+                                <input type="checkbox" id="Shift3" name="SelectedShifts" value="3" 
+                                            @(Model.SelectedShifts != null && Model.SelectedShifts.Contains("3") ? "checked" : "") 
+                                       style="display: none;">
+                                <label for="Shift3" class="shift-button">3</label>
+                             </div>
+                </div>
 
-            <button type="submit" class="btn btn-primary">Search</button>
-           <button type="submit" asp-page-handler="ExportExcel" class="btn btn-success">
-    <i class="fas fa-file-excel me-1"></i> Export CSV
-</button>
-            <button type="submit" asp-page-handler="Reset" class="btn btn-danger">Reset</button>
-        </form>
+              <button type="submit" class="btn btn-primary">Search</button>
+               <button type="submit" asp-page-handler="ExportExcel" class="btn btn-success">
+                     <i class="fas fa-file-excel me-1"></i> Export CSV
+                </button>
+                <button type="submit" asp-page-handler="Reset" class="btn btn-danger">Reset</button>
+
+                <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                    <i class="fas fa-file-excel me-2"></i>Upload Actual Loss
+                </button>
+            </form>
     </div>
 </div>
 
@@ -577,6 +584,67 @@ input[type="checkbox"]:checked + .shift-button {
             <div class="card-body">
                 <canvas id="dailyLossChart" style="width: 100%; height: 350px;"></canvas>
             </div>
+        </div>
+    </div>
+</div>
+<!-- UPLOAD MODAL -->
+<div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="uploadModalLabel"><i class="fas fa-file-upload"></i> Upload Actual Loss Data Daily</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" enctype="multipart/form-data" asp-page-handler="ImportExcelActual">
+                <div class="modal-body">
+                   @*  <input type="hidden" name="SelectedYear" value="@Model.SelectedYear" />
+                    <input type="hidden" name="MachineLine" value="@Model.MachineLine" /> *@
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">1. Choose Excel File</label>
+                        <input type="file" name="UploadedExcel" class="form-control" accept=".xlsx" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">2. Select Target Machine for Actual Data</label>
+                        <select name="UploadMachineLine" class="form-select" required>
+                            <option value="MCH1-01">MCH1-01 (CU)</option>
+                            <option value="MCH1-02">MCH1-02 (CS)</option>
+                        </select>
+                        <div class="form-text text-muted">You must specify which machine this file belongs to.</div>
+                    </div>
+                   
+                    <hr />
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="TargetMonth" class="form-label">Untuk Bulan:</label>
+                            <select id="TargetMonth" name="TargetMonth" class="form-select" required>
+                                @for (int i = 1; i <= 12; i++)
+                                {
+                                    <option value="@i">@CultureInfo.GetCultureInfo("en-US").DateTimeFormat.GetMonthName(i)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="TargetYear" class="form-label">Untuk Tahun:</label>
+                            <select id="TargetYear" name="TargetYear" class="form-select" required>
+                                @for (int i = DateTime.Now.Year - 3; i <= DateTime.Now.Year + 5; i++)
+                                {
+                                    <option value="@i">@i</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="small text-muted">Need the format?</span>
+                        <a asp-page-handler="DownloadTemplateActualLoss" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-download"></i> Download Template
+                        </a>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-small text-white" style="background-color: rgb(25, 135, 84);">Import Actual Loss Data</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

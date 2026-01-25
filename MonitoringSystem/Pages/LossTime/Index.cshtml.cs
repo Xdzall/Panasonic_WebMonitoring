@@ -9,6 +9,9 @@ using ClosedXML.Excel;
 using MonitoringSystem.Data;
 using System.Text.Json;
 using System.Text;
+using MonitoringSystem.Models;
+using OfficeOpenXml;
+using System.Globalization;
 
 namespace MonitoringSystem.Pages.LossTime
 {
@@ -39,6 +42,10 @@ namespace MonitoringSystem.Pages.LossTime
         public int SelectedMonth { get; set; } = DateTime.Today.Month;
         [BindProperty]
         public int SelectedYear { get; set; } = DateTime.Today.Year;
+        [BindProperty]
+        public int TargetYear { get; set; } = DateTime.Today.Year;
+        [BindProperty]
+        public int TargetMonth { get; set; } = DateTime.Today.Month;
 
         [BindProperty]
         public string MachineLine { get; set; } = "All";
@@ -57,6 +64,11 @@ namespace MonitoringSystem.Pages.LossTime
         public string AdditionalBreakTime2Start { get; set; } = "";
         [BindProperty]
         public string AdditionalBreakTime2End { get; set; } = "";
+        [BindProperty]
+        public IFormFile UploadedExcel { get; set; }
+        [BindProperty]
+        public string UploadMachineLine { get; set; }
+
 
         public bool IsFiltering { get; set; } = false;
         public Dictionary<string, int> CategorySummary { get; set; } = new Dictionary<string, int>();
@@ -505,6 +517,107 @@ namespace MonitoringSystem.Pages.LossTime
                     return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"LossTime_{StartSelectedDate:yyyyMMdd}-{EndSelectedDate:yyyyMMdd}.xlsx");
                 }
             }
+        }
+        public IActionResult OnGetDownloadTemplateActualLoss()
+        {
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "data", "ActualLossTime", "Template_LossTime_Actual.xlsx");
+            if (!System.IO.File.Exists(filePath)) return NotFound("File template tidak ditemukan di server.");
+            var bytes = System.IO.File.ReadAllBytes(filePath);
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Template_LossTime_Actual.xlsx");
+        }
+
+        private string NormalizeCategoryName(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return "Uncategorized";
+
+            TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
+            return textInfo.ToTitleCase(input.Trim().ToLower());
+        }
+
+        public async Task<IActionResult> OnPostImportExcelActualAsync()
+        {
+            // ... (Bagian validasi file dan input tetap sama) ...
+
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+            try
+            {
+                using (var stream = new MemoryStream())
+                {
+                    await UploadedExcel.CopyToAsync(stream);
+                    using (var package = new ExcelPackage(stream))
+                    {
+                        var sheet = package.Workbook.Worksheets[0];
+                        int rowCount = sheet.Dimension.Rows;
+
+                        var newActuals = new List<LossTimeActual>();
+
+                        // 2. Loop Baris (Mulai dari Baris 3: Quality Trouble)
+                        for (int row = 3; row <= rowCount; row++)
+                        {
+                            var catName = sheet.Cells[row, 2].Value?.ToString()?.Trim();
+
+                            // Lewati baris header atau sub-total di Excel
+                            if (string.IsNullOrEmpty(catName) ||
+                                catName.ToLower().Contains("loss (min)") ||
+                                catName.ToLower().Contains("loss category")) continue;
+
+                            catName = NormalizeCategoryName(catName);
+
+                            // 3. Loop Kolom (Tanggal 1 s/d 31)
+                            for (int day = 1; day <= 31; day++)
+                            {
+                                int col = 2 + day; // Kolom 3 (C) adalah tanggal 1
+                                var cellValue = sheet.Cells[row, col].Value;
+
+                                if (cellValue != null && double.TryParse(cellValue.ToString(), out double actualMinutes))
+                                {
+                                    // Kita masukkan semua data, termasuk 0 jika diperlukan untuk reporting
+                                    // atau gunakan 'if (actualMinutes == 0) continue;' jika ingin database hemat storage
+
+                                    // Validasi apakah hari tersebut ada di bulan yang dipilih (misal cegah tgl 31 Feb)
+                                    if (day <= DateTime.DaysInMonth(TargetYear, TargetMonth))
+                                    {
+                                        newActuals.Add(new LossTimeActual
+                                        {
+                                            Category = catName,
+                                            MachineLine = this.UploadMachineLine,
+                                            Day = day,              // Sesuai Model Anda
+                                            Month = TargetMonth,  // Sesuai Model Anda
+                                            Year = TargetYear,    // Sesuai Model Anda
+                                            Minutes = actualMinutes, // Sesuai Model Anda
+                                            CreatedAt = DateTime.Now // Otomatis terisi DateTime.Now
+                                        });
+                                    }
+                                }
+                            }
+                        }
+
+                        // 4. Hapus Data Lama agar tidak double (Berdasarkan Line, Day, Month, Year)
+                        // Karena model tidak punya kolom 'Date', kita filter berdasarkan 3 kolom tersebut
+                        var dataToDelete = _context.LossTimeActuals
+                            .Where(x => x.MachineLine == this.UploadMachineLine &&
+                                        x.Month == TargetMonth &&
+                                        x.Year == TargetYear);
+
+                        _context.LossTimeActuals.RemoveRange(dataToDelete);
+
+                        // 5. Simpan ke Database
+                        if (newActuals.Any())
+                        {
+                            _context.LossTimeActuals.AddRange(newActuals);
+                            await _context.SaveChangesAsync();
+                            TempData["Success"] = $"Berhasil import {newActuals.Count} data Actual untuk {UploadMachineLine} (Bulan {TargetMonth}).";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Gagal Import: " + ex.Message;
+            }
+
+            return RedirectToPage(new { TargetYear, TargetMonth, MachineLine });
         }
     }
 

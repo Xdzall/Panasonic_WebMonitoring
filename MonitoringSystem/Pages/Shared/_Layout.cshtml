@@ -515,39 +515,90 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script>
+@*     <script>
 $(document).ready(function () {
     var currentPath = window.location.pathname.toLowerCase();
 
-    // Hapus semua active dulu
-    $('#bdSidebar .nav-item a').removeClass('active');
+            // Normalisasi currentPath: hilangkan '/index' di akhir jika ada, agar konsisten
+            if (currentPath.endsWith('/index')) {
+                currentPath = currentPath.substring(0, currentPath.length - 6);
+            }
+            // Jika kosong setelah dihapus index (misal root), jadikan '/'
+            if (currentPath === '') currentPath = '/';
 
-    // Cek tiap link
-    $('#bdSidebar .nav-item a').each(function() {
-        var linkPath = $(this).attr('href');
+            // 2. Reset semua active class
+            $('#bdSidebar .nav-item a').removeClass('active');
 
-        // Skip kalau link modal
-        if (!linkPath || linkPath === '#') return;
+            // 3. Cek setiap link
+            $('#bdSidebar .nav-item a').each(function () {
+                var $this = $(this);
+                var href = $this.attr('href');
 
-        // Bersihkan path
-        var cleanLink = linkPath.toLowerCase().replace('~/', '/');
+                // Skip jika href tidak valid
+                if (!href || href === '#') return;
 
-        // Khusus untuk home page
-        if (cleanLink === '/' && (currentPath === '/' || currentPath === '/index')) {
-            $(this).addClass('active');
-            return;
-        }
+                // 4. Bersihkan href dari '~' dan '/index' agar bisa dibandingkan apple-to-apple
+                // Contoh: "~/LossTime/index" menjadi "/losstime"
+                var linkPath = href.replace('~', '').toLowerCase();
 
-        // Untuk halaman lainnya, cek apakah URL mengandung nama halaman
-        var pageName = cleanLink.split('/').filter(x => x && x !== 'index')[0];
+                if (linkPath.endsWith('/index')) {
+                    linkPath = linkPath.substring(0, linkPath.length - 6);
+                }
+                if (linkPath === '') linkPath = '/';
 
         if (pageName && currentPath.includes(pageName)) {
             $(this).addClass('active');
         }
     });
 });
-</script>
+</script> *@
+    <script>
+        $(document).ready(function () {
+            // 1. Ambil path saat ini dan bersihkan
+            var currentPath = window.location.pathname.toLowerCase();
 
+            // Normalisasi currentPath: hilangkan '/index' di akhir jika ada, agar konsisten
+            if (currentPath.endsWith('/index')) {
+                currentPath = currentPath.substring(0, currentPath.length - 6);
+            }
+            // Jika kosong setelah dihapus index (misal root), jadikan '/'
+            if (currentPath === '') currentPath = '/';
+
+            // 2. Reset semua active class
+            $('#bdSidebar .nav-item a').removeClass('active');
+
+            // 3. Cek setiap link
+            $('#bdSidebar .nav-item a').each(function () {
+                var $this = $(this);
+                var href = $this.attr('href');
+
+                // Skip jika href tidak valid
+                if (!href || href === '#') return;
+
+                // 4. Bersihkan href dari '~' dan '/index' agar bisa dibandingkan apple-to-apple
+                // Contoh: "~/LossTime/index" menjadi "/losstime"
+                var linkPath = href.replace('~', '').toLowerCase();
+
+                if (linkPath.endsWith('/index')) {
+                    linkPath = linkPath.substring(0, linkPath.length - 6);
+                }
+                if (linkPath === '') linkPath = '/';
+
+                // 5. LOGIKA BARU (EXACT MATCH & PARENT CHECK)
+
+                // Cek 1: Apakah path SAMA PERSIS? (Contoh: /losstime == /losstime)
+                if (currentPath === linkPath) {
+                    $this.addClass('active');
+                }
+                // Cek 2: Apakah ini sub-halaman? (Contoh: /losstime/create harus mengaktifkan /losstime)
+                // PENTING: Kita tambah '/' setelah linkPath agar tidak salah baca nama folder yang mirip
+                // Ini mencegah "/losstimereport" dianggap anak dari "/losstime"
+                else if (currentPath.startsWith(linkPath + '/')) {
+                    $this.addClass('active');
+                }
+            });
+        });
+    </script>
     <script>
         function updateDateTime() {
             const now = new Date();
