@@ -20,7 +20,7 @@ namespace MonitoringSystem.Pages.Summary
 
     public class SummaryModel : PageModel
     {
-        public string connectionString = "Server=XDZALL\\SQLEXPRESS;Database=PROMOSYS;Trusted_Connection=True;Encrypt=False";
+        public string connectionString = "Server=10.83.33.103;User Id=sa;Password=sa;Database=PROMOSYS;Trusted_Connection=False;TrustServerCertificate=True;Encrypt=False";
         public string errorMessage = "";
 
         // Properti publik untuk menampung semua data mentah

@@ -10,7 +10,7 @@ namespace MonitoringSystem.Pages.Shared
         public List<ProductName> listProducts = new List<ProductName>();
         public List<ProductionRecord> listRecords = new List<ProductionRecord>();
         //public string dbcon = "Data Source=DESKTOP-2VG5S76\\VE_SERVER;Initial Catalog=PROMOSYS;User ID=sa;Password=gerrys0803;";
-        public string dbcon = "Server=XDZALL\\SQLEXPRESS;Database=PROMOSYS;Trusted_Connection=True;Encrypt=False";
+        public string dbcon = "Server=10.83.33.103;User Id=sa;Password=sa;Database=PROMOSYS;Trusted_Connection=False;TrustServerCertificate=True;Encrypt=False";
         //public string dbcon = "Data Source=DESKTOP-NBPATD6\\MSSQLSERVERR;trusted_connection=true;trustservercertificate=True;Database=PROMOSYS;Integrated Security=True;Encrypt=False";
 
         public string? ProductNames { get; set; }

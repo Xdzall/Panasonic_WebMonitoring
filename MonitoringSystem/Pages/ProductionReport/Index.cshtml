@@ -825,7 +825,7 @@ input[type="checkbox"]:checked + .shift-button {
                             <div class="col-md-6 mb-3">
                                 <label for="TargetYear" class="form-label">Untuk Tahun:</label>
                                 <select id="TargetYear" name="TargetYear" class="form-select" required>
-                                    @for (int i = DateTime.Now.Year; i <= DateTime.Now.Year + 5; i++)
+                                    @for (int i = DateTime.Now.Year - 3; i <= DateTime.Now.Year + 5; i++)
                                     {
                                                         <option value="@i">@i</option>
                                     }
