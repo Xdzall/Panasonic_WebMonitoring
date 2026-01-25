@@ -61,7 +61,7 @@
 
                 <div class="col-auto d-flex gap-2">
                     <button type="submit" class="btn btn-sm fw-bold fs-6 text-white" style="background-color: rgb(61, 121, 176);">Search</button>
-                    <a href="/Final/ProductionPlanCU" class="btn btn-sm fw-bold fs-6 text-white" style="background-color: rgb(176, 61, 61);">Reset</a>
+                    <a href="/Summary/ProductionPlanCU" class="btn btn-sm fw-bold fs-6 text-white" style="background-color: rgb(176, 61, 61);">Reset</a>
                 </div>
             </form>
         </div>
@@ -76,56 +76,71 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header d-flex justify-content-between align-items-center">
-                        <h5 class="modal-title" id="uploadModalLabel">Upload Plan</h5>
+                        <h5 class="modal-title" id="uploadModalLabel">Upload Monthly Plan</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
+                        @* Bagian Download Template *@
                         <div class="mb-3 text-center">
                             <div class="d-flex justify-content-center gap-2">
+                                @* Pastikan backend OnGetDownloadTemplate sudah mendukung format baru *@
                                 <a asp-page-handler="DownloadTemplate" asp-route-type="cu" class="btn btn-sm btn-outline-success d-flex align-items-center gap-1">
                                     <i class="bi bi-file-earmark-excel-fill"></i>
-                                    Template CU
-                                </a>
-                                <a asp-page-handler="DownloadTemplate" asp-route-type="cs" class="btn btn-sm btn-outline-info d-flex align-items-center gap-1">
-                                    <i class="bi bi-file-earmark-excel-fill"></i>
-                                    Template CS
+                                    Template
                                 </a>
                             </div>
                         </div>
                         <hr />
+
+                        @* Form Upload *@
                         <form method="post" enctype="multipart/form-data" asp-page-handler="Upload">
+                            @* 1. File Input (Sesuai dengan IFormFile UploadedFile di Backend) *@
                             <div class="form-group mb-3">
-                                <label for="UploadedFile" class="form-label">Pilih File Plan:</label>
-                                <input type="file" id="UploadedFile" name="UploadedFile" class="form-control" required>
+                                <label for="UploadedFile" class="form-label fw-bold">Pilih File Excel:</label>
+                                <input type="file" id="UploadedFile" name="UploadedFile" class="form-control" accept=".xlsx, .xls" required>
                             </div>
+
+                            @* 2. Target Machine (Sesuai dengan string TargetMachine di Backend) *@
                             <div class="form-group mb-3">
-                                <label for="TargetMachine" class="form-label">Untuk Mesin:</label>
+                                <label for="TargetMachine" class="form-label fw-bold">Untuk Mesin:</label>
                                 <select id="TargetMachine" name="TargetMachine" class="form-select" required>
                                     <option value="MCH1-01">CU</option>
                                     <option value="MCH1-02">CS</option>
                                 </select>
                             </div>
+
                             <div class="row">
+                                @* 3. Target Month (Sesuai dengan int TargetMonth di Backend) *@
                                 <div class="col-md-6 form-group mb-3">
-                                    <label for="TargetMonth" class="form-label">Untuk Bulan:</label>
+                                    <label for="TargetMonth" class="form-label fw-bold">Bulan:</label>
                                     <select id="TargetMonth" name="TargetMonth" class="form-select" required>
                                         @for (int i = 1; i <= 12; i++)
                                         {
-                                            @* <option value="@i">@CultureInfo.GetCultureInfo("en-US").DateTimeFormat.GetMonthName(i)</option> *@
+                                            // Menampilkan Nama Bulan (Januari, Februari...) tapi mengirim Value Angka (1, 2...)
+                                            <option value="@i" selected="@(i == DateTime.Now.Month ? "selected" : null)">
+                                                @System.Globalization.CultureInfo.GetCultureInfo("en-US").DateTimeFormat.GetMonthName(i)
+                                            </option>
                                         }
                                     </select>
                                 </div>
+
+                                @* 4. Target Year (Sesuai dengan int TargetYear di Backend) *@
                                 <div class="col-md-6 form-group mb-3">
-                                    <label for="TargetYear" class="form-label">Untuk Tahun:</label>
+                                    <label for="TargetYear" class="form-label fw-bold">Tahun:</label>
                                     <select id="TargetYear" name="TargetYear" class="form-select" required>
-                                        @for (int i = DateTime.Now.Year; i <= DateTime.Now.Year + 5; i++)
+                                        @for (int i = DateTime.Now.Year - 3; i <= DateTime.Now.Year + 1; i++)
                                         {
-                                            <option value="@i">@i</option>
+                                            <option value="@i" selected="@(i == DateTime.Now.Year ? "selected" : null)">@i</option>
                                         }
                                     </select>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-success">Upload dan Simpan</button>
+
+                            <div class="d-grid gap-2 mt-3">
+                                <button type="submit" class="btn btn-success fw-bold">
+                                    <i class="bi bi-upload"></i> Upload
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>

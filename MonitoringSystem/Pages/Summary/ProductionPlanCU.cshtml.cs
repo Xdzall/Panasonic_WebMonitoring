@@ -2,15 +2,15 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Data.SqlClient;
 using System.Text.Json;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Linq;
+using OfficeOpenXml;
 
 
 namespace MonitoringSystem.Pages.Shared
 {
     public class ProductionPlanCUModel : PageModel
     {
+        private readonly IWebHostEnvironment _webHostEnvironment;
+
         public List<ProductName> listProducts = new List<ProductName>();
         public List<ProductionRecord> listRecords = new List<ProductionRecord>();
         //public string dbcon = "Data Source=DESKTOP-2VG5S76\\VE_SERVER;Initial Catalog=PROMOSYS;User ID=sa;Password=gerrys0803;";
@@ -741,6 +741,163 @@ namespace MonitoringSystem.Pages.Shared
             return new JsonResult(new { success = true, count = submitCount });
         }
 
+        public async Task<IActionResult> OnPostUploadAsync(IFormFile UploadedFile, string TargetMachine, int TargetMonth, int TargetYear)
+        {
+            if (UploadedFile == null || UploadedFile.Length == 0)
+            {
+                TempData["StatusMessage"] = "error";
+                TempData["Message"] = "File Excel tidak ditemukan.";
+                return RedirectToPage();
+            }
+
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+            int totalSaved = 0;
+            int daysInMonth = DateTime.DaysInMonth(TargetYear, TargetMonth);
+
+            try
+            {
+                using (var stream = new MemoryStream())
+                {
+                    await UploadedFile.CopyToAsync(stream);
+                    using (var package = new ExcelPackage(stream))
+                    {
+                        ExcelWorksheet worksheet = package.Workbook.Worksheets[0];
+                        int rowCount = worksheet.Dimension.Rows;
+
+                        using (SqlConnection connection = new SqlConnection(dbcon))
+                        {
+                            connection.Open();
+                            using (SqlTransaction transaction = connection.BeginTransaction())
+                            {
+                                try
+                                {
+                                    // Loop Baris (Mulai baris 3)
+                                    for (int row = 3; row <= rowCount; row++)
+                                    {
+                                        // PERUBAHAN 1: Baca Model Name dari Kolom 2 (B)
+                                        string modelName = worksheet.Cells[row, 2].Value?.ToString()?.Trim();
+
+                                        if (string.IsNullOrEmpty(modelName)) continue;
+
+                                        for (int day = 1; day <= daysInMonth; day++)
+                                        {
+                                            // PERUBAHAN 2: Geser pembacaan Data Data
+                                            // Sebelumnya: 2 + ((day - 1) * 2)  -> Mulai Kolom 2 (B)
+                                            // Sekarang:   3 + ((day - 1) * 2)  -> Mulai Kolom 3 (C)
+                                            // Karena Kolom A = No, Kolom B = Model Name, Data mulai Kolom C
+
+                                            int colNormal = 3 + ((day - 1) * 2);
+                                            int colOvertime = colNormal + 1;
+
+                                            var valNormal = worksheet.Cells[row, colNormal].Value;
+                                            var valOvertime = worksheet.Cells[row, colOvertime].Value;
+
+                                            int qtyNormal = 0;
+                                            int qtyOvertime = 0;
+
+                                            if (valNormal != null) int.TryParse(valNormal.ToString(), out qtyNormal);
+                                            if (valOvertime != null) int.TryParse(valOvertime.ToString(), out qtyOvertime);
+
+                                            if (qtyNormal > 0 || qtyOvertime > 0)
+                                            {
+                                                DateTime currentDate = new DateTime(TargetYear, TargetMonth, day);
+                                                int planId = GetOrCreatePlanId(connection, transaction, currentDate);
+                                                InsertRecordFromExcel(connection, transaction, planId, modelName, TargetMachine, qtyNormal, qtyOvertime);
+                                                totalSaved++;
+                                            }
+                                        }
+                                    }
+
+                                    transaction.Commit();
+                                    TempData["StatusMessage"] = "success";
+                                    TempData["Message"] = $"Upload Berhasil! {totalSaved} record produksi berhasil disimpan.";
+                                }
+                                catch (Exception ex)
+                                {
+                                    transaction.Rollback();
+                                    throw ex;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Upload Error: " + ex.ToString());
+                TempData["StatusMessage"] = "error";
+                TempData["Message"] = "Gagal memproses file: " + ex.Message;
+            }
+
+            DateTime redirectDate = new DateTime(TargetYear, TargetMonth, 1);
+            return RedirectToPage(new { FilterDate = redirectDate.ToString("yyyy-MM-dd"), FilterMachineCode = TargetMachine });
+        }
+
+        // --- HELPER METHODS (Supaya kode rapi) ---
+
+        private int GetOrCreatePlanId(SqlConnection conn, SqlTransaction trans, DateTime date)
+        {
+            // Cek apakah Plan ID untuk tanggal ini sudah ada?
+            string queryCheck = "SELECT Id FROM ProductionPlan WHERE CurrentDate = @Date";
+            using (SqlCommand cmd = new SqlCommand(queryCheck, conn, trans))
+            {
+                cmd.Parameters.AddWithValue("@Date", date);
+                var res = cmd.ExecuteScalar();
+                if (res != null) return (int)res;
+            }
+
+            // Jika belum ada, buat baru
+            string queryInsert = "INSERT INTO ProductionPlan (CurrentDate) VALUES (@Date); SELECT SCOPE_IDENTITY();";
+            using (SqlCommand cmd = new SqlCommand(queryInsert, conn, trans))
+            {
+                cmd.Parameters.AddWithValue("@Date", date);
+                return Convert.ToInt32(cmd.ExecuteScalar());
+            }
+        }
+
+        private void InsertRecordFromExcel(SqlConnection conn, SqlTransaction trans, int planId, string modelName, string machineCode, int qty, int ovt)
+        {
+            string query = @"
+        IF EXISTS (SELECT 1 FROM ProductionRecords WHERE PlanId = @PlanId AND ProductName = @Pn AND MachineCode = @Mc)
+        BEGIN
+            -- Data Sudah Ada: UPDATE
+            UPDATE ProductionRecords 
+            SET Quantity = @Qty, 
+                Overtime = @Ovt
+            WHERE PlanId = @PlanId AND ProductName = @Pn AND MachineCode = @Mc;
+        END
+        ELSE
+        BEGIN
+            -- Data Belum Ada: INSERT
+            INSERT INTO ProductionRecords 
+            (PlanId, ProductName, MachineCode, Quantity, Overtime, NoDirectOfWorker, NoDirectOfWorkerOvertime, Shift) 
+            VALUES 
+            (@PlanId, @Pn, @Mc, @Qty, @Ovt, 0, 0, 'NS');
+        END";
+
+            using (SqlCommand cmd = new SqlCommand(query, conn, trans))
+            {
+                cmd.Parameters.AddWithValue("@PlanId", planId);
+                cmd.Parameters.AddWithValue("@Pn", modelName);
+                cmd.Parameters.AddWithValue("@Mc", machineCode);
+                cmd.Parameters.AddWithValue("@Qty", qty);
+
+                // Handle Overtime Nullable
+                if (ovt > 0) cmd.Parameters.AddWithValue("@Ovt", ovt);
+                else cmd.Parameters.AddWithValue("@Ovt", DBNull.Value);
+
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        public IActionResult OnGetDownloadTemplate()
+        {
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "data", "productionplan", "ProductionPlan_Template.xlsx");
+            if (!System.IO.File.Exists(filePath)) return NotFound("File template tidak ditemukan di server.");
+            var bytes = System.IO.File.ReadAllBytes(filePath);
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ProductionPlan_Template.xlsx");
+        }
 
 
         public class ProductName
