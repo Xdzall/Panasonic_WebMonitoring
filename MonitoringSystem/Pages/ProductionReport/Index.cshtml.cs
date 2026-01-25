@@ -27,12 +27,14 @@ namespace MonitoringSystem.Pages.ProductionReport
         public List<int> OvertimeOperators { get; private set; } = new List<int>();
         public List<int> OvertimeMinutes { get; private set; } = new List<int>();
         public List<int> DailyLossTime { get; private set; } = new List<int>();
+        public List<int> PlanOvertimeData { get; private set; } = new List<int>();
 
         private class DailyData {
         public int Day { get; set; } 
         public decimal LastNormalReading { get; set; } = 0;
         public decimal LastOvertimeReading { get; set; } = 0;
         public int Plan { get; set; } = 0;
+        public int PlanOvertime { get; set; } = 0;
         public int OriginalPlan { get; set; } = 0;
         public int NoOfOperator { get; set; } = 0;
         public int OtOperatorCount { get; set; } = 0;
@@ -57,7 +59,7 @@ namespace MonitoringSystem.Pages.ProductionReport
         {
             if (!SelectedShifts.Any())
             {
-                SelectedShifts = new List<string> { "1" };
+                SelectedShifts = new List<string> { "All" };
             }
             LoadChartData();
         }
@@ -86,138 +88,6 @@ namespace MonitoringSystem.Pages.ProductionReport
         [BindProperty]
         public int TargetYear { get; set; }
 
-        public async Task<IActionResult> OnPostUploadAsync()
-        {
-            if (UploadedFile == null || UploadedFile.Length == 0)
-            {
-                TempData["UploadError"] = "Silakan pilih file untuk diunggah.";
-                return RedirectToPage();
-            }
-
-            List<List<string>> dataInMemory;
-            try
-            {
-                dataInMemory = await ReadDataFromUpload(UploadedFile);
-            }
-            catch (Exception ex)
-            {
-                TempData["UploadError"] = $"Gagal membaca file: {ex.Message}";
-                return RedirectToPage();
-            }
-
-            if (!dataInMemory.Any() || !dataInMemory.First().Any())
-            {
-                TempData["UploadError"] = "File yang diunggah kosong atau formatnya tidak dikenali.";
-                return RedirectToPage();
-            }
-
-            string expectedPrefix = TargetMachine == "MCH1-01" ? "CU" : "CS";
-            string selectedMachineName = TargetMachine == "MCH1-01" ? "CU" : "CS";
-            string firstModelName = dataInMemory.First().First().Trim();
-
-            if (!firstModelName.StartsWith(expectedPrefix, StringComparison.OrdinalIgnoreCase))
-            {
-                string fileContentPrefix = firstModelName.Split('-').FirstOrDefault() ?? "Tidak dikenal";
-                TempData["UploadError"] = $"File berisi data '{fileContentPrefix}', tetapi Anda memilih machine '{selectedMachineName}'. Unggahan dibatalkan.";
-                return RedirectToPage();
-            }
-
-            string machineType = TargetMachine == "MCH1-01" ? "cu" : "cs";
-            string monthName = CultureInfo.GetCultureInfo("en-US").DateTimeFormat.GetMonthName(TargetMonth);
-
-            var planCsvPath = Path.Combine(_webHostEnvironment.WebRootPath, "data", machineType, "plan", "csv", $"{monthName}_{TargetYear}_plan.csv");
-            var planXlsxPath = Path.Combine(_webHostEnvironment.WebRootPath, "data", machineType, "plan", "xlsx", $"{monthName}_{TargetYear}_plan.xlsx");
-            var originalPlanCsvPath = Path.Combine(_webHostEnvironment.WebRootPath, "data", machineType, "plan", "csv", $"{monthName}_{TargetYear}_original_plan.csv");
-            var originalPlanXlsxPath = Path.Combine(_webHostEnvironment.WebRootPath, "data", machineType, "plan", "xlsx", $"{monthName}_{TargetYear}_original_plan.xlsx");
-
-            Directory.CreateDirectory(Path.GetDirectoryName(planCsvPath));
-            Directory.CreateDirectory(Path.GetDirectoryName(planXlsxPath));
-            //Directory.CreateDirectory(Path.GetDirectoryName(estimateCsvPath));
-            //Directory.CreateDirectory(Path.GetDirectoryName(estimateXlsxPath));
-
-            if (!System.IO.File.Exists(originalPlanCsvPath))
-            {
-                WriteCsvFile(originalPlanCsvPath, dataInMemory);
-            }
-            if (!System.IO.File.Exists(originalPlanXlsxPath))
-            {
-                WriteXlsxFile(originalPlanXlsxPath, dataInMemory);
-            }
-
-            WriteCsvFile(planCsvPath, dataInMemory);
-            WriteXlsxFile(planXlsxPath, dataInMemory);
-
-            string successMessage = $"Plan untuk {monthName} {TargetYear} telah berhasil diunggah dan diperbarui.";
-            TempData["UploadSuccess"] = successMessage;
-
-            return RedirectToPage(new { SelectedYear = TargetYear, SelectedMonth = TargetMonth, MachineLine = TargetMachine });
-        }
-
-        private async Task<List<List<string>>> ReadDataFromUpload(IFormFile file)
-        {
-            var data = new List<List<string>>();
-            var extension = Path.GetExtension(file.FileName).ToLower();
-            using var stream = new MemoryStream();
-            await file.CopyToAsync(stream);
-            stream.Position = 0;
-
-            if (extension == ".csv")
-            {
-                using var reader = new StreamReader(stream);
-                while (!reader.EndOfStream)
-                {
-                    var line = await reader.ReadLineAsync();
-                    if (!string.IsNullOrWhiteSpace(line))
-                    {
-                        data.Add(line.Split(',').ToList());
-                    }
-                }
-            }
-            else if (extension == ".xlsx")
-            {
-                using var package = new ExcelPackage(stream);
-                var worksheet = package.Workbook.Worksheets.FirstOrDefault();
-                if (worksheet != null)
-                {
-                    for (int row = 1; row <= worksheet.Dimension.End.Row; row++)
-                    {
-                        var rowData = new List<string>();
-                        for (int col = 1; col <= worksheet.Dimension.End.Column; col++)
-                        {
-                            rowData.Add(worksheet.Cells[row, col].Text);
-                        }
-                        data.Add(rowData);
-                    }
-                }
-            }
-            else
-            {
-                throw new InvalidOperationException("Format file tidak didukung. Harap unggah file .csv atau .xlsx");
-            }
-            return data;
-        }
-
-        private void WriteCsvFile(string filePath, List<List<string>> data)
-        {
-            var lines = data.Select(row => string.Join(",", row));
-            System.IO.File.WriteAllLines(filePath, lines, Encoding.UTF8);
-        }
-
-        private void WriteXlsxFile(string filePath, List<List<string>> data)
-        {
-            using var package = new ExcelPackage();
-            var worksheet = package.Workbook.Worksheets.Add("Data");
-            for (int row = 0; row < data.Count; row++)
-            {
-                for (int col = 0; col < data[row].Count; col++)
-                {
-                    worksheet.Cells[row + 1, col + 1].Value = data[row][col];
-                }
-            }
-            var fileInfo = new FileInfo(filePath);
-            package.SaveAs(fileInfo);
-        }
-
         public IActionResult OnGetDownloadTemplate(string type)
         {
             if (string.IsNullOrEmpty(type) || (type.ToLower() != "cu" && type.ToLower() != "cs"))
@@ -237,106 +107,82 @@ namespace MonitoringSystem.Pages.ProductionReport
         private void LoadChartData()
         {
             this.connectionString = _configuration.GetConnectionString("DefaultConnection");
-
             var dailyLosses = GetDailyLossTimeTotals();
             bool isCurrentMonthView = (SelectedYear == DateTime.Now.Year && SelectedMonth == DateTime.Now.Month);
             this.IsCurrentMonthView = isCurrentMonthView;
+
             string dateFilter = isCurrentMonthView ? "AND CAST(SDate AS DATE) <= @TodayDate" : "";
-            string machineType = MachineLine == "MCH1-01" ? "cu" : "cs";
-            string monthName = CultureInfo.GetCultureInfo("en-US").DateTimeFormat.GetMonthName(SelectedMonth);
             this.DaysInMonth = DateTime.DaysInMonth(SelectedYear, SelectedMonth);
 
-            TimeSpan workDayStart = new TimeSpan(7, 5, 0);
-            TimeSpan workDayEnd = new TimeSpan(15, 55, 0);
-
-            for (int day = 1; day <= this.DaysInMonth; day++)
-            {
-                var currentDate = new DateTime(SelectedYear, SelectedMonth, day);
-                var dayType = DetermineTypeOfDay(currentDate.DayOfWeek);
-                int workTimeForThisDay = 0;
-
-                if (isCurrentMonthView && currentDate.Date > DateTime.Now.Date)
-                {
-                    workTimeForThisDay = 0;
-                }
-                else if (dayType != "WEEKEND")
-                {
-
-                    var breaksForThisDay = (dayType == "FRIDAY") ? this.FridayBreakTimes : this.RegularDayBreakTimes;
-                    var definedBreaks = breaksForThisDay.Select(b => new RestTime { StartTime = b.Start, EndTime = b.End }).ToList();
-
-                    if (currentDate.Date < DateTime.Now.Date)
-                    {
-
-                        int totalDuration = (int)(workDayEnd - workDayStart).TotalMinutes;
-                        int totalRest = GetTotalRestTime(definedBreaks, workDayStart, workDayEnd, workDayEnd);
-                        workTimeForThisDay = totalDuration - totalRest;
-                    }
-                    else
-                    {
-                        var currentTime = DateTime.Now.TimeOfDay;
-                        if (currentTime > workDayStart)
-                        {
-                            var effectiveEndTime = (currentTime > workDayEnd) ? workDayEnd : currentTime;
-                            int totalDuration = (int)(effectiveEndTime - workDayStart).TotalMinutes;
-                            int totalRest = GetTotalRestTime(definedBreaks, workDayStart, workDayEnd, currentTime);
-                            workTimeForThisDay = totalDuration - totalRest;
-                        }
-                    }
-                }
-
-                DailyWorkTime.Add(workTimeForThisDay < 0 ? 0 : workTimeForThisDay);
-            }
-
             var combinedData = Enumerable.Range(1, this.DaysInMonth).Select(day => new DailyData { Day = day }).ToList();
-            var planFilePath = Path.Combine(_webHostEnvironment.WebRootPath, "data", machineType, "plan", "csv", $"{monthName}_{SelectedYear}_plan.csv");
-            if (System.IO.File.Exists(planFilePath)) { var planValues = ReadDataFromCsv(planFilePath, this.DaysInMonth); for (int i = 0; i < planValues.Count; i++) { combinedData[i].Plan = planValues[i]; } }
-            var originalPlanFilePath = Path.Combine(_webHostEnvironment.WebRootPath, "data", machineType, "plan", "csv", $"{monthName}_{SelectedYear}_original_plan.csv");
-            if (System.IO.File.Exists(originalPlanFilePath))
+
+            string planShiftFilter = "";
+            if (!SelectedShifts.Contains("All") && SelectedShifts.Any())
             {
-                var originalPlanValues = ReadDataFromCsv(originalPlanFilePath, this.DaysInMonth);
-                for (int i = 0; i < originalPlanValues.Count; i++)
-                {
-                    combinedData[i].OriginalPlan = originalPlanValues[i];
-                }
+                var shifts = string.Join(",", SelectedShifts.Select(s => $"'{s}'"));
+                planShiftFilter = $"AND pr.Shift IN ({shifts})";
             }
 
-            string shiftsForSql = SelectedShifts.Any() ? string.Join(",", SelectedShifts.Select(s => $"'{s}'")) : "'0'";
-            var sql = $@"
-                        WITH ShiftData AS (
+            // Untuk Actual: "All" berarti '1','2','3'. Abaikan 'NS'.
+            List<string> actualShifts = new List<string>();
+            if (SelectedShifts.Contains("All"))
+            {
+                actualShifts.AddRange(new[] { "1", "2", "3" });
+            }
+            else
+            {
+                actualShifts.AddRange(SelectedShifts.Where(s => s != "NS"));
+            }
+            string shiftsForSql = actualShifts.Any() ? string.Join(",", actualShifts.Select(s => $"'{s}'")) : "'0'";
+
+            string planSql = $@"
+                                SELECT 
+                                    DAY(pp.CurrentDate) as Day,
+                                    SUM(ISNULL(pr.Quantity, 0)) as TotalPlanQuantity,
+                                    SUM(ISNULL(pr.Overtime, 0)) as TotalPlanOvertime
+                                FROM [PROMOSYS].[dbo].[ProductionPlan] pp
+                                LEFT JOIN [PROMOSYS].[dbo].[ProductionRecords] pr ON pp.Id = pr.PlanId
+                                WHERE YEAR(pp.CurrentDate) = @SelectedYear 
+                                  AND MONTH(pp.CurrentDate) = @SelectedMonth
+                                  AND pr.MachineCode = @MachineLine
+                                  {planShiftFilter}
+                                GROUP BY DAY(pp.CurrentDate)";
+
+            string actualSql = $@"
+                            WITH ShiftData AS (
+                                SELECT
+                                    CAST(SDate AS DATE) AS ReportDate,
+                                    SDate, TotalUnit, NoOfOperator,
+                                    CASE
+                                        WHEN CAST(SDate AS TIME) >= '07:00:00' AND CAST(SDate AS TIME) < '16:00:00' THEN 1
+                                        WHEN CAST(SDate AS TIME) >= '16:00:00' AND CAST(SDate AS TIME) < '23:15:00' THEN 2
+                                        ELSE 3
+                                    END as Shift
+                                FROM oeesn
+                                WHERE YEAR(SDate) = @SelectedYear 
+                                  AND MONTH(SDate) = @SelectedMonth 
+                                  AND MachineCode = @MachineLine
+                                  {dateFilter}
+                            ),
+                            DailyAggregates AS (
+                                SELECT
+                                    ReportDate,
+                                    MAX(CASE WHEN Shift = 1 THEN TotalUnit END) as Shift1_EndReading,
+                                    MAX(CASE WHEN Shift IN (2, 3) THEN TotalUnit END) as OT_EndReading,
+                                    MAX(CASE WHEN Shift = 1 THEN NoOfOperator END) as Shift1_Operators,
+                                    MAX(CASE WHEN Shift IN (2, 3) THEN NoOfOperator END) as OT_Operators,
+                                    MAX(CASE WHEN Shift IN (2, 3) THEN NoOfOperator END) as OT_OperatorCount,
+                                    MAX(CASE WHEN Shift IN (2, 3) THEN SDate END) as OT_LastSDate
+                                FROM ShiftData
+                                GROUP BY ReportDate
+                            )
                             SELECT
-                                CAST(SDate AS DATE) AS ReportDate,
-                                SDate, TotalUnit, NoOfOperator,
-                                CASE
-                                    WHEN CAST(SDate AS TIME) >= '07:00:00' AND CAST(SDate AS TIME) < '16:00:00' THEN 1
-                                    WHEN CAST(SDate AS TIME) >= '16:00:00' AND CAST(SDate AS TIME) < '23:15:00' THEN 2
-                                    ELSE 3
-                                END as Shift
-                            FROM oeesn
-                            WHERE YEAR(SDate) = @SelectedYear 
-                              AND MONTH(SDate) = @SelectedMonth 
-                              AND MachineCode = @MachineLine
-                              {dateFilter}
-                        ),
-                        DailyAggregates AS (
-                            SELECT
-                                ReportDate,
-                                MAX(CASE WHEN Shift = 1 THEN TotalUnit END) as Shift1_EndReading,
-                                MAX(CASE WHEN Shift IN (2, 3) THEN TotalUnit END) as OT_EndReading,
-                                MAX(CASE WHEN Shift = 1 THEN NoOfOperator END) as Shift1_Operators,
-                                MAX(CASE WHEN Shift IN (2, 3) THEN NoOfOperator END) as OT_Operators,
-                                MAX(CASE WHEN Shift IN (2, 3) THEN NoOfOperator END) as OT_OperatorCount,
-                                MAX(CASE WHEN Shift IN (2, 3) THEN SDate END) as OT_LastSDate
-                            FROM ShiftData
-                            GROUP BY ReportDate
-                        )
-                        SELECT
-                            DAY(ReportDate) as Day,
-                            CASE WHEN '1' IN ({shiftsForSql}) THEN ISNULL(Shift1_EndReading, 0) ELSE 0 END as LastNormalReading,
-                            CASE 
-                                WHEN ('2' IN ({shiftsForSql}) OR '3' IN ({shiftsForSql})) THEN ISNULL(OT_EndReading, 0) 
-                                ELSE CASE WHEN '1' IN ({shiftsForSql}) THEN ISNULL(Shift1_EndReading, 0) ELSE 0 END
-                            END as LastOvertimeReading,
+                                DAY(ReportDate) as Day,
+                                CASE WHEN '1' IN ({shiftsForSql}) THEN ISNULL(Shift1_EndReading, 0) ELSE 0 END as LastNormalReading,
+                                CASE 
+                                    WHEN ('2' IN ({shiftsForSql}) OR '3' IN ({shiftsForSql})) THEN ISNULL(OT_EndReading, 0) 
+                                    ELSE CASE WHEN '1' IN ({shiftsForSql}) THEN ISNULL(Shift1_EndReading, 0) ELSE 0 END
+                                END as LastOvertimeReading,
         
                             CASE
                                 WHEN CASE WHEN '1' IN ({shiftsForSql}) THEN ISNULL(Shift1_Operators, 0) ELSE 0 END >
@@ -353,21 +199,46 @@ namespace MonitoringSystem.Pages.ProductionReport
             {
                 using (var connection = new SqlConnection(this.connectionString))
                 {
-                    using (var command = new SqlCommand(sql, connection))
+                    connection.Open();
+                    // Eksekusi Plan SQL
+                    using (var planCmd = new SqlCommand(planSql, connection))
                     {
-                        command.Parameters.AddWithValue("@SelectedYear", SelectedYear); command.Parameters.AddWithValue("@SelectedMonth", SelectedMonth); command.Parameters.AddWithValue("@MachineLine", MachineLine);
-                        if (isCurrentMonthView) { command.Parameters.AddWithValue("@TodayDate", DateTime.Now.Date); }
-                        connection.Open();
-                        using (var reader = command.ExecuteReader())
+                        planCmd.Parameters.AddWithValue("@SelectedYear", SelectedYear);
+                        planCmd.Parameters.AddWithValue("@SelectedMonth", SelectedMonth);
+                        planCmd.Parameters.AddWithValue("@MachineLine", MachineLine);
+                        using (var reader = planCmd.ExecuteReader())
                         {
                             while (reader.Read())
                             {
-                                int day = (int)reader["Day"]; var dataForDay = combinedData.FirstOrDefault(d => d.Day == day);
-                                if (dataForDay != null) { dataForDay.LastNormalReading = (decimal)reader["LastNormalReading"]; dataForDay.LastOvertimeReading = (decimal)reader["LastOvertimeReading"]; dataForDay.NoOfOperator = Convert.ToInt32(reader["NoOfOperator"]); dataForDay.OtOperatorCount = Convert.ToInt32(reader["OtOperatorCount"]); dataForDay.LastOtTime = (TimeSpan)reader["LastOtTime"]; }
+                                int day = reader.GetInt32(0);
+                                var data = combinedData.FirstOrDefault(d => d.Day == day);
+                                if (data != null)
+                                {
+                                    data.Plan = Convert.ToInt32(reader["TotalPlanQuantity"]);
+                                    data.PlanOvertime = Convert.ToInt32(reader["TotalPlanOvertime"]);
+                                }
                             }
                         }
                     }
                 }
+
+                    using (var connection = new SqlConnection(this.connectionString))
+                    {
+                        using (var command = new SqlCommand(actualSql, connection))
+                        {
+                            command.Parameters.AddWithValue("@SelectedYear", SelectedYear); command.Parameters.AddWithValue("@SelectedMonth", SelectedMonth); command.Parameters.AddWithValue("@MachineLine", MachineLine);
+                            if (isCurrentMonthView) { command.Parameters.AddWithValue("@TodayDate", DateTime.Now.Date); }
+                            connection.Open();
+                            using (var reader = command.ExecuteReader())
+                            {
+                                while (reader.Read())
+                                {
+                                    int day = (int)reader["Day"]; var dataForDay = combinedData.FirstOrDefault(d => d.Day == day);
+                                    if (dataForDay != null) { dataForDay.LastNormalReading = (decimal)reader["LastNormalReading"]; dataForDay.LastOvertimeReading = (decimal)reader["LastOvertimeReading"]; dataForDay.NoOfOperator = Convert.ToInt32(reader["NoOfOperator"]); dataForDay.OtOperatorCount = Convert.ToInt32(reader["OtOperatorCount"]); dataForDay.LastOtTime = (TimeSpan)reader["LastOtTime"]; }
+                                }
+                            }
+                         }
+                    }
             }
             catch (Exception ex) { Console.WriteLine(ex.Message); }
 
@@ -375,6 +246,7 @@ namespace MonitoringSystem.Pages.ProductionReport
             {
                 ChartLabels.Add(data.Day.ToString());
                 PlanData.Add(data.Plan);
+                PlanOvertimeData.Add(data.PlanOvertime);
                 OriginalPlanData.Add(data.OriginalPlan);
                 NormalData.Add(data.LastNormalReading);
                 var overtimeValue = data.LastOvertimeReading - data.LastNormalReading;
@@ -390,6 +262,20 @@ namespace MonitoringSystem.Pages.ProductionReport
                 OvertimeMinutes.Add(netOvertimeMinutes > 0 ? netOvertimeMinutes : 0);
                 dailyLosses.TryGetValue(data.Day, out int totalSeconds);
                 DailyLossTime.Add(totalSeconds / 60);
+
+                var currentDay = new DateTime(SelectedYear, SelectedMonth, data.Day);
+                string typeOfDay = DetermineTypeOfDay(currentDay.DayOfWeek);
+
+                int standardMinutes = (typeOfDay == "FRIDAY") ? 435 : 473;
+                if (typeOfDay == "WEEKEND") standardMinutes = 0;
+
+             
+                if (!SelectedShifts.Contains("All") && !SelectedShifts.Contains("1"))
+                {
+                    standardMinutes = 0;
+                }
+
+                DailyWorkTime.Add(standardMinutes + (netOvertimeMinutes > 0 ? netOvertimeMinutes : 0));
 
                 for (int i = 0; i < this.DaysInMonth; i++)
                 {
@@ -537,6 +423,5 @@ namespace MonitoringSystem.Pages.ProductionReport
         public int GetTotalRestTime(List<RestTime> listRestTime, TimeSpan StartTime, TimeSpan EndTime, TimeSpan CurrentTime) { int TotalRestTime = 0; bool isToday = (SelectedYear == DateTime.Now.Year && SelectedMonth == DateTime.Now.Month); TotalRestTime = listRestTime.Sum(rest => { if (isToday && rest.StartTime > CurrentTime) { return 0; } TimeSpan effectiveRestStart = rest.StartTime < StartTime ? StartTime : rest.StartTime; TimeSpan effectiveRestEnd = rest.EndTime > EndTime ? EndTime : rest.EndTime; if (isToday && effectiveRestEnd > CurrentTime) { effectiveRestEnd = CurrentTime; } return effectiveRestStart < effectiveRestEnd ? (int)(effectiveRestEnd - effectiveRestStart).TotalMinutes : 0; }); return TotalRestTime; }
         public string DetermineTypeOfDay(DayOfWeek day) { return day switch { DayOfWeek.Monday or DayOfWeek.Tuesday or DayOfWeek.Wednesday or DayOfWeek.Thursday => "REGULAR", DayOfWeek.Friday => "FRIDAY", DayOfWeek.Saturday or DayOfWeek.Sunday => "WEEKEND", _ => "REGULAR" }; }
         public List<RestTime> GetRestTime(string dayTipe) { List<RestTime> listRestTime = new List<RestTime>(); try { using (SqlConnection connection = new SqlConnection(this.connectionString)) { connection.Open(); string GetRestTime = @"SELECT Duration, StartTime, EndTime FROM RestTime WHERE DayType = @DayTipe"; using (SqlCommand command = new SqlCommand(GetRestTime, connection)) { command.Parameters.AddWithValue("@DayTipe", dayTipe); using (SqlDataReader dataReader = command.ExecuteReader()) { while (dataReader.Read()) { if (!dataReader.IsDBNull(0)) { listRestTime.Add(new RestTime { Duration = dataReader.GetInt32(0), StartTime = dataReader.GetTimeSpan(1), EndTime = dataReader.GetTimeSpan(2) }); } } } } } } catch (Exception ex) { Console.WriteLine("Exception GetRestTime: " + ex.ToString()); } return listRestTime; }
-        private List<int> ReadDataFromCsv(string filePath, int DaysInMonth) { var dailyTotals = new List<int>(new int[DaysInMonth]); try { var lines = System.IO.File.ReadAllLines(filePath); foreach (var line in lines) { if (string.IsNullOrWhiteSpace(line)) continue; var valuesForThisLine = line.Split(',').Skip(1).Select(field => int.TryParse(field.Trim(), out int num) ? num : 0).ToList(); for (int i = 0; i < valuesForThisLine.Count && i < DaysInMonth; i++) { dailyTotals[i] += valuesForThisLine[i]; } } } catch { return new List<int>(new int[DaysInMonth]); } return dailyTotals; }
     }
 }

@@ -643,6 +643,12 @@ input[type="checkbox"]:checked + .shift-button {
 
                 <input type="checkbox" id="Shift3" name="SelectedShifts" value="3" @(Model.SelectedShifts.Contains("3") ? "checked" : "") style="display: none;">
                 <label for="Shift3" class="shift-button @(Model.SelectedShifts.Contains("3") ? "active" : "")">3</label>
+
+                <input type="checkbox" id="NonShift" name="SelectedShifts" value="NS" @(Model.SelectedShifts.Contains("NS") ? "checked" : "") style="display: none;">
+                <label for="NonShift" class="shift-button @(Model.SelectedShifts.Contains("NS") ? "active" : "")">NS</label>
+
+                <input type="checkbox" id="AllShift" name="SelectedShifts" value="All" @(Model.SelectedShifts.Contains("All") || !Model.SelectedShifts.Any() ? "checked" : "") style="display: none;">
+                <label for="AllShift" class="shift-button @(Model.SelectedShifts.Contains("All") || !Model.SelectedShifts.Any() ? "active" : "")">All</label>
             </div>
         </div>
 
@@ -650,9 +656,6 @@ input[type="checkbox"]:checked + .shift-button {
         <button type="submit" name="submitButton" value="reset" class="btn btn-sm btn-danger">Reset</button>
 
         <div class="ms-auto d-flex gap-2">
-    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
-        <i class="bi bi-upload me-2"></i>Upload
-    </button>
     <button type="button" id="downloadPdfButton" class="btn btn-sm btn-danger">
         <i class="bi bi-download me-2"></i>Download
     </button>
@@ -699,28 +702,28 @@ input[type="checkbox"]:checked + .shift-button {
 </thead>
         <tbody>
             <!-- PLAN FORECAST -->
-            <tr>
-                <td rowspan="3" style="vertical-align: middle; text-align: center; font-weight: 700;">Plan Forecast</td>
-                <td style="text-align: left;">Normal</td>
+                    <tr>
+                        <td rowspan="3" style="vertical-align: middle; text-align: center; font-weight: 700;">Plan Forecast</td>
+                        <td style="text-align: left;">Normal</td>
                         @for (int i = 0; i < Model.PlanData.Count; i++)
                         {
                             <td>@Model.PlanData[i]</td>
                         }
-            </tr>
-            <tr>
-                <td style="text-align: left;">Overtime</td>
-                        @for (int i = 0; i < Model.DaysInMonth; i++)
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">Overtime</td>
+                        @for (int i = 0; i < Model.PlanOvertimeData.Count; i++)
                         {
-                            <td>0</td>
+                            <td>@Model.PlanOvertimeData[i]</td>
                         }
-            </tr>
-            <tr>
-                <td style="text-align: left;"><b>Total Plan</b></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;"><b>Total Plan</b></td>
                         @for (int i = 0; i < Model.PlanData.Count; i++)
                         {
-                            <td>@Model.PlanData[i]</td>
+                            <td>@(Model.PlanData[i] + Model.PlanOvertimeData[i])</td>
                         }
-            </tr>
+                    </tr>
 
             <!-- ACTUAL -->
 <tr>
@@ -849,64 +852,6 @@ input[type="checkbox"]:checked + .shift-button {
         </tbody>
     </table>
 </div>
-    <!-- UPLOAD MODAL -->
-    <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="uploadModalLabel">Upload Plan</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3 text-center">
-                        <div class="d-flex justify-content-center gap-2">
-                            <a asp-page-handler="DownloadTemplate" asp-route-type="cu" class="btn btn-sm btn-outline-success">
-                                <i class="bi bi-file-earmark-excel-fill"></i> Template CU
-                            </a>
-                            <a asp-page-handler="DownloadTemplate" asp-route-type="cs" class="btn btn-sm btn-outline-info">
-                                <i class="bi bi-file-earmark-excel-fill"></i> Template CS
-                            </a>
-                        </div>
-                    </div>
-                    <hr />
-                    <form method="post" enctype="multipart/form-data" asp-page-handler="Upload">
-                        <div class="mb-3">
-                            <label for="UploadedFile" class="form-label">Pilih File Plan:</label>
-                            <input type="file" id="UploadedFile" name="UploadedFile" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="TargetMachine" class="form-label">Untuk Mesin:</label>
-                            <select id="TargetMachine" name="TargetMachine" class="form-select" required>
-                                <option value="MCH1-01">CU</option>
-                                <option value="MCH1-02">CS</option>
-                            </select>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="TargetMonth" class="form-label">Untuk Bulan:</label>
-                                <select id="TargetMonth" name="TargetMonth" class="form-select" required>
-                                        @for (int i = 1; i <= 12; i++)
-                                        {
-                                                            <option value="@i">@CultureInfo.GetCultureInfo("en-US").DateTimeFormat.GetMonthName(i)</option>
-                                        }
-                                </select>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="TargetYear" class="form-label">Untuk Tahun:</label>
-                                <select id="TargetYear" name="TargetYear" class="form-select" required>
-                                        @for (int i = DateTime.Now.Year; i <= DateTime.Now.Year + 5; i++)
-                                        {
-                                                            <option value="@i">@i</option>
-                                        }
-                                </select>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-success">Upload dan Simpan</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
     @section Scripts {
@@ -919,6 +864,7 @@ input[type="checkbox"]:checked + .shift-button {
                                 const normalData = @Html.Raw(Json.Serialize(Model.NormalData));
                                 const overtimeData = @Html.Raw(Json.Serialize(Model.OvertimeData));
                                 const planData = @Html.Raw(Json.Serialize(Model.PlanData));
+                                const planOvertimeData = @Html.Raw(Json.Serialize(Model.PlanOvertimeData));
                                 const originalPlanData = @Html.Raw(Json.Serialize(Model.OriginalPlanData));
                                 const chartLabels = @Html.Raw(Json.Serialize(Model.ChartLabels));
                                 const isCurrentMonth = @Html.Raw(Json.Serialize(Model.IsCurrentMonthView));
@@ -962,7 +908,15 @@ input[type="checkbox"]:checked + .shift-button {
                                                                     { label: 'Change Plan', data: planData, backgroundColor: '#a32ca3', borderColor: '#a32ca3', barThickness: 15, stack: 'Plan', yAxisID: 'y' },
                                                     { label: 'Normal', data: normalData, backgroundColor: '#35FF00', borderColor: '#35FF00', barThickness: 15, stack: 'Actual', yAxisID: 'y' },
                                                                             { label: 'Overtime', data: overtimeData, backgroundColor: '#006330', borderColor: '#006330', barThickness: 15, stack: 'Actual', yAxisID: 'y' },
-                                                                                { label: 'Overtime Plan', data: Array(daysInMonth).fill(0), backgroundColor: '#6a1b9a', borderColor: '#6a1b9a', barThickness: 15, stack: 'Plan', yAxisID: 'y' }
+                                                                                            {
+                                                                                                label: 'Overtime Plan',
+                                                                                                data: planOvertimeData, // Gunakan variabel dari model
+                                                                                                backgroundColor: '#6a1b9a',
+                                                                                                borderColor: '#6a1b9a',
+                                                                                                barThickness: 15,
+                                                                                                stack: 'Plan',
+                                                                                                yAxisID: 'y'
+                                                                                            },
                                         ]
                                     },
                                     options: {
