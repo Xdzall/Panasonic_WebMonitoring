@@ -219,21 +219,31 @@
     max-width: 100%;
     height: 350px !important;
     margin-bottom: 6px;
-}w
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
 
 /* TABLE STYLING - COMPACT DENGAN SMOOTH HORIZONTAL SCROLL */
+/* TABLE STYLING - COMPACT DENGAN SMOOTH HORIZONTAL SCROLL */
 .table-responsive {
-    max-width: calc(100% - 14px);
-    margin-left: 7px;
-    margin-right: 7px;
-    overflow-x: auto;
-    overflow-y: auto;
-    max-height: calc(100vh - 480px);
-    position: relative;
-    border-radius: 8px;
-    scroll-behavior: smooth;
-    padding-bottom: 20px;
-    margin-bottom: 30px;
+    width: calc(100% - 14px) !important;
+    max-width: calc(100% - 14px) !important;
+    margin-left: 7px !important;
+    margin-right: 7px !important;
+    margin-top: 8px !important;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    max-height: calc(100vh - 480px) !important;
+    position: relative !important;
+    border-radius: 8px !important;
+    scroll-behavior: smooth !important;
+    padding-bottom: 20px !important;
+    margin-bottom: 30px !important;
+    box-sizing: border-box !important;  /* 👈 TAMBAH INI */
+    scrollbar-width: auto;
+    scrollbar-color: #64b5f6 rgba(0, 0, 0, 0.5);
 }
 
 /* SCROLLBAR HORIZONTAL - LEBIH TEBAL & JELAS */
@@ -266,11 +276,6 @@
 .table-responsive::-webkit-scrollbar-corner {
     background: rgba(0, 0, 0, 0.5);
     border-radius: 7px;
-}
-
-.table-responsive {
-    scrollbar-width: auto;
-    scrollbar-color: #64b5f6 rgba(0, 0, 0, 0.5);
 }
 
 .table th,  
@@ -329,9 +334,12 @@ table.table thead th {
 /* FIX LEBAR KOLOM BP & ACT - SEMUA SAMA */
 /* Target hanya row kedua header (BP/Act) dan semua tbody cells */
 .table thead tr:nth-child(2) th {
-    min-width: 38px !important;
+     min-width: 38px !important;
     max-width: 38px !important;
     width: 38px !important;
+    text-align: center !important;  /* 👈 TAMBAH */
+    vertical-align: middle !important;  /* 👈 TAMBAH */
+    padding: 0.25rem !important;  /* 👈 TAMBAH - pastikan padding sama */
 }
 
 .table tbody td:not(:first-child) {
@@ -690,62 +698,72 @@ main.pb-5 {
 
         const barColors = [
             '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b',
-            '#858796', '#5a5c69', '#fd7e14', '#20c997', '#6f42c1'
+            '#858796', '#b5b9c2', '#fd7e14', '#20c997', '#6f42c1'
         ];
 
-        let datasets = [];
-        let colorIdx = 0;
+let datasets = [];
+let colorIdx = 0;
 
-        if(chartData.Categories){
-            chartData.Categories.forEach((cat) => {
-                let color = barColors[colorIdx % barColors.length];
-
-                datasets.push({
-                    label: cat + ' (Act)',
-                    data: chartData.Actuals[cat],
-                    backgroundColor: color,
-                    stack: 'Actual',
-                    order: 2
-                });
-
-                datasets.push({
-                    label: cat + ' (Plan)',
-                    data: chartData.Plans[cat],
-                    backgroundColor: color,
-                    stack: 'Plan',
-                    opacity: 0.6,
-                    order: 2
-                });
-                colorIdx++;
-            });
-        }
+// LOOP KATEGORI - CUMA ACT & PLAN
+// LOOP KATEGORI - ACT & PLAN
+if(chartData.Categories){
+    chartData.Categories.forEach((cat) => {
+        let color = barColors[colorIdx % barColors.length];
 
         datasets.push({
-            label: 'Actual Ratio (%)',
-            data: chartData.RatioActual,
-            type: 'line',
-            borderColor: '#e74a3b',
-            backgroundColor: '#e74a3b',
-            borderWidth: 3,
-            pointRadius: 4,
-            yAxisID: 'y_ratio',
-            tension: 0.1,
-            order: 0
+            type: 'bar',  // 👈 TAMBAH INI
+            label: cat + ' (Act)',
+            data: chartData.Actuals[cat],
+            backgroundColor: color,
+            borderColor: color,
+            barThickness: 40,
+            stack: 'Actual',
+            order: 2,
+            yAxisID: 'y'
         });
 
         datasets.push({
-            label: 'Plan Ratio (%)',
-            data: chartData.RatioPlan,
-            type: 'line',
-            borderColor: '#4e73df',
-            backgroundColor: '#4e73df',
-            borderWidth: 2,
-            borderDash: [5, 5],
-            pointRadius: 3,
-            yAxisID: 'y_ratio',
-            tension: 0.1,
-            order: 0
+            type: 'bar',  // 👈 TAMBAH INI
+            label: cat + ' (Plan)',
+            data: chartData.Plans[cat],
+            backgroundColor: color,
+            borderColor: color,
+            barThickness: 40,
+            stack: 'Plan',
+            order: 2,
+            yAxisID: 'y'
         });
+        colorIdx++;
+    });
+}
+
+// RATIO LINES
+datasets.push({
+    type: 'line',
+    label: 'Actual Ratio (%)',
+    data: chartData.RatioActual,
+    borderColor: '#e74a3b',
+    backgroundColor: 'rgba(231, 74, 59, 0.2)',
+    borderWidth: 3,
+    pointRadius: 4,
+    tension: 0.1,
+    yAxisID: 'y_ratio',
+    order: 0
+});
+
+datasets.push({
+    type: 'line',
+    label: 'Plan Ratio (%)',
+    data: chartData.RatioPlan,
+    borderColor: '#4e73df',
+    backgroundColor: 'rgba(78, 115, 223, 0.2)',
+    borderWidth: 2,
+    borderDash: [5, 5],  // 👈 INI BIKIN GARIS PUTUS-PUTUS
+    pointRadius: 3,
+    tension: 0.1,
+    yAxisID: 'y_ratio',
+    order: 0
+});
 
         new Chart(ctx, {
             type: 'bar',
@@ -784,26 +802,25 @@ main.pb-5 {
                             }
                         }
                     },
-                   legend: { 
-    display: false,
-    position: 'top',
+legend: { 
     labels: { 
         color: '#ffffff',
-        boxWidth: 12,
-        boxHeight: 12,
-        padding: 8,
-        font: {
-            size: 9
-        },
-        usePointStyle: false
+        usePointStyle: false,  // 👈 TAMBAH INI - FALSE = kotak
+        generateLabels: function(chart) {
+            // Ambil default label generator dari Chart.js
+            const original = Chart.defaults.plugins.legend.labels.generateLabels;
+            const labels = original.call(this, chart);
+
+            // Filter cuma Act + Ratio
+            return labels.filter(label => 
+                label.text.includes('(Act)') || 
+                label.text.includes('Ratio')
+            );
+        }
     },
-    maxHeight: 120,
-    align: 'start',
     onClick: function(e, legendItem, legend) {
         const index = legendItem.datasetIndex;
         const chart = legend.chart;
-
-        // Toggle visibility menggunakan API yang benar
         if (chart.isDatasetVisible(index)) {
             chart.hide(index);
         } else {
