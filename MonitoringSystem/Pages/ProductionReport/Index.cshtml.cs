@@ -266,6 +266,7 @@ namespace MonitoringSystem.Pages.ProductionReport
                 var currentDay = new DateTime(SelectedYear, SelectedMonth, data.Day);
                 string typeOfDay = DetermineTypeOfDay(currentDay.DayOfWeek);
 
+                // Working Time need improvement
                 int standardMinutes = (typeOfDay == "FRIDAY") ? 435 : 473;
                 if (typeOfDay == "WEEKEND") standardMinutes = 0;
 
