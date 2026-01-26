@@ -12,6 +12,8 @@ using System.Text;
 using MonitoringSystem.Models;
 using OfficeOpenXml;
 using System.Globalization;
+using Microsoft.AspNetCore.Hosting;
+using System.Configuration;
 
 namespace MonitoringSystem.Pages.LossTime
 {
@@ -19,12 +21,19 @@ namespace MonitoringSystem.Pages.LossTime
     {
         private readonly ApplicationDbContext _context;
 
-        public IndexModel(ApplicationDbContext context)
+        public IndexModel(ApplicationDbContext context, IConfiguration configuration, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
-        }
+			_configuration = configuration;
+			connectionString = _configuration.GetConnectionString("DefaultConnection") ?? "";
+			_webHostEnvironment = webHostEnvironment;
+		}
 
-        public List<LossTimeRecord> LossTimeData { get; set; } = new List<LossTimeRecord>();
+		private string connectionString;
+		private readonly IConfiguration _configuration;
+		private readonly IWebHostEnvironment _webHostEnvironment;
+
+		public List<LossTimeRecord> LossTimeData { get; set; } = new List<LossTimeRecord>();
         public int TotalDuration { get; set; }
         public int CurrentPage { get; set; } = 1;
         public int PageSize { get; set; } = 10;
@@ -126,9 +135,7 @@ namespace MonitoringSystem.Pages.LossTime
             (new TimeSpan(18, 15, 0), new TimeSpan(18, 45, 0))
         };
 
-        public string connectionString = "Server=XDZALL\\SQLEXPRESS;Database=PROMOSYS;Trusted_Connection=True;Encrypt=False";
-
-        public void OnGet(int pageNumber = 1, int pageSize = 10)
+		public void OnGet(int pageNumber = 1, int pageSize = 10)
         {
             CurrentPage = pageNumber;
             PageSize = pageSize;
