@@ -19,59 +19,561 @@
     <link rel="stylesheet" href="~/css/sweetalert2.css" />
 
     <style>
-        .dropdown {
-            border: 1px solid #ccc;
-            position: absolute;
-            z-index: 1000;
-            display: none;
-            background-color: white;
-            max-height: 150px;
-            overflow-y: auto;
-            width: 200px;
-        }
+        /* Pastikan parent container punya position relative */
+.input-group.position-relative {
+    position: relative !important;
+}
 
-            .dropdown div {
-                padding: 10px;
-                cursor: pointer;
-            }
+/* Dropdown container - FIXED POSITIONING */
+.dropdown.custom-dropdown {
+    position: absolute !important;
+    top: calc(100% + 2px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    z-index: 99999 !important;
+    display: none;
 
-                .dropdown div:hover {
-                    background-color: #f0f0f0;
-                }
+    /* Styling */
+    background-color: rgba(30, 40, 60, 0.98) !important;
+    border: 2px solid rgba(100, 181, 246, 0.5) !important;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 0;
+}
+
+/* Dropdown items */
+.dropdown.custom-dropdown div {
+    padding: 10px;
+    cursor: pointer;
+    color: #ffffff !important;
+    background-color: transparent !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Hover effect */
+.dropdown.custom-dropdown div:hover {
+    background-color: rgba(100, 181, 246, 0.2) !important;
+    color: #ffffff !important;
+}
+
+/* Last item - no border */
+.dropdown.custom-dropdown div:last-child {
+    border-bottom: none;
+}
+
+/* Scrollbar styling */
+.dropdown.custom-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+
+.dropdown.custom-dropdown::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+.dropdown.custom-dropdown::-webkit-scrollbar-thumb {
+    background: rgba(100, 181, 246, 0.3);
+    border-radius: 3px;
+}
+
+.dropdown.custom-dropdown::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 181, 246, 0.5);
+}
+/* ========== FILTER AREA WITH LINES - SAMA PERSIS DENGAN LOSS TIME ========== */
+.filter-area-with-lines {
+    position: relative;
+    padding: 1px 0;
+    margin-bottom: -63px !important;
+    margin-top: -20px;
+    min-height: 10px;
+    width: calc(100% - 14px);
+    margin-left: 7px;
+    margin-right: 7px;
+}
+
+.panamon-bottom-line,
+.panamon-bottomm-line {
+    position: absolute !important;
+    left: -13px !important;
+    right: -13px !important;
+    height: 2px !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    z-index: 999 !important;
+    pointer-events: none !important;
+    display: block !important;
+}
+
+.panamon-bottom-line {
+    top: 0 !important;
+    border-top: 2px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.panamon-bottomm-line {
+    bottom: 0 !important;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* FILTER CONTENT - SAMA PERSIS DENGAN LOSS TIME */
+.filter-content {
+    position: relative;
+    z-index: 2;
+    padding: 6px 0;
+    border-radius: 15px;
+    margin-left: -8px;
+    margin-right: 7px;
+}
+
+/* FORM SELECT & CONTROL - SAMA PERSIS */
+.filter-content .form-select.selected {
+    font-weight: 700 !important;
+}
+
+.filter-content .form-select,
+.filter-content .form-control {
+    height: 28px;
+    padding: 0 22px 0 8px;
+    font-size: 12px;
+    line-height: 20px;
+    border-radius: 999px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    color: #ffffff;
+    text-align: center;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-top: 0;
+    padding-bottom: 0;
+    vertical-align: middle;
+}
+
+.filter-content .form-select {
+    height: 28px;
+    padding: 0 !important;
+    padding-left: 12px !important;
+    padding-right: 28px !important;
+    padding-top: -2px !important;
+    font-size: 12px;
+    line-height: 16px;
+    border-radius: 999px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    color: #ffffff;
+    text-align: center;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 10px 10px;
+}
+
+.filter-content .form-select option {
+    background-color: rgba(50, 60, 80, 0.95);
+    color: #ffffff;
+    font-size: 12px;
+    padding: 8px;
+}
+
+.filter-content .form-select option:hover {
+    background-color: rgba(70, 85, 110, 0.95);
+}
+
+/* FORM SELECT SM - SAMA SEPERTI PRODUCTION REPORT */
+.filter-content .form-select-sm {
+    height: 28px;
+    padding: 0 !important;
+    padding-left: 12px !important;
+    padding-right: 28px !important;
+    font-size: 12px;
+    line-height: 16px;
+    border-radius: 999px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    color: #ffffff;
+    text-align: center;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 10px 10px;
+}
+
+.filter-content .form-select-sm.selected {
+    font-weight: 700 !important;
+}
+.filter-content .form-select:focus,
+.filter-content .form-control:focus {
+    background-color: rgba(255, 255, 255, 0.20);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.1);
+}
+
+.filter-content label {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 12px;
+    line-height: 20px;
+}
+
+.filter-content .btn {
+    height: 28px;
+    min-height: 20px;
+    padding: 0 12px;
+    font-size: 12px;
+    line-height: 20px;
+    border-radius: 999px !important;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.filter-content .btn-primary {
+    background-color: rgba(8, 65, 150, 0.95);
+    border: 2px solid rgba(100, 181, 246, 1);
+    color: rgba(100, 181, 246, 1);
+}
+
+.filter-content .btn-primary:hover {
+    background-color: rgba(5, 45, 110, 1);
+    border-color: rgba(144, 202, 249, 1);
+    color: rgba(144, 202, 249, 1);
+}
+
+.filter-content .btn-danger {
+    background-color: rgba(140, 30, 40, 0.95);
+    border: 2px solid rgba(239, 154, 154, 1);
+    color: rgba(239, 154, 154, 1);
+}
+
+.filter-content .btn-danger:hover {
+    background-color: rgba(110, 20, 30, 1);
+    border-color: rgba(244, 143, 177, 1);
+    color: rgba(244, 143, 177, 1);
+}
+
+/* ============ ATUR JARAK ANTAR BOX - CLEAN & SIMPLE ============ */
+
+/* Padding cell tabel - INI YANG NGATUR JARAK ANTAR BOX */
+.table tbody td,
+.table tbody th {
+    padding: 3px 5px;  /* UBAH ANGKA INI: makin kecil = makin rapat */
+    vertical-align: middle;
+}
+
+/* Input styling */
+.table td input.form-control {
+    padding: 6px 10px;
+}
+
+/* Jarak checkbox */
+.table td .d-flex {
+    gap: 4px;
+}
+
+.table .form-check {
+    margin-bottom: 0;
+}
+
+/* ============ CARD STYLING - SAMA SEPERTI PRODUCTION REPORT ============ */
+.card {
+    margin-left: 15px;
+    margin-right: 15px;
+    background: rgba(255, 255, 255, 0.20) !important;
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.card-header {
+    background: transparent !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+    padding: 12px;
+}
+
+/* Box Date & Total Quantity - ubah warna */
+.card-header .card {
+    background: rgba(30, 40, 60, 0.9) !important;
+    border: 2px solid rgba(100, 181, 246, 0.5) !important;
+    color: #ffffff !important;
+    border-radius: 8px;
+    padding: 8px;
+}
+
+.card-header .card p {
+    color: #ffffff !important;
+    margin-bottom: 4px;
+}
+
+/* Table styling */
+.table {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    color: #ffffff !important;
+}
+
+.table thead th {
+    background-color: rgba(30, 40, 60, 1) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* ============ FIX FONT TABEL & HEADER ============ */
+
+/* 1. SEMUA TEXT DI TABEL JADI PUTIH */
+.table tbody td input,
+.table tbody td input::placeholder,
+.table tbody th {
+    color: #ffffff !important;
+}
+
+/* 2. SAMAKAN WARNA SEMUA HEADER - TERMASUK YANG BLANK */
+.table thead tr:first-child th {
+    background-color: rgba(30, 40, 60, 1) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.table thead tr:nth-child(2) th {
+    background-color: rgba(30, 40, 60, 1) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* 3. OVERRIDE SEMUA HEADER TH - PAKSA WARNA SAMA */
+.table thead th {
+    background-color: rgba(30, 40, 60, 1) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;  
+    text-align: center !important;      /* ← TAMBAH INI */
+    vertical-align: middle !important;   /* ← DAN INI */
+}
+
+/* 4. TEXT INPUT DI DALAM TABLE BODY HARUS PUTIH */
+.table tbody input[type="text"],
+.table tbody input[type="number"] {
+    color: #ffffff !important;
+}
+
+/* 5. CHECKBOX LABEL JUGA PUTIH */
+.table .form-check-label {
+    color: #ffffff !important;
+}
+.table tbody td,
+.table tbody th {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.table td input.form-control,
+.table td textarea.form-control {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+}
+
+.table td input.form-control:focus,
+.table td textarea.form-control:focus {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(100, 181, 246, 0.5);
+    color: #ffffff;
+}
+
+.table td input.form-control::placeholder,
+.table td textarea.form-control::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Disabled inputs */
+.table td input:disabled {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.6);
+}
+/* ============ UBAH SEMUA FONT JADI PUTIH - LEBIH KUAT ============ */
+.card {
+    color: #ffffff !important;
+}
+
+.card *:not(.btn-warning *) {
+    color: #ffffff !important;
+}
+
+.card label,
+.card p,
+.card span,
+.card th,
+.card td,
+.card .form-check-label,
+.card h1, .card h2, .card h3, .card h4, .card h5, .card h6,
+.card div,
+.card input,
+.card textarea,
+.card select {
+    color: #ffffff !important;
+}
+
+/* Submit counter text */
+#submitCounter,
+#submitCounter span {
+    color: #ffffff !important;
+}
+
+/* Buttons - override warna sesuai fungsi */
+.card .btn-warning,
+.card .btn-warning * {
+    color: #000000 !important;
+}
+
+.card .btn-success,
+.card .btn-success * {
+    color: #ffffff !important;
+}
+
+.card .btn-danger,
+.card .btn-danger * {
+    color: #ffffff !important;
+}
+
+.card .btn-primary,
+.card .btn-primary * {
+    color: #ffffff !important;
+}
+
+/* Placeholder tetap semi-transparan */
+.card input::placeholder,
+.card textarea::placeholder,
+.card select::placeholder {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* ============ PAKSA SEMUA HEADER GELAP - SUPER KUAT ============ */
+.table thead th,
+.table > thead > tr > th {
+    background-color: rgba(30, 40, 60, 1) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.table thead tr th {
+    background-color: rgba(30, 40, 60, 1) !important;
+}
+
+/* Override Bootstrap default */
+.table-bordered thead th,
+.table-bordered thead td {
+    background-color: rgba(30, 40, 60, 1) !important;
+    color: #ffffff !important;
+}
+/* Textarea Comment - styling khusus */
+textarea#comment {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: #ffffff !important;
+}
+
+textarea#comment:focus {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(100, 181, 246, 0.5) !important;
+    color: #ffffff !important;
+}
+
+textarea#comment::placeholder {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+/* ============ STYLING BUTTON OPSI & DROPDOWN ============ */
+
+/* Button Opsi di tabel */
+.table .input-group .btn-primary {
+    background-color: rgba(8, 65, 150, 0.95) !important;
+    border: 2px solid rgba(100, 181, 246, 1) !important;
+    color: rgba(100, 181, 246, 1) !important;
+}
+
+.table .input-group .btn-primary:hover {
+    background-color: rgba(5, 45, 110, 1) !important;
+    border-color: rgba(144, 202, 249, 1) !important;
+    color: rgba(144, 202, 249, 1) !important;
+}
+
+/* Dropdown autocomplete */
+.dropdown.custom-dropdown {
+    background-color: rgba(30, 40, 60, 0.98) !important;
+    border: 2px solid rgba(100, 181, 246, 0.5) !important;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.dropdown.custom-dropdown div {
+    color: #ffffff !important;
+    background-color: transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dropdown.custom-dropdown div:hover {
+    background-color: rgba(100, 181, 246, 0.2) !important;
+    color: #ffffff !important;
+}
+
+.dropdown.custom-dropdown div:last-child {
+    border-bottom: none;
+}
+/* OVERRIDE FIX DROPDOWN */
+td .dropdown.custom-dropdown {
+    position: absolute !important;
+    top: calc(100% + 2px) !important;
+    left: 0 !important;
+    width: 100% !important;
+    z-index: 99999 !important;
+}
     </style>
 </head>
 <body>
-    <div class="row g-3 align-items-center justify-content-between flex-wrap">
-        <div class="col-auto">
-            <form method="get" class="row g-3 align-items-center">
-                <div class="col-auto d-flex gap-2 align-items-center">
-                    <label class="fs-10 fw-bold">Date:</label>
-                    <input type="date" class="form-control form-control-sm border-dark"
-                           name="FilterDate"
-                           value="@Model.CurrentDate.ToString("yyyy-MM-dd")" />
-                </div>
+<div class="filter-area-with-lines">    
+    <div class="panamon-bottom-line"></div>
+    <div class="panamon-bottomm-line"></div>
 
-                <div class="col-auto d-flex gap-2 align-items-center">
-                    <label class="fs-10 fw-bold">Machine:</label>
-                    <select class="form-select form-select-sm border-dark filter-control" name="FilterMachineCode" asp-for="FilterMachineCode">
-                        <option value="MCH1-01">CU</option>
-                        <option value="MCH1-02">CS</option>
-                    </select>
-                </div>
+    <div class="filter-content">
+        <div class="row g-3 align-items-center justify-content-between flex-wrap">
+            <div class="col-auto">
+                <form method="get" class="d-flex flex-wrap align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="mb-0">Date</label>
+                        <input type="date" class="form-control" style="width: 140px;"
+                               name="FilterDate"
+                               value="@Model.CurrentDate.ToString("yyyy-MM-dd")" />
+                    </div>
 
-                <div class="col-auto d-flex gap-2">
-                    <button type="submit" class="btn btn-sm fw-bold fs-6 text-white" style="background-color: rgb(61, 121, 176);">Search</button>
-                    <a href="/Summary/ProductionPlan" class="btn btn-sm fw-bold fs-6 text-white" style="background-color: rgb(176, 61, 61);">Reset</a>
-                </div>
-            </form>
-        </div>
-        <div class="col-auto ms-auto">
-            <div class="d-flex gap-2">
-                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="mb-0">Machine</label>
+                       <select class="form-select-sm" style="width: 70px;" name="FilterMachineCode" asp-for="FilterMachineCode">
+                            <option value="MCH1-01">CU</option>
+                            <option value="MCH1-02">CS</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Search</button>
+                    <a href="/Summary/ProductionPlan" class="btn btn-danger">Reset</a>
+                </form>
+            </div>
+
+            <div class="col-auto ms-auto">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
                     Upload
                 </button>
             </div>
         </div>
+    </div>
+</div>
         <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -107,21 +609,21 @@
                                 <div class="col-md-6 form-group mb-3">
                                     <label for="TargetMonth" class="form-label fw-bold">Bulan:</label>
                                     <select id="TargetMonth" name="TargetMonth" class="form-select" required>
-                                        @for (int i = 1; i <= 12; i++)
-                                        {
-                                            <option value="@i" selected="@(i == DateTime.Now.Month ? "selected" : null)">
-                                                @System.Globalization.CultureInfo.GetCultureInfo("en-US").DateTimeFormat.GetMonthName(i)
-                                            </option>
-                                        }
+                                    @for (int i = 1; i <= 12; i++)
+                                    {
+                                                <option value="@i" selected="@(i == DateTime.Now.Month ? "selected" : null)">
+                                            @System.Globalization.CultureInfo.GetCultureInfo("en-US").DateTimeFormat.GetMonthName(i)
+                                                </option>
+                                    }
                                     </select>
                                 </div>
                                 <div class="col-md-6 form-group mb-3">
                                     <label for="TargetYear" class="form-label fw-bold">Tahun:</label>
                                     <select id="TargetYear" name="TargetYear" class="form-select" required>
-                                        @for (int i = DateTime.Now.Year - 3; i <= DateTime.Now.Year + 1; i++)
-                                        {
-                                            <option value="@i" selected="@(i == DateTime.Now.Year ? "selected" : null)">@i</option>
-                                        }
+                                    @for (int i = DateTime.Now.Year - 3; i <= DateTime.Now.Year + 1; i++)
+                                    {
+                                                <option value="@i" selected="@(i == DateTime.Now.Year ? "selected" : null)">@i</option>
+                                    }
                                     </select>
                                 </div>
                             </div>
@@ -164,6 +666,7 @@
                     <tr class="text-center">
                         <th colspan="3">Original</th>
                         <th colspan="8">Current</th>
+                         <th rowspan="3">Action</th>
                     </tr>
 
                     <tr class="text-center">
@@ -179,7 +682,7 @@
                         <th rowspan="2">Shift</th>
                         <th rowspan="2">Qty/Hour</th>
                         <th rowspan="2">Hour</th>
-                        <th rowspan="2">Action</th>
+                       
                     </tr>
 
                     <tr class="text-center">
@@ -200,119 +703,103 @@
                     @for (int i = 0; i < totalRows; i++)
                     {
                         var record = dataCount > i ? Model.listRecords[i] : null;
-                        <tr>
-                            <th scope="row" class="text-center align-middle row-number">@(i + 1)</th>
-                            <td>
-                                <div class="input-group m-1">
+                            <tr>
+                                <th scope="row" class="text-center align-middle row-number">@(i + 1)</th>
+                                <td>
                                     <input disabled type="hidden" name="IdModel[@i]" value="@(record?.Id)" />
                                     <input disabled type="text" class="form-control" name="OriginalModelName[@i]" value="@(record?.ModelName)" placeholder="-" />
-                                </div>
-                            </td>
-                            <td>
-                                <div class="m-1">
+                                </td>
+                                <td>
                                     <input disabled type="text" class="form-control" name="OriginalQuantity[@i]" value="@(record?.Quantity.ToString())" placeholder="-" />
-                                </div>
-                            </td>
-                            <td>
-                                <div class="input-group m-1 position-relative">
-                                    <input type="hidden" name="IdModel[@i]" value="@(record?.Id)" />
-                                    <input type="text" class="form-control productInput" name="ModelName[@i]" value="@(record?.ModelName)" placeholder="Pilih Model" autocomplete="off" />
-                                    <a class="btn btn-primary input-group-text" data-bs-toggle="modal" data-bs-target="#new-model-modal">Opsi</a>
-                                    <div class="dropdown custom-dropdown" style="top: 100%; left: 0; width: 100%;"></div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="m-1">
+                                </td>
+                                <td>
+                                    <div class="input-group position-relative">
+                                        <input type="hidden" name="IdModel[@i]" value="@(record?.Id)" />
+                                        <input type="text" class="form-control productInput" name="ModelName[@i]" value="@(record?.ModelName)" placeholder="Pilih Model" autocomplete="off" />
+                                        <a class="btn btn-primary input-group-text" data-bs-toggle="modal" data-bs-target="#new-model-modal">Opsi</a>
+                                        <div class="dropdown custom-dropdown" style="top: 100%; left: 0; width: 100%;"></div>
+                                    </div>
+                                </td>
+                                <td>
                                     <input type="text" class="form-control" name="Quantity[@i]" value="@(record?.Quantity.ToString())" placeholder="Qty" autocomplete="off" />
-                                </div>
-                            </td>
-                            <td>
-                                <div class="m-1">
+                                </td>
+                                <td>
                                     <input type="text" class="form-control" name="Overtime[@i]" value="@(record?.Overtime.ToString())" placeholder="Ovt" autocomplete="off" />
-                                </div>
-                            </td>
-                            <td>
-                                <div class="m-1">
+                                </td>
+                                <td>
                                     <input type="number" class="form-control" name="NoOfDirectWorker[@i]" value="@(record?.NoDirectOfWorker.ToString())" placeholder="Worker" autocomplete="off" />
-                                </div>
-                            </td>
-                            <td>
-                                <div class="m-1">
+                                </td>
+                                <td>
                                     <input type="number" class="form-control" name="NoOfDirectWorkerOvertime[@i]" value="@(record?.NoDirectOfWorkerOvertime.ToString())" placeholder="Ovt" autocomplete="off" />
-                                </div>
-                            </td>
-                            <td class="align-middle">
-                                <div class="d-flex flex-wrap gap-2">
-                                    <div class="form-check">
-                                        <input class="form-check-input"
-                                               type="checkbox"
-                                               name="Shift[@i]"
-                                               value="1"
+                                </td>
+                                <td class="align-middle">
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input"
+                                                   type="checkbox"
+                                                   name="Shift[@i]"
+                                                   value="1"
                                         @(record?.Shift?.Contains("1") == true ? "checked" : "")>
-                                        <label class="form-check-label">S1</label>
-                                    </div>
+                                            <label class="form-check-label">S1</label>
+                                        </div>
 
-                                    <div class="form-check">
-                                        <input class="form-check-input"
-                                               type="checkbox"
-                                               name="Shift[@i]"
-                                               value="2"
+                                        <div class="form-check">
+                                            <input class="form-check-input"
+                                                   type="checkbox"
+                                                   name="Shift[@i]"
+                                                   value="2"
                                         @(record?.Shift?.Contains("2") == true ? "checked" : "")>
-                                        <label class="form-check-label">S2</label>
-                                    </div>
+                                            <label class="form-check-label">S2</label>
+                                        </div>
 
-                                    <div class="form-check">
-                                        <input class="form-check-input"
-                                               type="checkbox"
-                                               name="Shift[@i]"
-                                               value="3"
+                                        <div class="form-check">
+                                            <input class="form-check-input"
+                                                   type="checkbox"
+                                                   name="Shift[@i]"
+                                                   value="3"
                                         @(record?.Shift?.Contains("3") == true ? "checked" : "")>
-                                        <label class="form-check-label">S3</label>
-                                    </div>
+                                            <label class="form-check-label">S3</label>
+                                        </div>
 
-                                    <div class="form-check">
-                                        <input class="form-check-input"
-                                               type="checkbox"
-                                               name="Shift[@i]"
-                                               value="NS"
+                                        <div class="form-check">
+                                            <input class="form-check-input"
+                                                   type="checkbox"
+                                                   name="Shift[@i]"
+                                                   value="NS"
                                         @(record?.Shift?.Contains("NS") == true ? "checked" : "")>
-                                        <label class="form-check-label">NS</label>
+                                            <label class="form-check-label">NS</label>
+                                        </div>
                                     </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="m-1">
+                                </td>
+                                <td>
                                     <input type="text" class="form-control" name="QtyHour[@i]" value="@(record?.QtyHour.ToString())" placeholder="Qty/Hr" autocomplete="off" />
-                                </div>
-                            </td>
-                            <td>
-                                <div class="m-1">
+                                </td>
+                                <td>
                                     <input type="text" class="form-control" name="Hour[@i]" value="@(record?.Hour ?? 0)" readonly />
-                                </div>
-                            </td>
-                            <td>
-                                <div class="d-flex justify-content-center">
+                                </td>
+                                <td>
+                                    <div class="d-flex justify-content-center">
                                     @if (record != null)
                                     {
-                                        <a class="btn btn-warning btn-sm mt-1 me-1" data-bs-toggle="modal" data-bs-target="#edit-model" onclick="setModalData(this)">Edit</a>
-                                        <a class="btn btn-danger btn-sm mt-1" data-bs-toggle="modal" data-bs-target="#delete-model" onclick="setDeleteRecordId(@(record?.Id))">Del</a>
+                                                <a class="btn btn-warning btn-sm mt-1 me-1" data-bs-toggle="modal" data-bs-target="#edit-model" onclick="setModalData(this)">Edit</a>
+                                                <a class="btn btn-danger btn-sm mt-1" data-bs-toggle="modal" data-bs-target="#delete-model" onclick="setDeleteRecordId(@(record?.Id))">Del</a>
                                     }
                                     else
                                     {
-                                        <button type="button" class="btn btn-danger btn-sm mt-1" onclick="removeRow(this)">Del</button>
+                                                <button type="button" class="btn btn-danger btn-sm mt-1" onclick="removeRow(this)">Del</button>
                                     }
-                                </div>
-                            </td>
-                        </tr>
+                                    </div>
+                                </td>
+                            </tr>
                     }
                 </tbody>
             </table>
-            <div class="row">
-                <div class="col-12 mb-3">
-                    <button type="button" class="btn btn-success btn-sm" onclick="addNewRow()">
-                        <i class="bi bi-plus-circle"></i> Add Row
-                    </button>
-                </div>
+           <div class="row">
+    <div class="col-12 mb-3 d-flex justify-content-end">
+        <button type="button" class="btn btn-success btn-sm" onclick="addNewRow()">
+            <i class="bi bi-plus-circle"></i> Add Row
+        </button>
+    </div>
 
                 <div class="col-12">
                     <div class="d-flex align-items-start gap-3">
@@ -324,7 +811,7 @@
             <div class="d-flex align-middle justify-content-center pb-3">
                 <button type="button" id="btn-validate-submit" class="btn btn-primary me-3" onclick="validateAndSubmit()">Submit</button>
                 <a class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delete-all-model">Reset</a>
-                <span id="submitCounter" class="ms-3">Submitted <span id="counter">0</span> time(s)</span>
+                <span id="submitCounter" class="ms-3">Submitted <span id="counter">0</span> time(s)</span>
             </div>
         </form>
     </div>
@@ -598,16 +1085,11 @@
             const newRowHtml = `
                     <tr>
                         <th scope="row" class="text-center align-middle row-number">${currentIndex + 1}</th>
+                        <td><input disabled type="text" class="form-control" placeholder="-" /></td>
+                        <td><input disabled type="text" class="form-control" placeholder="-" /></td>
 
                         <td>
-                            <div class="input-group m-1">
-                                 <input disabled type="text" class="form-control" placeholder="-" />
-                            </div>
-                        </td>
-                        <td><div class="m-1"><input disabled type="text" class="form-control" placeholder="-" /></div></td>
-
-                        <td>
-                            <div class="input-group m-1 position-relative">
+                            <div class="input-group position-relative">
                                 <input type="hidden" name="IdModel[${currentIndex}]" value="" />
                                 <input type="text" class="form-control productInput" name="ModelName[${currentIndex}]" placeholder="Pilih Model" autocomplete="off" />
                                 <a class="btn btn-primary input-group-text" data-bs-toggle="modal" data-bs-target="#new-model-modal">Opsi</a>
@@ -615,11 +1097,11 @@
                             </div>
                         </td>
 
-                        <td><div class="m-1"><input type="number" class="form-control" name="Quantity[${currentIndex}]" placeholder="Qty" /></div></td>
-                        <td><div class="m-1"><input type="number" class="form-control" name="Overtime[${currentIndex}]" placeholder="Ovt" /></div></td>
+                        <td><input type="number" class="form-control" name="Quantity[${currentIndex}]" placeholder="Qty" /></td>
+                        <td><input type="number" class="form-control" name="Overtime[${currentIndex}]" placeholder="Ovt" /></td>
 
-                        <td><div class="m-1"><input type="number" class="form-control" name="NoOfDirectWorker[${currentIndex}]" placeholder="Normal" /></div></td>
-                        <td><div class="m-1"><input type="number" class="form-control" name="NoOfDirectWorkerOvertime[${currentIndex}]" placeholder="Overtime" /></div></td>
+                        <td><input type="number" class="form-control" name="NoOfDirectWorker[${currentIndex}]" placeholder="Normal" /></td>
+                        <td><input type="number" class="form-control" name="NoOfDirectWorkerOvertime[${currentIndex}]" placeholder="Overtime" /></td>
 
                         <td class="align-middle">
                             <div class="d-flex flex-wrap gap-2">
@@ -638,8 +1120,8 @@
                             </div>
                         </td>
 
-                        <td><div class="m-1"><input type="number" class="form-control" name="QtyHour[${currentIndex}]" placeholder="Qty/Hr" /></div></td>
-                        <td><div class="m-1"><input type="text" class="form-control" name="Hour[${currentIndex}]" value="0" readonly /></div></td>
+                        <td><input type="number" class="form-control" name="QtyHour[${currentIndex}]" placeholder="Qty/Hr" /></td>
+                        <td><input type="text" class="form-control" name="Hour[${currentIndex}]" value="0" readonly /></td>
 
                         <td>
                             <div class="d-flex justify-content-center">
@@ -777,6 +1259,30 @@
         function setDeleteRecordId(recordId) {
             document.getElementById("delete-record-id").value = recordId;
         }
+        // BOLD EFFECT - SAMA SEPERTI PRODUCTION REPORT
+document.addEventListener('DOMContentLoaded', function() {
+    function updateDropdownStyle() {
+        const dropdowns = document.querySelectorAll('.filter-content .form-select-sm');
+
+        dropdowns.forEach(dropdown => {
+            const dropdownName = dropdown.name;
+            const dropdownValue = dropdown.value;
+
+            if (dropdownName === 'FilterMachineCode') {
+                if (dropdownValue) {
+                    dropdown.classList.add('selected');
+                }
+            }
+        });
+    }
+
+    updateDropdownStyle();
+
+    const dropdowns = document.querySelectorAll('.filter-content .form-select-sm');
+    dropdowns.forEach(dropdown => {
+        dropdown.addEventListener('change', updateDropdownStyle);
+    });
+});
     </script>
 </body>
 </html>
