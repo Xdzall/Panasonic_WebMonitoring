@@ -147,7 +147,7 @@
     display: flex !important;
     flex-direction: column !important;
     padding: 8px 0 !important; /* Padding kotak sedikit ditambah agar simetris */
-    overflow: hidden !important;
+    overflow: visible !important;
     background: rgba(255, 255, 255, 0.20) !important;
     border: 2px solid rgba(255, 255, 255, 0.3) !important;
     border-left: none !important;
@@ -370,6 +370,10 @@
     opacity: 0.6 !important;
     color: #ffffff !important;
 }
+#moreMenuPopup a:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+}
     </style>
 </head>
 
@@ -441,26 +445,28 @@
                         <span class="nav-label">Break Time</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a href="~/Machine/index">
+                        <i class="fa-solid fa-gear"></i>
+                        <span class="nav-label">Machine</span>
+                    </a>
+                </li>
 
-                <!-- MORE MENU -->
-        <li class="nav-item" style="position: relative;">
-            <a href="#" id="moreMenuBtn">
-                <i class="fa-solid fa-ellipsis-vertical"></i>
-                <span class="nav-label">More</span>
-            </a>
+             <!-- MORE MENU -->
+<li class="nav-item" style="position: relative;">
+    <a href="#" id="moreMenuBtn">
+        <i class="fa-solid fa-ellipsis-vertical"></i>
+        <span class="nav-label">More</span>
+    </a>
 
-            <!-- POPUP MENU -->
-            <div id="moreMenuPopup" style="display: none; position: absolute; left: 100%; top: 0; margin-left: 8px; background: rgba(255, 255, 255, 0.95); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); min-width: 140px; z-index: 1000;">
-                <a href="~/Final/ProductionPlan" style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; color: #333; text-decoration: none; border-bottom: 1px solid rgba(0,0,0,0.1);">
-                    <i class="fa-solid fa-clipboard-list" style="font-size: 14px;"></i>
-                    <span style="font-size: 11px; white-space: nowrap;">CS Plan</span>
-                </a>
-                <a href="~/Final/ProductionPlan" style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; color: #333; text-decoration: none;">
-                    <i class="fa-solid fa-tasks" style="font-size: 14px;"></i>
-                    <span style="font-size: 11px; white-space: nowrap;">CU Plan</span>
-                </a>
-            </div>
-        </li>
+   <!-- POPUP MENU -->
+<div id="moreMenuPopup" style="display: none; position: absolute; left: 100%; top: 0; margin-left: 8px; background: rgba(255, 255, 255, 0.20) !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 8px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2); min-width: 160px; z-index: 1000; padding: 4px 0;">
+    <a href="~/Summary/ProductionPlan" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 12px 14px; color: rgba(255, 255, 255, 0.5) !important; text-decoration: none; border-radius: 6px; transition: all 0.2s ease; margin: 0 4px;">
+        <i class="fa-solid fa-clipboard-list" style="font-size: 18px;"></i>
+        <span style="font-size: 8.5px; font-weight: 500; text-align: center; line-height: 1.1;">Production<br>Plan</span>
+    </a>
+</div>
+</li>
          </ul>
 
 <div class="align-items-center center">
@@ -612,32 +618,33 @@ $(document).ready(function () {
             setInterval(updateDateTime, 1000);
         });
     </script>
-    <script>
-    // More Menu Toggle
-    document.addEventListener('DOMContentLoaded', function() {
-        const moreBtn = document.getElementById('moreMenuBtn');
-        const morePopup = document.getElementById('moreMenuPopup');
+<script>
+// More Menu Toggle - FIXED VERSION
+document.addEventListener('DOMContentLoaded', function() {
+    const moreBtn = document.getElementById('moreMenuBtn');
+    const morePopup = document.getElementById('moreMenuPopup');
 
-        if (moreBtn && morePopup) {
-            moreBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
+    if (moreBtn && morePopup) {
+        moreBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
 
-                if (morePopup.style.display === 'none') {
-                    morePopup.style.display = 'block';
-                } else {
-                    morePopup.style.display = 'none';
-                }
-            });
+            // FIX: Cek kalau display kosong ('') atau 'none'
+            if (morePopup.style.display === 'none' || morePopup.style.display === '') {
+                morePopup.style.display = 'block';
+            } else {
+                morePopup.style.display = 'none';
+            }
+        });
 
-            // Close popup when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!moreBtn.contains(e.target) && !morePopup.contains(e.target)) {
-                    morePopup.style.display = 'none';
-                }
-            });
-        }
-    });
+        // Close popup when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!moreBtn.contains(e.target) && !morePopup.contains(e.target)) {
+                morePopup.style.display = 'none';
+            }
+        });
+    }
+});
 </script>
 
     @await RenderSectionAsync("Scripts", required: false)
