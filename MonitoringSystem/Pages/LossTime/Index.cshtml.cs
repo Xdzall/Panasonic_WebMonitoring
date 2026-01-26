@@ -1,19 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Data.SqlClient;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.IO;
 using ClosedXML.Excel;
 using MonitoringSystem.Data;
 using System.Text.Json;
-using System.Text;
 using MonitoringSystem.Models;
 using OfficeOpenXml;
 using System.Globalization;
-using Microsoft.AspNetCore.Hosting;
-using System.Configuration;
 
 namespace MonitoringSystem.Pages.LossTime
 {
@@ -243,22 +236,17 @@ namespace MonitoringSystem.Pages.LossTime
         {
             var breakTimes = GetAllBreakTimes();
 
-            // 1. Ambil Data untuk Chart Summary & Harian (Data Bulan Ini)
             var currentRecords = GetLossTimeRecords(StartSelectedDate, EndSelectedDate, breakTimes);
 
-            // 2. Ambil Data Bulan Lalu untuk Chart Summary
             DateTime prevMonthDate = StartSelectedDate.AddMonths(-1);
             DateTime lastMonthStart = new DateTime(prevMonthDate.Year, prevMonthDate.Month, 1);
             DateTime lastMonthEnd = lastMonthStart.AddMonths(1).AddDays(-1);
             var lastMonthRecords = GetLossTimeRecords(lastMonthStart, lastMonthEnd, breakTimes);
 
-            // 3. Siapkan Chart Summary (Shift & Comparison)
             PrepareSummaryChartData(currentRecords, lastMonthRecords);
 
-            // 4. Siapkan Chart Harian (Daily Stacked)
             PrepareDailyChartData(currentRecords);
 
-            // 5. Load Data Tabel (Pagination)
             LoadPaginatedData(breakTimes);
         }
 
@@ -283,7 +271,7 @@ namespace MonitoringSystem.Pages.LossTime
                             string reason = reader.IsDBNull(reader.GetOrdinal("Reason")) ? string.Empty : reader.GetString(reader.GetOrdinal("Reason"));
                             records.Add(new LossTimeRecord
                             {
-                                Date = reader.GetDateTime(reader.GetOrdinal("Date")), // Penting untuk grouping harian
+                                Date = reader.GetDateTime(reader.GetOrdinal("Date")),
                                 LossTime = reason,
                                 Duration = reader.IsDBNull(reader.GetOrdinal("LossTime")) ? 0 : reader.GetInt32(reader.GetOrdinal("LossTime")),
                                 Shift = reader.IsDBNull(reader.GetOrdinal("Shift")) ? string.Empty : reader.GetString(reader.GetOrdinal("Shift")),
@@ -337,16 +325,13 @@ namespace MonitoringSystem.Pages.LossTime
         {
             try
             {
-                // 1. Dapatkan daftar hari dalam bulan tersebut (1 s/d 30/31)
                 int daysInMonth = DateTime.DaysInMonth(SelectedYear, SelectedMonth);
                 var days = Enumerable.Range(1, daysInMonth).ToArray();
 
-                // 2. Group data berdasarkan Hari dan Kategori
                 var dailyGroups = currentRecords
                     .GroupBy(r => new { Day = r.Date.Day, r.Category })
                     .ToDictionary(g => g.Key, g => g.Sum(x => x.Duration));
 
-                // 3. Buat Datasets (Satu dataset per Kategori)
                 var datasets = AllCategories.Select(category => new
                 {
                     label = category,
@@ -356,13 +341,12 @@ namespace MonitoringSystem.Pages.LossTime
                         return dailyGroups.ContainsKey(key) ? Math.Round(dailyGroups[key] / 60.0, 2) : 0;
                     }).ToArray(),
                     backgroundColor = CategoryColors.ContainsKey(category) ? CategoryColors[category] : "#cccccc",
-                    stack = "DayStack" // Stack ID yang sama agar bertumpuk
+                    stack = "DayStack"
                 }).ToList();
 
-                // 4. Buat Object Chart
                 var dailyChartData = new
                 {
-                    labels = days.Select(d => d.ToString()).ToArray(), // Label hari 1, 2, 3...
+                    labels = days.Select(d => d.ToString()).ToArray(),
                     datasets = datasets
                 };
 
@@ -494,7 +478,6 @@ namespace MonitoringSystem.Pages.LossTime
 
         public IActionResult OnPostExportExcel()
         {
-            // Logic Export Excel sama seperti sebelumnya, disingkat disini untuk fokus pada Chart
             LoadBreakTimeForToday();
             SetDatesFromMonthYear();
             var breakTimes = GetAllBreakTimes();
@@ -543,7 +526,6 @@ namespace MonitoringSystem.Pages.LossTime
 
         public async Task<IActionResult> OnPostImportExcelActualAsync()
         {
-            // ... (Bagian validasi file dan input tetap sama) ...
 
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
@@ -559,49 +541,41 @@ namespace MonitoringSystem.Pages.LossTime
 
                         var newActuals = new List<LossTimeActual>();
 
-                        // 2. Loop Baris (Mulai dari Baris 3: Quality Trouble)
                         for (int row = 3; row <= rowCount; row++)
                         {
                             var catName = sheet.Cells[row, 2].Value?.ToString()?.Trim();
 
-                            // Lewati baris header atau sub-total di Excel
                             if (string.IsNullOrEmpty(catName) ||
                                 catName.ToLower().Contains("loss (min)") ||
                                 catName.ToLower().Contains("loss category")) continue;
 
                             catName = NormalizeCategoryName(catName);
 
-                            // 3. Loop Kolom (Tanggal 1 s/d 31)
                             for (int day = 1; day <= 31; day++)
                             {
-                                int col = 2 + day; // Kolom 3 (C) adalah tanggal 1
+                                int col = 2 + day;
                                 var cellValue = sheet.Cells[row, col].Value;
 
                                 if (cellValue != null && double.TryParse(cellValue.ToString(), out double actualMinutes))
                                 {
-                                    // Kita masukkan semua data, termasuk 0 jika diperlukan untuk reporting
-                                    // atau gunakan 'if (actualMinutes == 0) continue;' jika ingin database hemat storage
 
-                                    // Validasi apakah hari tersebut ada di bulan yang dipilih (misal cegah tgl 31 Feb)
                                     if (day <= DateTime.DaysInMonth(TargetYear, TargetMonth))
                                     {
                                         newActuals.Add(new LossTimeActual
                                         {
                                             Category = catName,
                                             MachineLine = this.UploadMachineLine,
-                                            Day = day,              // Sesuai Model Anda
-                                            Month = TargetMonth,  // Sesuai Model Anda
-                                            Year = TargetYear,    // Sesuai Model Anda
-                                            Minutes = actualMinutes, // Sesuai Model Anda
-                                            CreatedAt = DateTime.Now // Otomatis terisi DateTime.Now
+                                            Day = day,
+                                            Month = TargetMonth,
+                                            Year = TargetYear,
+                                            Minutes = actualMinutes,
+                                            CreatedAt = DateTime.Now
                                         });
                                     }
                                 }
                             }
                         }
 
-                        // 4. Hapus Data Lama agar tidak double (Berdasarkan Line, Day, Month, Year)
-                        // Karena model tidak punya kolom 'Date', kita filter berdasarkan 3 kolom tersebut
                         var dataToDelete = _context.LossTimeActuals
                             .Where(x => x.MachineLine == this.UploadMachineLine &&
                                         x.Month == TargetMonth &&
@@ -609,7 +583,6 @@ namespace MonitoringSystem.Pages.LossTime
 
                         _context.LossTimeActuals.RemoveRange(dataToDelete);
 
-                        // 5. Simpan ke Database
                         if (newActuals.Any())
                         {
                             _context.LossTimeActuals.AddRange(newActuals);
