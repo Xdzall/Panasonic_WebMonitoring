@@ -7,7 +7,7 @@ using OfficeOpenXml;
 
 namespace MonitoringSystem.Pages.Shared
 {
-    public class ProductionPlanCUModel : PageModel
+    public class ProductionPlanModel : PageModel
     {
         private readonly IWebHostEnvironment _webHostEnvironment;
 

@@ -1,7 +1,7 @@
 ﻿@page
-@model MonitoringSystem.Pages.Shared.ProductionPlanCUModel
+@model MonitoringSystem.Pages.Shared.ProductionPlanModel
 @{
-    ViewData["Title"] = "CU Production Plan";
+    ViewData["Title"] = "Production Plan";
     string formattedDate = DateTime.Now.ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("en-US"));
 }
 
@@ -61,7 +61,7 @@
 
                 <div class="col-auto d-flex gap-2">
                     <button type="submit" class="btn btn-sm fw-bold fs-6 text-white" style="background-color: rgb(61, 121, 176);">Search</button>
-                    <a href="/Summary/ProductionPlanCU" class="btn btn-sm fw-bold fs-6 text-white" style="background-color: rgb(176, 61, 61);">Reset</a>
+                    <a href="/Summary/ProductionPlan" class="btn btn-sm fw-bold fs-6 text-white" style="background-color: rgb(176, 61, 61);">Reset</a>
                 </div>
             </form>
         </div>
