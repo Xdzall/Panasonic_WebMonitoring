@@ -258,11 +258,6 @@ table.table tbody td {
     color: #eaeaea !important;
 }
 
-/* Kolom-kolom hari (3 dst) - background normal */
-.table tbody td:nth-child(n+3) {
-    background-color: rgba(255, 255, 255, 0.08) !important;
-}
-
 table.table-bordered > :not(caption) > * {
     border-color: rgba(255, 255, 255, 0.5) !important;
 }
@@ -552,6 +547,28 @@ input[type="checkbox"]:checked + .shift-button {
 /* Override: pastikan semua kolom data (termasuk kolom angka 1) punya warna sama */
 .table tbody tr td:not(:first-child):not(:nth-child(2)) {
     background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+
+/* GELAPIN BARIS TOTAL ACTUAL & TOTAL PLAN */
+.table tbody tr:nth-child(3) td,  /* Total Plan */
+.table tbody tr:nth-child(6) td {  /* Total Actual */
+    background-color: rgba(255, 255, 255, 0.30) !important;
+    font-weight: 700;
+}
+
+/* Override khusus untuk kolom sticky (kolom 1 & 2) di baris Total */
+.table tbody tr:nth-child(3) td:first-child,
+.table tbody tr:nth-child(3) td:nth-child(2),
+.table tbody tr:nth-child(6) td:first-child,
+.table tbody tr:nth-child(6) td:nth-child(2) {
+    background-color: rgba(255, 255, 255, 0.30) !important;
+}
+
+/* Override untuk kolom tanggal (3 dst) di baris Total - lebih gelap */
+.table tbody tr:nth-child(3) td:nth-child(n+3),
+.table tbody tr:nth-child(6) td:nth-child(n+3) {
+    background-color: rgba(255, 255, 255, 0.25) !important;
 }
 /* ========================================
    HAPUS/COMMENT CSS YANG LAMA INI (HAPUS)
