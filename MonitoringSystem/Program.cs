@@ -33,7 +33,7 @@ builder.Services.AddHostedService<PlanUpdaterService>()
 
 builder.Services.AddSignalR();
 
-builder.Services.AddHostedService<PlanUpdaterService>();
+//builder.Services.AddHostedService<PlanUpdaterService>();
 
 
 builder.Services.Configure<CookiePolicyOptions>(options =>
