@@ -59,14 +59,14 @@ body {
 }
 
     /* HANYA apply background untuk body tanpa class reusable-bg */
-    body:not(.reusable-bg) {
+   /* body:not(.reusable-bg) {
             margin: 0;
             min-height: 100vh;
             background-image: url('/assets/BackgroundPanamon.png');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-    }
+    }*/
 
 /* Focus Styles */
 .btn:focus,

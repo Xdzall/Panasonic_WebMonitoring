@@ -3,7 +3,7 @@
    Semua CSS dengan prefix .auth-body
    ========================================== */
 
-/* Background untuk halaman auth */
+/* Background untuk halaman auth 
 .auth-body {
     background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('../assets/BackgroundPanamon.png');
     background-size: cover;
@@ -13,17 +13,17 @@
     min-height: 100vh;
     padding: 20px 0;
 }
-
-    /* Card styling untuk auth */
-    .auth-body .card {
-        background: linear-gradient(135deg, rgba(50, 60, 80, 0.7) 0%, rgba(30, 40, 60, 0.8) 100%) !important;
-        border: 1px solid rgba(255, 255, 255, 0.35) !important;
-        box-shadow: none !important;
-        border-radius: 12px;
-        max-width: 620px;
-        width: 100%;
-        margin: 50px auto;
-    }
+*/
+/* Card styling untuk auth */
+.auth-body .card {
+    background: linear-gradient(135deg, rgba(50, 60, 80, 0.7) 0%, rgba(30, 40, 60, 0.8) 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.35) !important;
+    box-shadow: none !important;
+    border-radius: 12px;
+    max-width: 620px;
+    width: 100%;
+    margin: 50px auto;
+}
 
     .auth-body .card-header {
         background: transparent !important;
