@@ -1,107 +1,908 @@
-/* Navigation Menu Styles */
-.nav-menu a {
-    † † color: #333;
-    † † text-decoration: none;
-    † † border-radius: 10px;
-    † † padding: 13px 15px;
-    † † position: relative;
-    † † z-index: 2;
-    † † transition: color 0.3s ease;
-}
+Ôªø/* ====================================================
+   REFACTORED 
+    S - MonitoringSystem
+   Menggabungkan: site.css + background-style.css + inline styles dari _Layout
+   ==================================================== */
 
-.nav-menu {
-    † † position: relative;
-    † † z-index: 1;
-    † † display: flex;
-    † † align-items: center;
+/* ====================================================
+   1. GLOBAL VARIABLES & RESETS
+   ==================================================== */
+:root {
+    --panasonic-blue: rgb(61, 121, 176);
+    --panasonic-dark-blue: rgb(35, 66, 164);
+    --bg-light: #ffffff;
+    --text-dark: #333333;
+    --border-radius: 5px;
 }
-
-.nav-highlighter {
-    † † position: absolute;
-    † † height: 85%;
-    † † top: 50%;
-    † † transform: translateY(-50%);
-    † † left: 0;
-    † † background-color: rgb(61, 121, 176);
-    † † border-radius: 8px;
-    † † transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-    † † opacity: 0;
-    † † pointer-events: none;
-    † † z-index: 0;
-}
-
-.nav-menu a.active-text {
-    † † color: #fff !important;
-}
-
-.nav-menu a:hover {
-    † † color: #fff;
-}
-
-/* Base HTML & Body Styles */
 html {
-    † † font-size: 14px;
-    † † position: relative;
-    † † min-height: 80%;
-    † † margin: 0;
+    font-size: 14px;
+    position: relative;
+    min-height: 100vh !important; /* ? UBAH INI */
+    margin: 0;
+    /* JANGAN tambah background di sini, biar background-style.css yang handle */
 }
 
 @media (min-width: 768px) {
-    † † html {
-        † † † † font-size: 16px;
-        † †
+    html {
+        font-size: 16px;
     }
 }
 
 body {
-    † † margin-bottom: 60px;
-    † † height: 100%;
+    margin: 0;
+    padding: 0;
+    height: 100%;
 }
 
-    /* HANYA apply background untuk body tanpa class reusable-bg */
-   /* body:not(.reusable-bg) {
-        † † margin: 0;
-        † † min-height: 100vh;
-        † † background-image: url('/assets/BackgroundPanamon.png');
-        † † background-size: cover;
-        † † background-position: center;
-        † † background-repeat: no-repeat;
-    }*/
+html, body {
+    overflow: hidden !important;
+    height: 100vh;
+}
 
-/* Focus Styles */
+    /* ====================================================
+   2. BACKGROUND SETTINGS
+   ==================================================== */
+    /* Background styles TIDAK ADA DI SINI */
+    /* Tetap pakai background-style.css yang original */
+
+    /* ====================================================
+   3. TRANSPARENT CONTAINERS
+   ==================================================== */
+.bg-light,
+.bg-white,
+.flex-fill,
+.overflow-y-scroll,
+.p-2,
+main,
+.container-fluid,
+canvas,
+.chart-container {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+    /* ====================================================
+   4. CUSTOM SCROLLBAR
+   ==================================================== */
+    body.reusable-bg ::-webkit-scrollbar {
+        width: 12px;
+        height: 12px;
+    }
+
+    body.reusable-bg ::-webkit-scrollbar-track {
+        background: rgba(26, 26, 46, 0.5);
+        border-radius: 10px;
+    }
+
+    body.reusable-bg ::-webkit-scrollbar-thumb {
+        background: rgba(61, 121, 176, 0.7);
+        border-radius: 10px;
+        border: 2px solid rgba(26, 26, 46, 0.5);
+    }
+
+        body.reusable-bg ::-webkit-scrollbar-thumb:hover {
+            background: rgba(61, 121, 176, 0.9);
+        }
+
+    body.reusable-bg ::-webkit-scrollbar-corner {
+        background: rgba(26, 26, 46, 0.5);
+    }
+
+    /* Firefox scrollbar */
+    body.reusable-bg * {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(61, 121, 176, 0.7) rgba(26, 26, 46, 0.5);
+    }
+
+/* Main content wrapper scrollbar */
+.main-content-wrapper::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+.main-content-wrapper::-webkit-scrollbar {
+    width: 8px;
+}
+
+.main-content-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+}
+
+    .main-content-wrapper::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.5);
+    }
+
+/* ====================================================
+   5. HEADER STYLES
+   ==================================================== */
+.main-header {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: 45px !important;
+    background: transparent !important;
+    z-index: 10 !important;
+    pointer-events: none;
+}
+
+.header-content {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    height: 30px !important;
+    padding: 0 25px !important;
+    position: relative !important;
+    margin-top: 9px !important;
+}
+
+.header-left {
+    display: flex !important;
+    align-items: center !important;
+    height: 100% !important;
+}
+
+    .header-left img {
+        height: 12px !important;
+        width: auto !important;
+        object-fit: contain !important;
+    }
+
+.header-center {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0px !important;
+    font-size: 15px !important;
+    letter-spacing: 0.08em !important;
+    font-family: "DINPro-CondensedMedium", -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+    .header-center .brand-o {
+        width: 14px !important;
+        height: 14px !important;
+        border: 2px solid #ffffff !important;
+        border-radius: 50% !important;
+        display: inline-block;
+        position: relative;
+        top: 1px !important;
+    }
+
+        .header-center .brand-o::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 5px;
+            height: 5px;
+            background-color: #ffffff;
+            border-radius: 50%;
+        }
+
+    .header-center span {
+        color: #ffffff !important;
+        line-height: 1 !important;
+    }
+
+        .header-center span:last-child {
+            margin-left: -4px !important;
+        }
+
+.header-right {
+    font-family: 'Montserrat', 'Poppins', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    color: #ffffff !important;
+    display: flex !important;
+    gap: 12px !important;
+    align-items: center !important;
+}
+
+    .header-right p {
+        margin: 0 !important;
+    }
+
+        .header-right p:first-child::after {
+            content: "|";
+            margin-left: 12px;
+            color: #ffffff;
+        }
+
+/* ====================================================
+   6. SIDEBAR STYLES - ULTRA COMPACT
+   ==================================================== */
+#bdSidebar {
+    width: 75px !important;
+    margin: 4px 0 10px -2px !important;
+    height: calc(100vh - 70px) !important;
+    border-radius: 12px !important;
+    position: relative !important;
+    z-index: 5000 !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 8px 0 !important;
+    overflow: visible !important;
+    background: rgba(255, 255, 255, 0.20) !important;
+    border: 2px solid rgba(255, 255, 255, 0.3) !important;
+    border-left: none !important;
+}
+
+    #bdSidebar .mynav {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 2px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+    }
+
+    #bdSidebar .nav-item {
+        width: 100% !important;
+        display: flex !important;
+        justify-content: center !important;
+        margin: 0 !important;
+    }
+
+        #bdSidebar .nav-item a {
+            width: 88px !important;
+            height: 56px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: 8px !important;
+            background: transparent !important;
+            color: rgba(255, 255, 255, 0.5) !important;
+            text-decoration: none !important;
+            transition: all 0.2s ease !important;
+            padding: 0 !important;
+        }
+
+            #bdSidebar .nav-item a:hover {
+                background: rgba(255, 255, 255, 0.1) !important;
+            }
+
+            /* Active/Current Page Indicator - Garis Kiri */
+            #bdSidebar .nav-item a.active {
+                color: #ffffff !important;
+                position: relative;
+            }
+
+                #bdSidebar .nav-item a.active::before {
+                    content: '';
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    bottom: 0;
+                    width: 3px;
+                    background: #ffffff;
+                    border-radius: 0 3px 3px 0;
+                }
+
+    /* Label Teks */
+    #bdSidebar .nav-label {
+        font-size: 8.5px !important;
+        font-weight: 500;
+        text-align: center;
+        line-height: 1.1;
+        white-space: nowrap;
+        letter-spacing: -0.1px;
+    }
+
+    /* Logout Section - PUSH KE BOTTOM */
+    #bdSidebar .align-items-center.center {
+        margin-top: auto !important;
+        padding: 8px 0 !important;
+        width: 100% !important;
+        display: flex !important;
+        justify-content: center !important;
+    }
+
+    #bdSidebar .center form {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        display: flex !important;
+        justify-content: center !important;
+    }
+
+    #bdSidebar .logout-btn {
+        width: 88px !important;
+        height: 50px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 8px !important;
+        background: transparent !important;
+        border: none !important;
+        color: #ff8a80 !important;
+        cursor: pointer !important;
+        text-decoration: none !important;
+        padding: 0 !important;
+        transition: all 0.2s ease !important;
+    }
+
+        #bdSidebar .logout-btn:hover {
+            background: rgba(255, 138, 128, 0.1) !important;
+            color: #ff5252 !important;
+        }
+
+        #bdSidebar .logout-btn i {
+            font-size: 15px !important;
+            margin-bottom: 2px !important;
+        }
+
+        #bdSidebar .logout-btn .nav-label {
+            font-size: 9px !important;
+            font-weight: 500 !important;
+            text-align: center !important;
+            line-height: 1.1 !important;
+        }
+
+/* More Menu Popup */
+#moreMenuPopup {
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: 0;
+    margin-left: 8px;
+    background: rgba(255, 255, 255, 0.20) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    min-width: 160px;
+    z-index: 9999;
+    padding: 4px 0;
+}
+
+    #moreMenuPopup a {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        padding: 12px 14px;
+        color: rgba(255, 255, 255, 0.5) !important;
+        text-decoration: none;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        margin: 0 4px;
+    }
+
+        #moreMenuPopup a:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+            color: #ffffff !important;
+        }
+
+        #moreMenuPopup a i {
+            font-size: 18px;
+        }
+
+        #moreMenuPopup a span {
+            font-size: 8.5px;
+            font-weight: 500;
+            text-align: center;
+            line-height: 1.1;
+        }
+
+/* ====================================================
+   7. MAIN CONTENT AREA
+   ==================================================== */
+.main-content-wrapper {
+    flex: 1;
+    height: calc(100vh - 45px);
+    overflow: auto !important;
+    padding-top: 3px;
+}
+
+/ /* ====================================================
+   8. FOOTER STYLES
+   ==================================================== */
+/* ====================================================
+   8. FOOTER STYLES
+   ==================================================== */
+.footer-copyright {
+    position: relative !important;
+    bottom: auto !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    padding: 5px 0 !important;
+    background: transparent !important;
+    z-index: 5 !important;
+    font-size: 6px !important;
+    margin-top: 3px !important;  /* ‚Üê Jarak dari box terakhir */
+}
+
+.footer-copyright p {
+    margin: 0 !important;
+    opacity: 0.6 !important;
+    color: #ffffff !important;
+}
+
+/* Footer sticky bottom for auth pages */
+body.reusable-bg .position-sticky.sticky-bottom,
+body.reusable-bg .sticky-bottom {
+    background: rgba(15, 32, 39, 0.9) !important;
+    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+    body.reusable-bg .position-sticky.sticky-bottom *,
+    body.reusable-bg .sticky-bottom * {
+        color: #ffffff !important;
+    }
+
+    body.reusable-bg .position-sticky.sticky-bottom span,
+    body.reusable-bg .sticky-bottom span,
+    body.reusable-bg .position-sticky.sticky-bottom p,
+    body.reusable-bg .sticky-bottom p {
+        color: #ffffff !important;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+/* ====================================================
+   9. MODAL STYLES
+   ==================================================== */
+.modal-backdrop {
+    display: none !important;
+}
+
+.modal {
+    z-index: 1050 !important;
+    pointer-events: auto !important;
+}
+
+body.modal-open #bdSidebar {
+    pointer-events: none !important;
+    opacity: 0.5;
+}
+
+#exportModal .modal-content,
+.modal-content {
+    background: linear-gradient(180deg, #2d3548 0%, #1f2533 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 15px !important;
+    color: white;
+}
+
+/* ====================================================
+   10. FONT FACE
+   ==================================================== */
+@font-face {
+    font-family: DINProCondensedMedium;
+    src: url('/assets/fonts/DINPro-CondensedMedium.ttf') format('truetype');
+    font-weight: 500;
+    font-style: normal;
+}
+
+/* ====================================================
+   11. AUTH PAGES (Login/Register) STYLES
+   ==================================================== */
+
+/* Card styling untuk auth */
+.auth-body .card {
+    background: linear-gradient(135deg, rgba(50, 60, 80, 0.7) 0%, rgba(30, 40, 60, 0.8) 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.35) !important;
+    box-shadow: none !important;
+    border-radius: 12px;
+    max-width: 620px;
+    width: 100%;
+    margin: 50px auto;
+}
+
+.auth-body .card-header {
+    background: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.35) !important;
+    box-shadow: none !important;
+    border-radius: 12px;
+    border-bottom: none !important;
+    padding: 0.75rem 1.5rem !important;
+}
+
+    .auth-body .card-header.bg-primary,
+    .auth-body .card-header.bg-success {
+        background: transparent !important;
+    }
+
+    .auth-body .card-header h2 {
+        font-size: 1.3rem !important;
+        margin-bottom: 0.15rem !important;
+    }
+
+    .auth-body .card-header p {
+        font-size: 0.75rem !important;
+        margin-bottom: 0 !important;
+    }
+
+.auth-body .card-body {
+    padding: 1.5rem 2rem !important;
+}
+
+    .auth-body .card-body form {
+        max-width: 75%;
+        margin: 0 auto;
+    }
+
+/* Custom Input Box untuk auth */
+.auth-body .custom-input {
+    width: 100%;
+    background: linear-gradient(135deg, rgba(120, 130, 150, 1.0) 0%, rgba(100, 110, 130, 1.0) 100%) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.6) !important;
+    border-radius: 8px !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 15px !important;
+    color: rgba(255, 255, 255, 1.0) !important;
+    height: 50px !important;
+    transition: all 0.3s ease;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+    .auth-body .custom-input::placeholder {
+        color: rgba(255, 255, 255, 0.5) !important;
+    }
+
+/* Autofill fix */
+.auth-body input.custom-input:-webkit-autofill,
+.auth-body input.custom-input:-webkit-autofill:hover,
+.auth-body input.custom-input:-webkit-autofill:focus,
+.auth-body input.custom-input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px rgba(110, 120, 140, 1) inset !important;
+    box-shadow: 0 0 0 1000px rgba(110, 120, 140, 1) inset !important;
+    -webkit-text-fill-color: #ffffff !important;
+    caret-color: #ffffff !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.6) !important;
+    transition: background-color 9999s ease-in-out 0s !important;
+}
+
+/* Label styling untuk auth */
+.auth-body .form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: #ffffff;
+}
+
+.auth-body .mb-3 {
+    margin-bottom: 1rem !important;
+}
+
+/* Buttons untuk auth */
+.auth-body .btn-primary,
+.auth-body .btn-success,
+.auth-body .btn-white {
+    border-radius: 5px;
+    padding: 10px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.auth-body .btn-white {
+    background-color: #ffffff;
+    border: none;
+}
+
+    .auth-body .btn-white:hover {
+        box-shadow: 0 5px 15px #f8f9fa;
+        background-color: #ffffff;
+        transform: translateY(-2px);
+        color: black;
+    }
+
+.auth-body .btn-primary {
+    background: linear-gradient(109.6deg, rgb(61, 121, 176) 11.3%, rgb(45, 76, 174) 91.1%);
+    border: none;
+}
+
+    .auth-body .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
+        background: linear-gradient(109.6deg, rgb(71, 131, 186) 11.3%, rgb(45, 76, 174) 91.1%);
+    }
+
+.auth-body .btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+}
+
+.auth-body .btn-lg {
+    padding: 0.65rem 1rem !important;
+    font-size: 1rem !important;
+}
+
+.auth-body .d-grid {
+    margin-bottom: 0.75rem !important;
+}
+
+/* Links untuk auth */
+.auth-body .text-decoration-none {
+    color: rgb(255, 255, 255);
+    transition: all 0.2s ease;
+}
+
+    .auth-body .text-decoration-none:hover {
+        color: rgb(200, 220, 255);
+        text-decoration: underline !important;
+    }
+
+/* Validation errors untuk auth */
+.auth-body .text-danger {
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+    color: #ff6b6b !important;
+}
+
+/* External login buttons untuk auth */
+.auth-body .btn-outline-secondary {
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+    .auth-body .btn-outline-secondary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
+    }
+
+/* Brand logo untuk auth page */
+.brand-logo {
+    display: inline-flex !important;
+    align-items: center;
+    font-family: 'Montserrat', 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 30px;
+    letter-spacing: 0.5em !important;
+    color: #ffffff;
+    margin-top: 115px !important;
+    margin-bottom: 0px !important;
+    position: relative;
+    z-index: 1;
+}
+
+.brand-text {
+    line-height: 1;
+}
+
+.brand-o {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 33px;
+    height: 33px;
+    border: 3px solid #ffffff;
+    border-radius: 50%;
+    margin-left: 0.1em;
+    margin-right: 0.5em;
+    transform: translateY(-3px);
+}
+
+    .brand-o::after {
+        content: "";
+        width: 13px;
+        height: 13px;
+        background-color: #ffffff;
+        border-radius: 50%;
+    }
+
+/* Auth footer */
+.auth-footer {
+    margin-top: -2.5rem !important;
+    font-size: 9px !important;
+}
+
+/* Password toggle untuk auth */
+.auth-body .password-toggle {
+    color: #ffffff;
+}
+
+    .auth-body .password-toggle:hover {
+        color: rgb(200, 220, 255);
+    }
+
+/* Fix double password eye */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none;
+}
+
+input[type="password"]::-webkit-credentials-auto-fill-button {
+    visibility: hidden;
+    display: none !important;
+    pointer-events: none;
+}
+
+/* Wrapper khusus halaman auth */
+.panamon-bg {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 120px;
+}
+
+    .panamon-bg .brand-logo {
+        margin-top: 0 !important;
+    }
+
+/* ====================================================
+   12. DASHBOARD STYLES
+   ==================================================== */
+.dashboard-container {
+    padding: 10px;
+}
+
+.grid-border {
+    border: 1px solid var(--panasonic-blue);
+    padding: 8px;
+    background: #ffffff;
+    border-radius: var(--border-radius);
+    margin-bottom: 10px;
+}
+
+.fill-height {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.section-title {
+    color: var(--panasonic-blue);
+    font-weight: 900;
+    text-align: center;
+    text-transform: uppercase;
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    border-bottom: 2px solid var(--panasonic-blue);
+    padding-bottom: 5px;
+}
+
+.btn-custom-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.btn-blue-active {
+    background-color: var(--panasonic-blue);
+    color: white;
+    font-weight: bold;
+    border: 1px solid var(--panasonic-blue);
+    width: 100%;
+    border-radius: var(--border-radius);
+    padding: 10px;
+}
+
+.btn-outline-inactive {
+    background-color: white;
+    color: #6c757d;
+    font-weight: bold;
+    border: 2px solid #6c757d;
+    width: 100%;
+    border-radius: var(--border-radius);
+    padding: 10px;
+}
+
+    .btn-outline-inactive:hover {
+        background-color: #f8f9fa;
+        color: #333;
+    }
+
+.kpi-box {
+    text-align: center;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #dee2e6;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.kpi-header {
+    background-color: var(--panasonic-blue);
+    color: white;
+    font-weight: bold;
+    padding: 8px;
+    font-size: 1rem;
+    text-transform: uppercase;
+}
+
+.kpi-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dark);
+    background-color: #fff;
+}
+
+/* ====================================================
+   13. NAVIGATION MENU STYLES
+   ==================================================== */
+.nav-menu a {
+    color: #333;
+    text-decoration: none;
+    border-radius: 10px;
+    padding: 13px 15px;
+    position: relative;
+    z-index: 2;
+    transition: color 0.3s ease;
+}
+
+.nav-menu {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+}
+
+.nav-highlighter {
+    position: absolute;
+    height: 85%;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 0;
+    background-color: rgb(61, 121, 176);
+    border-radius: 8px;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.nav-menu a.active-text {
+    color: #fff !important;
+}
+
+.nav-menu a:hover {
+    color: #fff;
+}
+
+/* ====================================================
+   14. FOCUS STYLES
+   ==================================================== */
 .btn:focus,
-†
 .btn:active:focus,
-†
 .btn-link.nav-link:focus,
-†
 .form-control:focus,
-†
 .form-check-input:focus {
-    † † box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
-/* Chart Styles */
+/* ====================================================
+   15. CHART STYLES
+   ==================================================== */
 #dayDiv {
-    † † min-height: calc(50vh - 100px);
+    min-height: calc(50vh - 100px);
 }
 
 #dayChart {
-    † † height: 25% !important;
-    † † width: 100% !important;
+    height: 25% !important;
+    width: 100% !important;
 }
 
-/* Wrapper khusus halaman auth (login / test background) */
-.panamon-bg {
-    † † flex: 1;
-    † † display: flex;
-    † † justify-content: center;
-    † † align-items: flex-start;
-    † † padding-top: 120px;
+/* ====================================================
+   16. RESPONSIVE ADJUSTMENTS
+   ==================================================== */
+@media (max-width: 768px) {
+    .auth-body .col-md-6 {
+        padding: 0 15px;
+    }
+
+    .auth-body .card {
+        margin: 30px auto;
+    }
 }
 
-.brand-logo {
-    † † margin-top: 0 !important;
-}
-
-
+    

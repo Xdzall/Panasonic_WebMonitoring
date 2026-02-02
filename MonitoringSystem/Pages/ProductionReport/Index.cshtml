@@ -181,8 +181,8 @@
 /* TABLE STYLING - COMPACT */
 .table th,  
 .table td {
-    font-size: 11px;
-    padding: 0.25rem;
+    font-size: 12px;
+    padding: 0.1rem;
     white-space: nowrap;
     word-wrap: break-word;
     vertical-align: middle;
@@ -392,8 +392,8 @@ html, body {
     position: relative;
     border-radius: 8px;
     scroll-behavior: smooth;
-    padding-bottom: 20px;      /* ← KUNCI 1: SPACING BAWAH */
-    margin-bottom: 30px;        /* ← KUNCI 2: EXTRA SPACE */
+    padding-bottom: 1px;      /* ← KUNCI 1: SPACING BAWAH */
+    margin-bottom: 3px;        /* ← KUNCI 2: EXTRA SPACE */
 }
 
 main.pb-5 {
@@ -619,13 +619,14 @@ input[type="checkbox"]:checked + .shift-button {
                   <div class="col-12">
     <form method="post" class="d-flex flex-wrap align-items-center gap-3">
         <!-- LINE - PALING KIRI -->
-        <div class="d-flex align-items-center gap-2">
-            <label class="mb-0 text-white small">Line</label>
-            <select class="form-select form-select-sm" style="width: 60px;" id="MachineLine" name="MachineLine" asp-for="MachineLine">
-                <option value="MCH1-01">CU</option>
-                <option value="MCH1-02">CS</option>
-            </select>
-        </div>
+       <div class="d-flex align-items-center gap-2">
+    <label class="mb-0 text-white small">Line</label>
+    <select class="form-select form-select-sm" style="width: 70px;" id="MachineLine" name="MachineLine" asp-for="MachineLine">
+        <option value="All" selected>All</option>
+        <option value="MCH1-01">CU</option>
+        <option value="MCH1-02">CS</option>
+    </select>
+</div>
 
         <!-- MONTH -->
         <div class="d-flex align-items-center gap-2">
@@ -633,7 +634,7 @@ input[type="checkbox"]:checked + .shift-button {
             <select class="form-select form-select-sm" style="width: 110px;" id="SelectedMonth" name="SelectedMonth" asp-for="SelectedMonth">
                                     @for (int i = 1; i <= 12; i++)
                                     {
-                                <option value="@i">@CultureInfo.GetCultureInfo("en-US").DateTimeFormat.GetMonthName(i)</option>
+                                    <option value="@i">@CultureInfo.GetCultureInfo("en-US").DateTimeFormat.GetMonthName(i)</option>
                                     }
             </select>
         </div>
@@ -642,9 +643,9 @@ input[type="checkbox"]:checked + .shift-button {
         <div class="d-flex align-items-center gap-2">
             <label class="mb-0 text-white small">Year</label>
             <select class="form-select form-select-sm" style="width: 80px;" id="SelectedYear" name="SelectedYear" asp-for="SelectedYear">
-                                    @for (int i = DateTime.Now.Year; i >= 2000; i--)
+                                    @for (int i = DateTime.Now.Year; i >= 2020; i--)
                                     {
-                                <option value="@i">@i</option>
+                                    <option value="@i">@i</option>
                                     }
             </select>
         </div>
@@ -714,7 +715,7 @@ input[type="checkbox"]:checked + .shift-button {
         <th colspan="2" style="min-width: 300px;">Production Result</th>
                         @for (int day = 1; day <= Model.DaysInMonth; day++)
                         {
-                        <th>@day</th>
+                            <th>@day</th>
                         }
     </tr>
 </thead>
@@ -725,21 +726,21 @@ input[type="checkbox"]:checked + .shift-button {
                         <td style="text-align: left;">Normal</td>
                         @for (int i = 0; i < Model.PlanData.Count; i++)
                         {
-                            <td>@Model.PlanData[i]</td>
+                                <td>@Model.PlanData[i]</td>
                         }
                     </tr>
                     <tr>
                         <td style="text-align: left;">Overtime</td>
                         @for (int i = 0; i < Model.PlanOvertimeData.Count; i++)
                         {
-                            <td>@Model.PlanOvertimeData[i]</td>
+                                <td>@Model.PlanOvertimeData[i]</td>
                         }
                     </tr>
                     <tr>
                         <td style="text-align: left;"><b>Total Plan</b></td>
                         @for (int i = 0; i < Model.PlanData.Count; i++)
                         {
-                            <td>@(Model.PlanData[i] + Model.PlanOvertimeData[i])</td>
+                                <td>@(Model.PlanData[i] + Model.PlanOvertimeData[i])</td>
                         }
                     </tr>
 
@@ -749,21 +750,21 @@ input[type="checkbox"]:checked + .shift-button {
     <td style="text-align: left;">Normal</td>
                         @for (int i = 0; i < Model.NormalData.Count; i++)
                         {
-                    <td>@Model.NormalData[i]</td>
+                        <td>@Model.NormalData[i]</td>
                         }
 </tr>
 <tr>
     <td style="text-align: left;">Overtime</td>
                         @for (int i = 0; i < Model.OvertimeData.Count; i++)
                         {
-                    <td>@Model.OvertimeData[i]</td>
+                        <td>@Model.OvertimeData[i]</td>
                         }
 </tr>
 <tr>
     <td style="text-align: left;"><b>Total Actual</b></td>
                         @for (int i = 0; i < Model.NormalData.Count; i++)
                         {
-                    <td>@(Model.NormalData[i] + Model.OvertimeData[i])</td>
+                        <td>@(Model.NormalData[i] + Model.OvertimeData[i])</td>
                         }
 </tr>
 
@@ -772,40 +773,40 @@ input[type="checkbox"]:checked + .shift-button {
     <td colspan="2" style="text-align: left; font-weight: 700;">Difference (Actual - Plan)</td>
                         @for (int i = 0; i < Model.NormalData.Count; i++)
                         {
-                    <td>@((Model.NormalData[i] + Model.OvertimeData[i]) - Model.PlanData[i])</td>
+                        <td>@((Model.NormalData[i] + Model.OvertimeData[i]) - Model.PlanData[i])</td>
                         }
 </tr>
 
 <!-- ACHIEVEMENT RATIO - SATU KOLOM PENUH, DIBAWAH DIFFERENCE -->
 <tr>
     <td colspan="2" style="text-align: left; font-weight: 700;">Achievement Ratio</td>
-            @for (int i = 0; i < Model.PlanData.Count; i++)
-            {
-                decimal totalActual = Model.NormalData[i] + Model.OvertimeData[i];
-                decimal plan = Model.PlanData[i];
-                string ratioDisplay = "-";
+                        @for (int i = 0; i < Model.PlanData.Count; i++)
+                        {
+                            decimal totalActual = Model.NormalData[i] + Model.OvertimeData[i];
+                            decimal plan = Model.PlanData[i];
+                            string ratioDisplay = "-";
 
-                if (plan > 0)
-                {
-                    double ratio = Math.Round(((double)totalActual / (double)plan) * 100, 2);
-                    ratioDisplay = ratio.ToString("0.##") + "%";
-                }
-                else if (totalActual > 0)
-                {
-                    ratioDisplay = "N/A";
-                }
+                            if (plan > 0)
+                            {
+                                double ratio = Math.Round(((double)totalActual / (double)plan) * 100, 2);
+                                ratioDisplay = ratio.ToString("0.##") + "%";
+                            }
+                            else if (totalActual > 0)
+                            {
+                                ratioDisplay = "N/A";
+                            }
 
-    <td>@ratioDisplay</td>
-            }
+        <td>@ratioDisplay</td>
+                        }
 </tr>
 
 <!-- NO. OF DIRECT WORKERS - SATU KOLOM PENUH, DIBAWAH ACHIEVEMENT RATIO -->
 <tr>
     <td colspan="2" style="text-align: left; font-weight: 700;">No. of Direct Workers</td>
-            @for (int i = 0; i < Model.NoOfDirectWorkers.Count; i++)
-            {
-                <td>@(Model.NoOfDirectWorkers[i] > 0 ? Model.NoOfDirectWorkers[i].ToString() : "0")</td>
-            }
+                        @for (int i = 0; i < Model.NoOfDirectWorkers.Count; i++)
+                        {
+                    <td>@(Model.NoOfDirectWorkers[i] > 0 ? Model.NoOfDirectWorkers[i].ToString() : "0")</td>
+                        }
 </tr>
 
             <!-- WORKFORCE -->
@@ -814,7 +815,7 @@ input[type="checkbox"]:checked + .shift-button {
     <td style="text-align: left;">Overtime - No. of Operator</td>
                         @for (int i = 0; i < Model.OvertimeOperators.Count; i++)
                         {
-            <td>@(Model.OvertimeOperators[i] > 0 ? Model.OvertimeOperators[i] : "0")</td>
+                <td>@(Model.OvertimeOperators[i] > 0 ? Model.OvertimeOperators[i] : "0")</td>
                         }
 </tr>
 
@@ -824,14 +825,14 @@ input[type="checkbox"]:checked + .shift-button {
     <td style="text-align: left;">Overtime - Minutes</td>
                         @for (int i = 0; i < Model.OvertimeMinutes.Count; i++)
                         {
-            <td>@(Model.OvertimeMinutes[i] > 0 ? Model.OvertimeMinutes[i] : "0")</td>
+                <td>@(Model.OvertimeMinutes[i] > 0 ? Model.OvertimeMinutes[i] : "0")</td>
                         }
 </tr>
 <tr>
     <td style="text-align: left;">Loss Time</td>
                         @for (int i = 0; i < Model.DailyLossTime.Count; i++)
                         {
-            <td>@(Model.DailyLossTime[i] > 0 ? Model.DailyLossTime[i] : "0")</td>
+                <td>@(Model.DailyLossTime[i] > 0 ? Model.DailyLossTime[i] : "0")</td>
                         }
 </tr>
 
@@ -840,7 +841,7 @@ input[type="checkbox"]:checked + .shift-button {
     <td colspan="2" style="text-align: left; font-weight: 700;">Total Working Time</td>
                         @for (int i = 0; i < Model.DailyWorkTime.Count; i++)
                         {
-            <td>@Model.DailyWorkTime[i]</td>
+                <td>@Model.DailyWorkTime[i]</td>
                         }
 </tr>
 
@@ -849,7 +850,7 @@ input[type="checkbox"]:checked + .shift-button {
     <td colspan="2" style="text-align: left; font-weight: 700;">Prod. Qty / Head / Hour</td>
                         @for (int i = 0; i < Model.PlanData.Count; i++)
                         {
-            <td>
+                <td>
                                 @{
                                     decimal totalActual = Model.NormalData[i] + Model.OvertimeData[i];
                                     int workers = Model.NoOfDirectWorkers[i];
@@ -864,7 +865,7 @@ input[type="checkbox"]:checked + .shift-button {
                                     }
                                 }
                                 @(pph > 0 ? pph.ToString() : "")
-            </td>
+                </td>
                         }
 </tr>
         </tbody>
@@ -873,149 +874,137 @@ input[type="checkbox"]:checked + .shift-button {
 </div>
 
     @section Scripts {
-                        <script src="~/js/chart.umd.min.js"></script>
-                        <script src="~/js/jspdf.umd.min.js"></script>
-                        <script src="~/js/jspdf.plugin.autotable.js"></script>
+            <!-- GANTI JADI LOCAL -->
+        <script src="~/js/jquery-3.6.0.min.js"></script>
+        <script src="~/js/jquery.validate.min.js"></script>
+        <script src="~/js/jquery.validate.unobtrusive.min.js"></script>
 
-                        <script>
-                            document.addEventListener('DOMContentLoaded', function () {
-                                const normalData = @Html.Raw(Json.Serialize(Model.NormalData));
-                                const overtimeData = @Html.Raw(Json.Serialize(Model.OvertimeData));
-                                const planData = @Html.Raw(Json.Serialize(Model.PlanData));
-                                const planOvertimeData = @Html.Raw(Json.Serialize(Model.PlanOvertimeData));
-                                const originalPlanData = @Html.Raw(Json.Serialize(Model.OriginalPlanData));
-                                const chartLabels = @Html.Raw(Json.Serialize(Model.ChartLabels));
-                                const isCurrentMonth = @Html.Raw(Json.Serialize(Model.IsCurrentMonthView));
-                                const today = new Date().getDate();
-                                const daysInMonth = @Model.DaysInMonth;
-                                const anchorDay = isCurrentMonth ? today : daysInMonth;
+        <!-- Script yang sudah ada -->
+        <script src="~/js/chart.umd.min.js"></script>
+        <script src="~/js/jspdf.umd.min.js"></script>
+        <script src="~/js/jspdf.plugin.autotable.js"></script>
 
-                                let totalActualAtAnchor = 0;
-                                let totalPlanAtAnchor = 0;
-                                for (let i = 0; i < anchorDay; i++) {
-                                    totalActualAtAnchor += (normalData[i] || 0) + (overtimeData[i] || 0);
-                                    totalPlanAtAnchor += (planData[i] || 0);
-                                }
 
-                                document.getElementById('totalActualValue').textContent = totalActualAtAnchor.toLocaleString();
-                                document.getElementById('totalPlanValue').textContent = totalPlanAtAnchor.toLocaleString();
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                // ===== DATA DARI MODEL =====
+                const normalData = @Html.Raw(Json.Serialize(Model.NormalData));
+                const overtimeData = @Html.Raw(Json.Serialize(Model.OvertimeData));
+                const planData = @Html.Raw(Json.Serialize(Model.PlanData));
+                const planOvertimeData = @Html.Raw(Json.Serialize(Model.PlanOvertimeData));
+                const originalPlanData = @Html.Raw(Json.Serialize(Model.OriginalPlanData));
+                const chartLabels = @Html.Raw(Json.Serialize(Model.ChartLabels));
+                const isCurrentMonth = @Html.Raw(Json.Serialize(Model.IsCurrentMonthView));
+                const today = new Date().getDate();
+                const daysInMonth = @Model.DaysInMonth;
+                const anchorDay = isCurrentMonth ? today : daysInMonth;
 
-                                const ratioActualData = [], ratioPlanData = [];
-                                let runningActualTotal = 0, runningPlanTotal = 0;
+                // ===== HITUNG TOTAL =====
+                let totalActualAtAnchor = 0;
+                let totalPlanAtAnchor = 0;
+                for (let i = 0; i < anchorDay; i++) {
+                    totalActualAtAnchor += (normalData[i] || 0) + (overtimeData[i] || 0);
+                    totalPlanAtAnchor += (planData[i] || 0);
+                }
 
-                                for (let i = 0; i < chartLabels.length; i++) {
-                                    if (isCurrentMonth && (i + 1) > today) {
-                                        ratioActualData.push(null);
-                                        ratioPlanData.push(null);
-                                    } else {
-                                        runningActualTotal += (normalData[i] || 0) + (overtimeData[i] || 0);
-                                        runningPlanTotal += (planData[i] || 0);
-                                        ratioActualData.push((totalActualAtAnchor > 0) ? (runningActualTotal / totalActualAtAnchor) * 100 : 0);
-                                        ratioPlanData.push((totalPlanAtAnchor > 0) ? (runningPlanTotal / totalPlanAtAnchor) * 100 : 0);
-                                    }
-                                }
+                document.getElementById('totalActualValue').textContent = totalActualAtAnchor.toLocaleString();
+                document.getElementById('totalPlanValue').textContent = totalPlanAtAnchor.toLocaleString();
 
-                                new Chart(document.getElementById('dayChart'), {
-                                    type: 'bar',
-                                    data: {
-                                        labels: chartLabels,
-                                        datasets: [
-                                                { type: 'line', label: 'Rasio Actual (%)', data: ratioActualData, borderColor: '#FACC15', backgroundColor: 'rgba(255, 215, 0, 0.2)', tension: 0.1, yAxisID: 'y1' },
-                                                        { type: 'line', label: 'Rasio Plan (%)', data: ratioPlanData, borderColor: '#FFFFFF', backgroundColor: 'rgba(255, 255, 255, 0.2) ', tension: 0.1, yAxisID: 'y1' },
-                                                                    { label: 'SAP Plan', data: originalPlanData, backgroundColor: '#3cb9fc', borderColor: '#3cb9fc', barThickness: 15, stack: 'OriginalPlan', yAxisID: 'y' },
-                                                                    { label: 'Change Plan', data: planData, backgroundColor: '#a32ca3', borderColor: '#a32ca3', barThickness: 15, stack: 'Plan', yAxisID: 'y' },
-                                                    { label: 'Normal', data: normalData, backgroundColor: '#35FF00', borderColor: '#35FF00', barThickness: 15, stack: 'Actual', yAxisID: 'y' },
-                                                                            { label: 'Overtime', data: overtimeData, backgroundColor: '#006330', borderColor: '#006330', barThickness: 15, stack: 'Actual', yAxisID: 'y' },
-                                                                                            {
-                                                                                                label: 'Overtime Plan',
-                                                                                                data: planOvertimeData, // Gunakan variabel dari model
-                                                                                                backgroundColor: '#6a1b9a',
-                                                                                                borderColor: '#6a1b9a',
-                                                                                                barThickness: 15,
-                                                                                                stack: 'Plan',
-                                                                                                yAxisID: 'y'
-                                                                                            },
-                                        ]
-                                    },
-                                    options: {
-                                        devicePixelRatio: 3,
-                                        responsive: true,
-                                        maintainAspectRatio: false,
-                                        animation: { duration: 500 },
-                                        interaction: { mode: 'index', intersect: false },
-                                        scales: {
-                                            x: { stacked: true, ticks: { color: '#ffffff' } },
-                                            y: { type: 'linear', position: 'left', title: { display: true, text: 'Production Qty (unit)', color: '#ffffff' }, ticks: { color: '#ffffff' } },
-                                            y1: { type: 'linear', position: 'right', max: 120, title: { display: true, text: 'Ratio (%)', color: '#ffffff' }, ticks: { color: '#ffffff', callback: v => v + '%' }, grid: { drawOnChartArea: false } }
-                                        },
-                                        plugins: {
-                                            legend: { labels: { color: '#ffffff' } },
-                                            tooltip: { titleColor: '#ffffff', bodyColor: '#ffffff' }
-                                        }
-                                    }
-                                });
+                // ===== HITUNG RATIO =====
+                const ratioActualData = [], ratioPlanData = [];
+                let runningActualTotal = 0, runningPlanTotal = 0;
 
-            @* document.getElementById('toggleExtraRows')?.addEventListener('click', function () {
-                                const extraRows = document.querySelectorAll('.extra-row');
-                                const icon = document.getElementById('toggleIcon');
-                                const isVisible = extraRows[0]?.style.display === 'table-row';
-                                extraRows.forEach(row => row.style.display = isVisible ? 'none' : 'table-row');
-                                icon?.classList.toggle('bi-chevron-down', isVisible);
-                                icon?.classList.toggle('bi-chevron-up', !isVisible);
-                            });*@
+                for (let i = 0; i < chartLabels.length; i++) {
+                    if (isCurrentMonth && (i + 1) > today) {
+                        ratioActualData.push(null);
+                        ratioPlanData.push(null);
+                    } else {
+                        runningActualTotal += (normalData[i] || 0) + (overtimeData[i] || 0);
+                        runningPlanTotal += (planData[i] || 0);
+                        ratioActualData.push((totalActualAtAnchor > 0) ? (runningActualTotal / totalActualAtAnchor) * 100 : 0);
+                        ratioPlanData.push((totalPlanAtAnchor > 0) ? (runningPlanTotal / totalPlanAtAnchor) * 100 : 0);
+                    }
+                }
 
-                                document.getElementById('downloadPdfButton')?.addEventListener('click', function () {
-                                    const btn = this;
-                                    const origContent = btn.innerHTML;
-                                    btn.disabled = true;
-                                    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generating...';
+                // ===== CHART =====
+                new Chart(document.getElementById('dayChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: chartLabels,
+                        datasets: [
+                            { type: 'line', label: 'Rasio Actual (%)', data: ratioActualData, borderColor: '#FACC15', backgroundColor: 'rgba(255, 215, 0, 0.2)', tension: 0.1, yAxisID: 'y1' },
+                            { type: 'line', label: 'Rasio Plan (%)', data: ratioPlanData, borderColor: '#FFFFFF', backgroundColor: 'rgba(255, 255, 255, 0.2)', tension: 0.1, yAxisID: 'y1' },
+                            { label: 'SAP Plan', data: originalPlanData, backgroundColor: '#3cb9fc', borderColor: '#3cb9fc', barThickness: 15, stack: 'OriginalPlan', yAxisID: 'y' },
+                            { label: 'Change Plan', data: planData, backgroundColor: '#a32ca3', borderColor: '#a32ca3', barThickness: 15, stack: 'Plan', yAxisID: 'y' },
+                            { label: 'Normal', data: normalData, backgroundColor: '#35FF00', borderColor: '#35FF00', barThickness: 15, stack: 'Actual', yAxisID: 'y' },
+                            { label: 'Overtime', data: overtimeData, backgroundColor: '#006330', borderColor: '#006330', barThickness: 15, stack: 'Actual', yAxisID: 'y' },
+                            { label: 'Overtime Plan', data: planOvertimeData, backgroundColor: '#6a1b9a', borderColor: '#6a1b9a', barThickness: 15, stack: 'Plan', yAxisID: 'y' }
+                        ]
+                    },
+                    options: {
+                        devicePixelRatio: 3,
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: { duration: 500 },
+                        interaction: { mode: 'index', intersect: false },
+                        scales: {
+                            x: { stacked: true, ticks: { color: '#ffffff' } },
+                            y: { type: 'linear', position: 'left', title: { display: true, text: 'Production Qty (unit)', color: '#ffffff' }, ticks: { color: '#ffffff' } },
+                            y1: { type: 'linear', position: 'right', max: 120, title: { display: true, text: 'Ratio (%)', color: '#ffffff' }, ticks: { color: '#ffffff', callback: v => v + '%' }, grid: { drawOnChartArea: false } }
+                        },
+                        plugins: {
+                            legend: { labels: { color: '#ffffff' } },
+                            tooltip: { titleColor: '#ffffff', bodyColor: '#ffffff' }
+                        }
+                    }
+                });
 
-                                    setTimeout(() => {
-                                        try {
-                                            const { jsPDF } = window.jspdf;
-                                            const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
-                                            const pageWidth = doc.internal.pageSize.getWidth();
+                // ===== DOWNLOAD PDF =====
+                document.getElementById('downloadPdfButton')?.addEventListener('click', function () {
+                    const btn = this;
+                    const origContent = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generating...';
 
-                                            doc.setFontSize(18);
-                                            doc.text('Production Achivment', 40, 50);
-                                            doc.setFontSize(10);
-                                            doc.setTextColor(100);
-                                            doc.text(`Period: ${document.getElementById('SelectedMonth').selectedOptions[0].text} ${document.getElementById('SelectedYear').value}`, 40, 70);
-                                            doc.text(`Total Plan: ${document.getElementById('totalPlanValue').innerText}`, pageWidth - 40, 70, { align: 'right' });
-                                            doc.text(`Total Actual: ${document.getElementById('totalActualValue').innerText}`, pageWidth - 40, 85, { align: 'right' });
-                                            doc.text(`P/H/H: ${document.getElementById('totalPhhValue').innerText}`, pageWidth - 40, 100, { align: 'right' });
-                                            doc.setTextColor(0);
+                    setTimeout(() => {
+                        try {
+                            const { jsPDF } = window.jspdf;
+                            const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+                            const pageWidth = doc.internal.pageSize.getWidth();
 
-                                            const chartImgData = document.getElementById('dayChart').toDataURL('image/png', 1.0);
-                                            doc.addImage(chartImgData, 'PNG', 40, 110, 760, 220);
+                            doc.setFontSize(18);
+                            doc.text('Production Achievement', 40, 50);
+                            doc.setFontSize(10);
+                            doc.setTextColor(100);
+                            doc.text(`Period: ${document.getElementById('SelectedMonth').selectedOptions[0].text} ${document.getElementById('SelectedYear').value}`, 40, 70);
+                            doc.text(`Total Plan: ${document.getElementById('totalPlanValue').innerText}`, pageWidth - 40, 70, { align: 'right' });
+                            doc.text(`Total Actual: ${document.getElementById('totalActualValue').innerText}`, pageWidth - 40, 85, { align: 'right' });
+                            doc.text(`P/H/H: ${document.getElementById('totalPhhValue').innerText}`, pageWidth - 40, 100, { align: 'right' });
+                            doc.setTextColor(0);
 
-                                            const extraRows = document.querySelectorAll('.extra-row');
-                                            const wereHidden = extraRows[0]?.style.display === 'none';
-                                            if (wereHidden) extraRows.forEach(row => row.style.display = 'table-row');
+                            const chartImgData = document.getElementById('dayChart').toDataURL('image/png', 1.0);
+                            doc.addImage(chartImgData, 'PNG', 40, 110, 760, 220);
 
-                                            doc.autoTable({
-                                                html: '#productionTable',
-                                                startY: 340,
-                                                theme: 'grid',
-                                                styles: { fontSize: 5, cellPadding: 2 },
-                                                headStyles: { fillColor: [44, 62, 80], fontSize: 6 }
-                                            });
-
-                                            if (wereHidden) extraRows.forEach(row => row.style.display = 'none');
-                                            doc.save('Production-Report.pdf');
-                                        } catch (err) {
-                                            console.error(err);
-                                            alert('Gagal membuat PDF. Cek console untuk detail.');
-                                        } finally {
-                                            btn.disabled = false;
-                                            btn.innerHTML = origContent;
-                                        }
-                                    }, 100);
-                                });
+                            doc.autoTable({
+                                html: '#productionTable',
+                                startY: 340,
+                                theme: 'grid',
+                                styles: { fontSize: 5, cellPadding: 2 },
+                                headStyles: { fillColor: [44, 62, 80], fontSize: 6 }
                             });
-                                // TAMBAHKAN KODE INI DI BAWAH
-            document.addEventListener('DOMContentLoaded', function() {
-                // Function untuk set bold pada dropdown yang sudah dipilih
+
+                            doc.save('Production-Report.pdf');
+                        } catch (err) {
+                            console.error(err);
+                            alert('Gagal membuat PDF. Cek console untuk detail.');
+                        } finally {
+                            btn.disabled = false;
+                            btn.innerHTML = origContent;
+                        }
+                    }, 100);
+                });
+
+                // ===== DROPDOWN STYLE (BOLD) =====
                 function updateDropdownStyle() {
                     const dropdowns = document.querySelectorAll('.filter-content .form-select-sm');
 
@@ -1023,14 +1012,11 @@ input[type="checkbox"]:checked + .shift-button {
                         const dropdownId = dropdown.id;
                         const dropdownValue = dropdown.value;
 
-                        // Logic untuk masing-masing dropdown
                         if (dropdownId === 'SelectedYear') {
-                            // Year selalu bold setelah dipilih
                             if (dropdownValue) {
                                 dropdown.classList.add('selected');
                             }
                         } else if (dropdown.name === 'MachineLine') {
-                            // Machine Line bold jika bukan "All"
                             if (dropdownValue && dropdownValue !== 'All') {
                                 dropdown.classList.add('selected');
                             } else {
@@ -1049,5 +1035,59 @@ input[type="checkbox"]:checked + .shift-button {
                     dropdown.addEventListener('change', updateDropdownStyle);
                 });
             });
-                        </script>
+
+                // SHIFT BUTTON LOGIC - MUTUAL EXCLUSIVITY
+    document.addEventListener('DOMContentLoaded', function() {
+        const allShiftCheckbox = document.getElementById('AllShift');
+        const individualShifts = ['Shift1', 'Shift2', 'Shift3', 'NonShift'];
+
+        // Ketika "All" diklik
+        allShiftCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                // Uncheck semua shift individual
+                individualShifts.forEach(id => {
+                    const checkbox = document.getElementById(id);
+                    checkbox.checked = false;
+                    checkbox.nextElementSibling.classList.remove('active');
+                });
+                this.nextElementSibling.classList.add('active');
+            } else {
+                // Jika user uncheck "All" dan tidak ada shift lain yang dipilih
+                const anyChecked = individualShifts.some(id => 
+                    document.getElementById(id).checked
+                );
+                if (!anyChecked) {
+                    // Force check "All" kembali
+                    this.checked = true;
+                    this.nextElementSibling.classList.add('active');
+                }
+            }
+        });
+
+        // Ketika shift individual diklik
+        individualShifts.forEach(shiftId => {
+            const checkbox = document.getElementById(shiftId);
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    // Uncheck "All"
+                    allShiftCheckbox.checked = false;
+                    allShiftCheckbox.nextElementSibling.classList.remove('active');
+                    this.nextElementSibling.classList.add('active');
+                } else {
+                    this.nextElementSibling.classList.remove('active');
+
+                    // Jika semua shift individual di-uncheck
+                    const anyChecked = individualShifts.some(id => 
+                        document.getElementById(id).checked
+                    );
+                    if (!anyChecked) {
+                        // Auto-check "All"
+                        allShiftCheckbox.checked = true;
+                        allShiftCheckbox.nextElementSibling.classList.add('active');
+                    }
+                }
+            });
+        });
+    });
+        </script>
 }

@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Data.SqlClient;
 using OfficeOpenXml;
@@ -52,15 +52,21 @@ namespace MonitoringSystem.Pages.ProductionReport
 
         [BindProperty(SupportsGet = true)] public int SelectedMonth { get; set; } = DateTime.Now.Month;
         [BindProperty(SupportsGet = true)] public int SelectedYear { get; set; } = DateTime.Now.Year;
-        [BindProperty(SupportsGet = true)] public string MachineLine { get; set; } = "MCH1-01";
+        [BindProperty(SupportsGet = true)] public string MachineLine { get; set; } = "All";
         [BindProperty(SupportsGet = true)] public List<string> SelectedShifts { get; set; } = new List<string>();
-
         public void OnGet()
         {
-            if (!SelectedShifts.Any())
+            // Normalisasi: jika kosong atau ada "All", set ke "All" saja
+            if (!SelectedShifts.Any() || SelectedShifts.Contains("All"))
             {
                 SelectedShifts = new List<string> { "All" };
             }
+            // Jika user somehow pilih "All" + shift lain, prioritaskan "All"
+            else if (SelectedShifts.Count > 1 && SelectedShifts.Contains("All"))
+            {
+                SelectedShifts = new List<string> { "All" };
+            }
+
             LoadChartData();
         }
 
@@ -68,7 +74,7 @@ namespace MonitoringSystem.Pages.ProductionReport
         {
             if (submitButton == "reset")
             {
-                return RedirectToPage(new { SelectedYear = DateTime.Now.Year, SelectedMonth = DateTime.Now.Month, MachineLine = "MCH1-01" });
+                return RedirectToPage(new { SelectedYear = DateTime.Now.Year, SelectedMonth = DateTime.Now.Month, MachineLine = "All" });
             }
             return RedirectToPage(new
             {
@@ -102,28 +108,32 @@ namespace MonitoringSystem.Pages.ProductionReport
                 return File(System.IO.File.ReadAllBytes(templateFilePath), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", templateFileName);
             }
             return NotFound($"Template file not found.");
+
+
+
         }
 
-        private void LoadChartData()
-        {
-            this.connectionString = _configuration.GetConnectionString("DefaultConnection");
-            var dailyLosses = GetDailyLossTimeTotals();
-            bool isCurrentMonthView = (SelectedYear == DateTime.Now.Year && SelectedMonth == DateTime.Now.Month);
-            this.IsCurrentMonthView = isCurrentMonthView;
+private void LoadChartData()
+{
+    this.connectionString = _configuration.GetConnectionString("DefaultConnection");
+    var dailyLosses = GetDailyLossTimeTotals();
+    bool isCurrentMonthView = (SelectedYear == DateTime.Now.Year && SelectedMonth == DateTime.Now.Month);
+    this.IsCurrentMonthView = isCurrentMonthView;
 
-            string dateFilter = isCurrentMonthView ? "AND CAST(SDate AS DATE) <= @TodayDate" : "";
-            this.DaysInMonth = DateTime.DaysInMonth(SelectedYear, SelectedMonth);
+    string dateFilter = isCurrentMonthView ? "AND CAST(SDate AS DATE) <= @TodayDate" : "";
+    this.DaysInMonth = DateTime.DaysInMonth(SelectedYear, SelectedMonth);
 
-            var combinedData = Enumerable.Range(1, this.DaysInMonth).Select(day => new DailyData { Day = day }).ToList();
-
+    var combinedData = Enumerable.Range(1, this.DaysInMonth).Select(day => new DailyData { Day = day }).ToList();
+            // Di bagian planShiftFilter
             string planShiftFilter = "";
             if (!SelectedShifts.Contains("All") && SelectedShifts.Any())
             {
                 var shifts = string.Join(",", SelectedShifts.Select(s => $"'{s}'"));
                 planShiftFilter = $"AND pr.Shift IN ({shifts})";
             }
+            // Jika "All", filter kosong = ambil semua
 
-            // Untuk Actual: "All" berarti '1','2','3'. Abaikan 'NS'.
+            // Di bagian actualShifts
             List<string> actualShifts = new List<string>();
             if (SelectedShifts.Contains("All"))
             {
@@ -134,112 +144,133 @@ namespace MonitoringSystem.Pages.ProductionReport
                 actualShifts.AddRange(SelectedShifts.Where(s => s != "NS"));
             }
             string shiftsForSql = actualShifts.Any() ? string.Join(",", actualShifts.Select(s => $"'{s}'")) : "'0'";
-
             string planSql = $@"
-                                SELECT 
-                                    DAY(pp.CurrentDate) as Day,
-                                    SUM(ISNULL(pr.Quantity, 0)) as TotalPlanQuantity,
-                                    SUM(ISNULL(pr.Overtime, 0)) as TotalPlanOvertime
-                                FROM [PROMOSYS].[dbo].[ProductionPlan] pp
-                                LEFT JOIN [PROMOSYS].[dbo].[ProductionRecords] pr ON pp.Id = pr.PlanId
-                                WHERE YEAR(pp.CurrentDate) = @SelectedYear 
-                                  AND MONTH(pp.CurrentDate) = @SelectedMonth
-                                  AND pr.MachineCode = @MachineLine
-                                  {planShiftFilter}
-                                GROUP BY DAY(pp.CurrentDate)";
+    SELECT 
+        DAY(pp.CurrentDate) as Day,
+        SUM(ISNULL(pr.Quantity, 0)) as TotalPlanQuantity,
+        SUM(ISNULL(pr.Overtime, 0)) as TotalPlanOvertime
+    FROM [PROMOSYS].[dbo].[ProductionPlan] pp
+    LEFT JOIN [PROMOSYS].[dbo].[ProductionRecords] pr ON pp.Id = pr.PlanId
+    WHERE YEAR(pp.CurrentDate) = @SelectedYear 
+      AND MONTH(pp.CurrentDate) = @SelectedMonth
+      {planShiftFilter}
+      {(MachineLine != "All" ? "AND pr.MachineCode = @MachineLine" : "AND pr.MachineCode IN ('MCH1-01', 'MCH1-02')")}
+    GROUP BY DAY(pp.CurrentDate)";
 
-            string actualSql = $@"
-                            WITH ShiftData AS (
-                                SELECT
-                                    CAST(SDate AS DATE) AS ReportDate,
-                                    SDate, TotalUnit, NoOfOperator,
-                                    CASE
-                                        WHEN CAST(SDate AS TIME) >= '07:00:00' AND CAST(SDate AS TIME) < '16:00:00' THEN 1
-                                        WHEN CAST(SDate AS TIME) >= '16:00:00' AND CAST(SDate AS TIME) < '23:15:00' THEN 2
-                                        ELSE 3
-                                    END as Shift
-                                FROM oeesn
-                                WHERE YEAR(SDate) = @SelectedYear 
-                                  AND MONTH(SDate) = @SelectedMonth 
-                                  AND MachineCode = @MachineLine
-                                  {dateFilter}
-                            ),
-                            DailyAggregates AS (
-                                SELECT
-                                    ReportDate,
-                                    MAX(CASE WHEN Shift = 1 THEN TotalUnit END) as Shift1_EndReading,
-                                    MAX(CASE WHEN Shift IN (2, 3) THEN TotalUnit END) as OT_EndReading,
-                                    MAX(CASE WHEN Shift = 1 THEN NoOfOperator END) as Shift1_Operators,
-                                    MAX(CASE WHEN Shift IN (2, 3) THEN NoOfOperator END) as OT_Operators,
-                                    MAX(CASE WHEN Shift IN (2, 3) THEN NoOfOperator END) as OT_OperatorCount,
-                                    MAX(CASE WHEN Shift IN (2, 3) THEN SDate END) as OT_LastSDate
-                                FROM ShiftData
-                                GROUP BY ReportDate
-                            )
-                            SELECT
-                                DAY(ReportDate) as Day,
-                                CASE WHEN '1' IN ({shiftsForSql}) THEN ISNULL(Shift1_EndReading, 0) ELSE 0 END as LastNormalReading,
-                                CASE 
-                                    WHEN ('2' IN ({shiftsForSql}) OR '3' IN ({shiftsForSql})) THEN ISNULL(OT_EndReading, 0) 
-                                    ELSE CASE WHEN '1' IN ({shiftsForSql}) THEN ISNULL(Shift1_EndReading, 0) ELSE 0 END
-                                END as LastOvertimeReading,
-        
-                            CASE
-                                WHEN CASE WHEN '1' IN ({shiftsForSql}) THEN ISNULL(Shift1_Operators, 0) ELSE 0 END >
-                                     CASE WHEN '2' IN ({shiftsForSql}) OR '3' IN ({shiftsForSql}) THEN ISNULL(OT_Operators, 0) ELSE 0 END
-                                THEN CASE WHEN '1' IN ({shiftsForSql}) THEN ISNULL(Shift1_Operators, 0) ELSE 0 END
-                                ELSE CASE WHEN '2' IN ({shiftsForSql}) OR '3' IN ({shiftsForSql}) THEN ISNULL(OT_Operators, 0) ELSE 0 END
-                            END as NoOfOperator,
+            // ✅ ACTUAL SQL - Conditional append
+        string actualSql = $@"
+    WITH ShiftData AS (
+        SELECT
+            CAST(SDate AS DATE) AS ReportDate,
+            SDate, TotalUnit, NoOfOperator,
+            CASE
+                WHEN CAST(SDate AS TIME) >= '07:00:00' AND CAST(SDate AS TIME) < '16:00:00' THEN 1
+                WHEN CAST(SDate AS TIME) >= '16:00:00' AND CAST(SDate AS TIME) < '23:15:00' THEN 2
+                ELSE 3
+            END as Shift
+        FROM oeesn
+        WHERE YEAR(SDate) = @SelectedYear 
+          AND MONTH(SDate) = @SelectedMonth 
+          {dateFilter}
+          {(MachineLine != "All" ? "AND MachineCode = @MachineLine" : "AND MachineCode IN ('MCH1-01', 'MCH1-02')")}
+    ),
+    DailyAggregates AS (
+        SELECT
+            ReportDate,
+            MAX(CASE WHEN Shift = 1 THEN TotalUnit END) as Shift1_EndReading,
+            MAX(CASE WHEN Shift IN (2, 3) THEN TotalUnit END) as OT_EndReading,
+            MAX(CASE WHEN Shift = 1 THEN NoOfOperator END) as Shift1_Operators,
+            MAX(CASE WHEN Shift IN (2, 3) THEN NoOfOperator END) as OT_Operators,
+            MAX(CASE WHEN Shift IN (2, 3) THEN NoOfOperator END) as OT_OperatorCount,
+            MAX(CASE WHEN Shift IN (2, 3) THEN SDate END) as OT_LastSDate
+        FROM ShiftData
+        GROUP BY ReportDate
+    )
+    SELECT
+        DAY(ReportDate) as Day,
+        CASE WHEN '1' IN (" + shiftsForSql + @") THEN ISNULL(Shift1_EndReading, 0) ELSE 0 END as LastNormalReading,
+        CASE 
+            WHEN ('2' IN (" + shiftsForSql + @") OR '3' IN (" + shiftsForSql + @")) THEN ISNULL(OT_EndReading, 0) 
+            ELSE CASE WHEN '1' IN (" + shiftsForSql + @") THEN ISNULL(Shift1_EndReading, 0) ELSE 0 END
+        END as LastOvertimeReading,
+        CASE
+            WHEN CASE WHEN '1' IN (" + shiftsForSql + @") THEN ISNULL(Shift1_Operators, 0) ELSE 0 END >
+                 CASE WHEN '2' IN (" + shiftsForSql + @") OR '3' IN (" + shiftsForSql + @") THEN ISNULL(OT_Operators, 0) ELSE 0 END
+            THEN CASE WHEN '1' IN (" + shiftsForSql + @") THEN ISNULL(Shift1_Operators, 0) ELSE 0 END
+            ELSE CASE WHEN '2' IN (" + shiftsForSql + @") OR '3' IN (" + shiftsForSql + @") THEN ISNULL(OT_Operators, 0) ELSE 0 END
+        END as NoOfOperator,
+        ISNULL(OT_OperatorCount, 0) as OtOperatorCount,
+        ISNULL(CAST(OT_LastSDate AS TIME), '00:00:00') as LastOtTime
+    FROM DailyAggregates;";
 
-                            ISNULL(OT_OperatorCount, 0) as OtOperatorCount,
-                            ISNULL(CAST(OT_LastSDate AS TIME), '00:00:00') as LastOtTime
-                        FROM DailyAggregates;";
-
-            try
+    try
+    {
+        using (var connection = new SqlConnection(this.connectionString))
+        {
+            connection.Open();
+            using (var planCmd = new SqlCommand(planSql, connection))
             {
-                using (var connection = new SqlConnection(this.connectionString))
+                planCmd.Parameters.AddWithValue("@SelectedYear", SelectedYear);
+                planCmd.Parameters.AddWithValue("@SelectedMonth", SelectedMonth);
+                
+                if (MachineLine != "All")
                 {
-                    connection.Open();
-                    // Eksekusi Plan SQL
-                    using (var planCmd = new SqlCommand(planSql, connection))
+                    planCmd.Parameters.AddWithValue("@MachineLine", MachineLine);
+                }
+                
+                using (var reader = planCmd.ExecuteReader())
+                {
+                    while (reader.Read())
                     {
-                        planCmd.Parameters.AddWithValue("@SelectedYear", SelectedYear);
-                        planCmd.Parameters.AddWithValue("@SelectedMonth", SelectedMonth);
-                        planCmd.Parameters.AddWithValue("@MachineLine", MachineLine);
-                        using (var reader = planCmd.ExecuteReader())
+                        int day = reader.GetInt32(0);
+                        var data = combinedData.FirstOrDefault(d => d.Day == day);
+                        if (data != null)
                         {
-                            while (reader.Read())
-                            {
-                                int day = reader.GetInt32(0);
-                                var data = combinedData.FirstOrDefault(d => d.Day == day);
-                                if (data != null)
-                                {
-                                    data.Plan = Convert.ToInt32(reader["TotalPlanQuantity"]);
-                                    data.PlanOvertime = Convert.ToInt32(reader["TotalPlanOvertime"]);
-                                }
-                            }
+                            data.Plan = Convert.ToInt32(reader["TotalPlanQuantity"]);
+                            data.PlanOvertime = Convert.ToInt32(reader["TotalPlanOvertime"]);
                         }
                     }
                 }
-
-                    using (var connection = new SqlConnection(this.connectionString))
-                    {
-                        using (var command = new SqlCommand(actualSql, connection))
-                        {
-                            command.Parameters.AddWithValue("@SelectedYear", SelectedYear); command.Parameters.AddWithValue("@SelectedMonth", SelectedMonth); command.Parameters.AddWithValue("@MachineLine", MachineLine);
-                            if (isCurrentMonthView) { command.Parameters.AddWithValue("@TodayDate", DateTime.Now.Date); }
-                            connection.Open();
-                            using (var reader = command.ExecuteReader())
-                            {
-                                while (reader.Read())
-                                {
-                                    int day = (int)reader["Day"]; var dataForDay = combinedData.FirstOrDefault(d => d.Day == day);
-                                    if (dataForDay != null) { dataForDay.LastNormalReading = (decimal)reader["LastNormalReading"]; dataForDay.LastOvertimeReading = (decimal)reader["LastOvertimeReading"]; dataForDay.NoOfOperator = Convert.ToInt32(reader["NoOfOperator"]); dataForDay.OtOperatorCount = Convert.ToInt32(reader["OtOperatorCount"]); dataForDay.LastOtTime = (TimeSpan)reader["LastOtTime"]; }
-                                }
-                            }
-                         }
-                    }
             }
+        }
+
+        using (var connection = new SqlConnection(this.connectionString))
+        {
+            using (var command = new SqlCommand(actualSql, connection))
+            {
+                command.Parameters.AddWithValue("@SelectedYear", SelectedYear);
+                command.Parameters.AddWithValue("@SelectedMonth", SelectedMonth);
+                
+                if (MachineLine != "All")
+                {
+                    command.Parameters.AddWithValue("@MachineLine", MachineLine);
+                }
+                
+                if (isCurrentMonthView)
+                {
+                    command.Parameters.AddWithValue("@TodayDate", DateTime.Now.Date);
+                }
+                
+                connection.Open();
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        int day = (int)reader["Day"];
+                        var dataForDay = combinedData.FirstOrDefault(d => d.Day == day);
+                        if (dataForDay != null)
+                        {
+                            dataForDay.LastNormalReading = (decimal)reader["LastNormalReading"];
+                            dataForDay.LastOvertimeReading = (decimal)reader["LastOvertimeReading"];
+                            dataForDay.NoOfOperator = Convert.ToInt32(reader["NoOfOperator"]);
+                            dataForDay.OtOperatorCount = Convert.ToInt32(reader["OtOperatorCount"]);
+                            dataForDay.LastOtTime = (TimeSpan)reader["LastOtTime"];
+                        }
+                    }
+                }
+            }
+        }
+    }
             catch (Exception ex) { Console.WriteLine(ex.Message); }
 
             foreach (var data in combinedData)
@@ -331,6 +362,12 @@ namespace MonitoringSystem.Pages.ProductionReport
                 shiftFilterSql = $"AND ({string.Join(" OR ", shiftConditions)})";
             }
 
+            // ✅ DEFINISIKAN FILTER MACHINE
+            string lossTimeMachineFilter = (MachineLine == "All")
+                ? "AND MachineCode IN ('MCH1-01', 'MCH1-02')"
+                : "AND MachineCode = @Machine";
+
+            // ✅ PAKAI VARIABLE {lossTimeMachineFilter} DI QUERY (BUKAN HARDCODE)
             string query = $@"
         SELECT 
             CAST(Date AS DATE) as FullDate,
@@ -338,8 +375,10 @@ namespace MonitoringSystem.Pages.ProductionReport
             CAST(EndDateTime AS TIME) as EndTime, 
             LossTime as Duration
         FROM AssemblyLossTime
-        WHERE YEAR(Date) = @Year AND MONTH(Date) = @Month AND MachineCode = @Machine
-        {shiftFilterSql}";
+        WHERE YEAR(Date) = @Year 
+          AND MONTH(Date) = @Month 
+          {lossTimeMachineFilter}
+          {shiftFilterSql}";
 
             try
             {
@@ -349,7 +388,12 @@ namespace MonitoringSystem.Pages.ProductionReport
                     {
                         command.Parameters.AddWithValue("@Year", SelectedYear);
                         command.Parameters.AddWithValue("@Month", SelectedMonth);
-                        command.Parameters.AddWithValue("@Machine", MachineLine);
+
+                        // ✅ HANYA TAMBAH PARAMETER @Machine JIKA BUKAN "All"
+                        if (MachineLine != "All")
+                        {
+                            command.Parameters.AddWithValue("@Machine", MachineLine);
+                        }
 
                         connection.Open();
                         using (var reader = command.ExecuteReader())
@@ -384,7 +428,6 @@ namespace MonitoringSystem.Pages.ProductionReport
             }
             return dailyTotals;
         }
-
         //ini kayaknya ga kepakek hehe
         private List<(TimeSpan Start, TimeSpan End)> GetAdditionalBreakTimesForDate(DateTime date)
         {
