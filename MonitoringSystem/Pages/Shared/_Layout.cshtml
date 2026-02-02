@@ -1,10 +1,5 @@
-﻿    @using MonitoringSystem.Data
-
-    @{
-        string layoutMenu = ViewContext.HttpContext.Request.Cookies["layoutType"];
-        string baseColor = "linear-gradient(109.6deg, rgb(61, 121, 176) 11.3%, rgb(35, 66, 164) 91.1%);";
-        var title = ViewData["Title"] as string;
-    }
+﻿    
+    
 
     <!DOCTYPE html>
     <html lang="en" class="reusable-bg-html">
@@ -386,263 +381,153 @@
                     <p id="current-time"></p>
                 </div>
             </div>
-        </header>
-
-        <div class="container-fluid p-0 d-flex" style="height: calc(100vh - 45px); margin-top:45px;">
-
-            <div id="bdSidebar" class="d-flex flex-column flex-shrink-0 text-white offcanvas-md offcanvas-start">
-                <ul class="mynav nav nav-pills flex-column">
-                    <li class="nav-item">
-                        <a href="~/">
-                            <i class="fa-solid fa-house"></i>
-                            <span class="nav-label">Home</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="~/Summary/index">
-                            <i class="fa-solid fa-chart-pie"></i>
-                            <span class="nav-label">Summary</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="~/Perfomance/index">
-                            <i class="fa-solid fa-chart-line"></i>
-                            <span class="nav-label">Performance</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="~/Quality/index">
-                            <i class="fa-solid fa-check-circle"></i>
-                            <span class="nav-label">Quality</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="~/LossTime/index">
-                            <i class="fa-solid fa-hourglass-half"></i>
-                            <span class="nav-label">Trend Loss<br>Time</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="~/LossTimeReport/index">
-                            <i class="fa-solid fa-file-lines"></i>
-                            <span class="nav-label">Detail Loss<br>Time</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="~/ProductionReport/index">
-                            <i class="fa-solid fa-industry"></i>
-                            <span class="nav-label">Production<br>Achievement</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#breakTimeFilterModal">
-                            <i class="fa-solid fa-clock"></i>
-                            <span class="nav-label">Break Time</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="~/Machine/index">
-                            <i class="fa-solid fa-gear"></i>
-                            <span class="nav-label">Machine</span>
-                        </a>
-                    </li>
-
-                 <!-- MORE MENU -->
-    <li class="nav-item" style="position: relative;">
-        <a href="#" id="moreMenuBtn">
-            <i class="fa-solid fa-ellipsis-vertical"></i>
-            <span class="nav-label">More</span>
-        </a>
-
-       <!-- POPUP MENU -->
-    <div id="moreMenuPopup" style="display: none; position: absolute; left: 100%; top: 0; margin-left: 8px; background: rgba(255, 255, 255, 0.20) !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 8px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2); min-width: 160px; z-index: 1000; padding: 4px 0;">
-        <a href="~/Summary/ProductionPlan" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 12px 14px; color: rgba(255, 255, 255, 0.5) !important; text-decoration: none; border-radius: 6px; transition: all 0.2s ease; margin: 0 4px;">
-            <i class="fa-solid fa-clipboard-list" style="font-size: 18px;"></i>
-            <span style="font-size: 8.5px; font-weight: 500; text-align: center; line-height: 1.1;">Production<br>Plan</span>
-        </a>
-    </div>
-    </li>
-             </ul>
-
-    <div class="align-items-center center">
-        <form method="post"
-              asp-area="Identity"
-              asp-page="/Account/Logout"
-              asp-route-returnUrl="@Url.Page("/Index", new { area = "" })">
-            <button type="submit" class="logout-btn">
-                <i class="fa-solid fa-right-from-bracket"></i>
-                <span class="nav-label">Log Out</span>
-            </button>
-        </form>
-    </div>
-
-
+            <div class="header-center">
+                <span>PANAM</span><span class="brand-o"></span><span>N</span>
             </div>
+            <div class="header-right">
+                <p id="current-date"></p>
+                <p id="current-time"></p>
+            </div>
+        </div>
+    </header>
 
-            <div class="main-content-wrapper">
-                <div class="p-4">
-                    <main role="main" class="pb-5">
-                        @RenderBody()
-                    </main>
+    <!-- Main Container -->
+    <div class="container-fluid p-0 d-flex" style="height: calc(100vh - 45px); margin-top:45px;">
+
+        <!-- Sidebar -->
+        <div id="bdSidebar" class="d-flex flex-column flex-shrink-0 text-white offcanvas-md offcanvas-start">
+            <ul class="mynav nav nav-pills flex-column">
+               <li class="nav-item">
+    <a href="http://10.83.33.103:1111/">
+        <i class="fa-solid fa-house"></i>
+        <span class="nav-label">Home</span>
+    </a>
+</li>
+                <li class="nav-item">
+                    <a href="/Summary/index">
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <span class="nav-label">Summary</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/Perfomance/index">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span class="nav-label">Performance</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/Quality/index">
+                        <i class="fa-solid fa-check-circle"></i>
+                        <span class="nav-label">Quality</span>
+                    </a>
+                </li>
+                 <li class="nav-item">
+                    <a href="/ProductionReport/index">
+                        <i class="fa-solid fa-industry"></i>
+                        <span class="nav-label">Production<br>Achievement</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/LossTimeReport/index">
+                        <i class="fa-solid fa-arrow-trend-down"></i>
+                        <span class="nav-label">Trend Loss<br>Time</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/LossTime/index">
+                        <i class="fa-solid  fa-file-lines"></i>
+                        <span class="nav-label">Detail Loss<br>Time</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#breakTimeFilterModal">
+                        <i class="fa-solid fa-clock"></i>
+                        <span class="nav-label">Break Time</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/Machine/index">
+                        <i class="fa-solid fa-gear"></i>
+                        <span class="nav-label">Machine</span>
+                    </a>
+                </li>
+
+                <!-- MORE MENU -->
+                <li class="nav-item" style="position: relative;">
+                    <a href="#" id="moreMenuBtn">
+                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                        <span class="nav-label">More</span>
+                    </a>
+
+                    <!-- POPUP MENU -->
+                    <div id="moreMenuPopup">
+                        <a href="/Summary/ProductionPlan">
+                            <i class="fa-solid fa-clipboard-list"></i>
+                            <span>Production<br>Plan</span>
+                        </a>
+                    </div>
+                </li>
+            </ul>
+
+            <!-- Logout Section -->
+            <div class="align-items-center center">
+                <form method="post"
+                      asp-area="Identity"
+                      asp-page="/Account/Logout"
+                      asp-route-returnUrl="@Url.Page("/Index", new { area = "" })">
+                    <button type="submit" class="logout-btn">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span class="nav-label">Log Out</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content-wrapper">
+            <div class="p-4">
+                <main role="main" class="pb-2">
+                    @RenderBody()
+                </main>
+
+    <!-- Footer -->
+    <div class="footer-copyright text-white text-center">
+        <p class="m-0 opacity-75">&copy; 2025 - Panasonic Manufacturing Indonesia (PMI) - AC BU</p>
+    </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Break Time Filter Modal -->
+    <div class="modal fade" id="breakTimeFilterModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title text-white fw-bold">
+                        <i class="fa-solid fa-clock me-2"></i>Break Time Settings
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    @{
+                        var models = new MonitoringSystem.Pages.Shared.ApplyBreakFilterModel(
+                            (ApplicationDbContext)Context.RequestServices.GetService(typeof(ApplicationDbContext)));
+                        await models.LoadBreakTimesAsync();
+                        await Html.RenderPartialAsync("_BreakTimeFilterPartial", models);
+                    }
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="footer-copyright text-white text-center">
-            <p class="m-0 opacity-75">&copy; 2025 - Panasonic Manufacturing Indonesia (PMI) - AC BU</p>
-        </div>
+  <!-- Validation Scripts - LOCAL -->
+<script src="~/js/jquery.validate.min.js"></script>
+<script src="~/js/jquery.validate.unobtrusive.min.js"></script>
 
-        <div class="modal fade" id="breakTimeFilterModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content" style="background: linear-gradient(180deg, #2d3548 0%, #1f2533 100%); border: 1px solid rgba(255,255,255,0.2); border-radius: 15px;">
-                    <div class="modal-header border-bottom border-secondary">
-                        <h5 class="modal-title text-white fw-bold">
-                            <i class="fa-solid fa-clock me-2"></i>Break Time Settings
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        @{
-                            var models = new MonitoringSystem.Pages.Shared.ApplyBreakFilterModel(
-                                (ApplicationDbContext)Context.RequestServices.GetService(typeof(ApplicationDbContext)));
-                            await models.LoadBreakTimesAsync();
-                            await Html.RenderPartialAsync("_BreakTimeFilterPartial", models);
-                        }
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- Custom Scripts -->
+    <script src="~/js/layout.js" asp-append-version="true"></script>
 
-
-
-    @*     <script>
-    $(document).ready(function () {
-        var currentPath = window.location.pathname.toLowerCase();
-
-                // Normalisasi currentPath: hilangkan '/index' di akhir jika ada, agar konsisten
-                if (currentPath.endsWith('/index')) {
-                    currentPath = currentPath.substring(0, currentPath.length - 6);
-                }
-                // Jika kosong setelah dihapus index (misal root), jadikan '/'
-                if (currentPath === '') currentPath = '/';
-
-                // 2. Reset semua active class
-                $('#bdSidebar .nav-item a').removeClass('active');
-
-                // 3. Cek setiap link
-                $('#bdSidebar .nav-item a').each(function () {
-                    var $this = $(this);
-                    var href = $this.attr('href');
-
-                    // Skip jika href tidak valid
-                    if (!href || href === '#') return;
-
-                    // 4. Bersihkan href dari '~' dan '/index' agar bisa dibandingkan apple-to-apple
-                    // Contoh: "~/LossTime/index" menjadi "/losstime"
-                    var linkPath = href.replace('~', '').toLowerCase();
-
-                    if (linkPath.endsWith('/index')) {
-                        linkPath = linkPath.substring(0, linkPath.length - 6);
-                    }
-                    if (linkPath === '') linkPath = '/';
-
-            if (pageName && currentPath.includes(pageName)) {
-                $(this).addClass('active');
-            }
-        });
-    });
-    </script> *@
-        <script>
-            $(document).ready(function () {
-                // 1. Ambil path saat ini dan bersihkan
-                var currentPath = window.location.pathname.toLowerCase();
-
-                // Normalisasi currentPath: hilangkan '/index' di akhir jika ada, agar konsisten
-                if (currentPath.endsWith('/index')) {
-                    currentPath = currentPath.substring(0, currentPath.length - 6);
-                }
-                // Jika kosong setelah dihapus index (misal root), jadikan '/'
-                if (currentPath === '') currentPath = '/';
-
-                // 2. Reset semua active class
-                $('#bdSidebar .nav-item a').removeClass('active');
-
-                // 3. Cek setiap link
-                $('#bdSidebar .nav-item a').each(function () {
-                    var $this = $(this);
-                    var href = $this.attr('href');
-
-                    // Skip jika href tidak valid
-                    if (!href || href === '#') return;
-
-                    // 4. Bersihkan href dari '~' dan '/index' agar bisa dibandingkan apple-to-apple
-                    // Contoh: "~/LossTime/index" menjadi "/losstime"
-                    var linkPath = href.replace('~', '').toLowerCase();
-
-                    if (linkPath.endsWith('/index')) {
-                        linkPath = linkPath.substring(0, linkPath.length - 6);
-                    }
-                    if (linkPath === '') linkPath = '/';
-
-                    // 5. LOGIKA BARU (EXACT MATCH & PARENT CHECK)
-
-                    // Cek 1: Apakah path SAMA PERSIS? (Contoh: /losstime == /losstime)
-                    if (currentPath === linkPath) {
-                        $this.addClass('active');
-                    }
-                    // Cek 2: Apakah ini sub-halaman? (Contoh: /losstime/create harus mengaktifkan /losstime)
-                    // PENTING: Kita tambah '/' setelah linkPath agar tidak salah baca nama folder yang mirip
-                    // Ini mencegah "/losstimereport" dianggap anak dari "/losstime"
-                    else if (currentPath.startsWith(linkPath + '/')) {
-                        $this.addClass('active');
-                    }
-                });
-            });
-        </script>
-        <script>
-            function updateDateTime() {
-                const now = new Date();
-                const dateStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '.');
-                const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-                document.getElementById('current-date').textContent = dateStr;
-                document.getElementById('current-time').textContent = timeStr;
-            }
-            $(document).ready(function () {
-                updateDateTime();
-                setInterval(updateDateTime, 1000);
-            });
-        </script>
-    <script>
-    // More Menu Toggle - FIXED VERSION
-    document.addEventListener('DOMContentLoaded', function() {
-        const moreBtn = document.getElementById('moreMenuBtn');
-        const morePopup = document.getElementById('moreMenuPopup');
-
-        if (moreBtn && morePopup) {
-            moreBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-
-                // FIX: Cek kalau display kosong ('') atau 'none'
-                if (morePopup.style.display === 'none' || morePopup.style.display === '') {
-                    morePopup.style.display = 'block';
-                } else {
-                    morePopup.style.display = 'none';
-                }
-            });
-
-            // Close popup when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!moreBtn.contains(e.target) && !morePopup.contains(e.target)) {
-                    morePopup.style.display = 'none';
-                }
-            });
-        }
-    });
-    </script>
-        
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation/1.19.5/jquery.validate.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
-        @await RenderSectionAsync("Scripts", required: false)
-    </body>
-    </html>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

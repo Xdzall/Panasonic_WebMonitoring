@@ -297,8 +297,7 @@
 
 /* Default body untuk dashboard - Full White */
 body:not(.auth-body) {
-    background-color: #ffffff !important;
-    background-image: none !important;
+    background: transparent !important; /* ← GANTI JADI TRANSPARENT! */
     color: #333333;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
