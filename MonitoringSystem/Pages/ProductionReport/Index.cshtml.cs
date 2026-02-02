@@ -128,12 +128,10 @@ private void LoadChartData()
             string planShiftFilter = "";
             if (!SelectedShifts.Contains("All") && SelectedShifts.Any())
             {
-                var shifts = string.Join(",", SelectedShifts.Select(s => $"'{s}'"));
-                planShiftFilter = $"AND pr.Shift IN ({shifts})";
+                var conditions = SelectedShifts.Select(s => $"pr.shift LIKE '%{s}%'");
+                planShiftFilter = $"AND ({string.Join(" OR ", conditions)})";
             }
-            // Jika "All", filter kosong = ambil semua
 
-            // Di bagian actualShifts
             List<string> actualShifts = new List<string>();
             if (SelectedShifts.Contains("All"))
             {
