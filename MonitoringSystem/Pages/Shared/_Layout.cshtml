@@ -1,46 +1,385 @@
-﻿@using MonitoringSystem.Data
+﻿    
+    
 
-@{
-    string layoutMenu = ViewContext.HttpContext.Request.Cookies["layoutType"];
-    string baseColor = "linear-gradient(109.6deg, rgb(61, 121, 176) 11.3%, rgb(35, 66, 164) 91.1%);";
-    var title = ViewData["Title"] as string;
-}
+    <!DOCTYPE html>
+    <html lang="en" class="reusable-bg-html">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        @*<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">*@
 
-    <title>@ViewData["Title"] - MonitoringSystem</title>
+        <title>@ViewData["Title"] - MonitoringSystem</title>
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="~/css/Sidebar.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/Navbar.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/lib/fontawesome/css/all.min.css" />
+        <link rel="stylesheet" href="~/css/sweetalert2.css" />
+        <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/MonitoringSystem.styles.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/site-identity.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/background-style.css" asp-append-version="true" />
 
-    <!-- CSS -->
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/lib/fontawesome/css/all.min.css" />
-    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/sweetalert2.css" />
+        <script src="~/lib/jquery/dist/jquery.min.js"></script>
+        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="~/lib/chartjs/dist/chart.umd.js"></script>
 
-    <!-- Custom CSS - Refactored -->
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/Sidebar.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/Navbar.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/site-identity.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/MonitoringSystem.styles.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/background-style.css?v=999" />
+         <style type="text/css">
+            @font-face {
+                font-family: DINProCondensedMedium;
+                src: url('/assets/fonts/DINPro-CondensedMedium.ttf') format('truetype');
+                font-weight: 500;
+                font-style: normal;
+            }
+        </style>
 
-    <!-- JavaScript Libraries -->
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/lib/chartjs/dist/chart.umd.js"></script>
-</head>
+        <style>
+        /* 1. BACKGROUND */
+     
 
-<body class="reusable-bg">
+        /* 2. HEADER */
+        .main-header {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            height:45px !important;
+            background: transparent !important;
+            z-index: 10 !important;
+            pointer-events: none;
+        }
 
-    <!-- Header -->
-    <header class="main-header">
-        <div class="header-content">
-            <div class="header-left">
-                <img src="~/assets/PanasonicIcon.png" alt="Panasonic" />
+        .header-content {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            height: 30px !important;
+            padding: 0 25px !important;
+            position: relative !important;
+            margin-top: 9px !important;
+        }
+
+        .header-left {
+        display: flex !important;
+        align-items: center !important;
+        height: 100% !important;
+    }
+
+    .header-left img {
+        height: 12px !important; /* Sesuaikan tinggi gambar, bisa diganti 18px atau 22px */
+        width: auto !important; /* Biar proporsi gambar tetap */
+        object-fit: contain !important;
+    }
+
+       .header-center {
+        display: flex !important;
+        align-items: center !important; /* ← UBAH dari baseline jadi center */
+        gap: 0px !important;
+        font-size: 15px !important;
+        letter-spacing: 0.08em !important;
+        font-family: "DINPro-CondensedMedium", -apple-system, BlinkMacSystemFont, sans-serif !important;
+    }
+
+    .header-center .brand-o {
+        width: 14px !important; /* ← GEDEIN lagi dari 12px jadi 14px */
+        height: 14px !important; /* ← GEDEIN lagi dari 12px jadi 14px */
+        border: 2px solid #ffffff !important;
+        border-radius: 50% !important;
+        display: inline-block;
+        position: relative;
+        top: 1px !important;
+    }
+
+    /* Titik di tengah */
+    .header-center .brand-o::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 5px; /* ← GEDEIN titik juga dari 4px jadi 5px */
+        height: 5px;
+        background-color: #ffffff;
+        border-radius: 50%;
+    }
+
+    .header-center span { 
+        color: #ffffff !important;
+        line-height: 1 !important; /* ← TAMBAH INI */
+    }
+    .header-center span:last-child {
+        margin-left: -4px !important; /* ← N jadi rapat ke lingkaran */
+    }
+        .header-right {
+            font-family: 'Montserrat', 'Poppins', sans-serif !important;
+            font-weight: 600 !important;
+            font-size: 12px !important;
+            color: #ffffff !important;
+            display: flex !important;
+            gap: 12px !important;
+            align-items: center !important;
+        }
+
+        .header-right p { margin: 0 !important; }
+        .header-right p:first-child::after { content: "|"; margin-left: 12px; color: #ffffff; }
+
+       /* 9. SIDEBAR - ULTRA COMPACT (GAP 2PX) */
+    #bdSidebar {
+        width: 75px !important; 
+        margin: 4px 0 10px -2px !important; 
+        height: calc(100vh - 70px) !important; 
+        border-radius: 12px !important;
+        position: relative !important;
+        z-index: 30 !important;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
+        display: flex !important;
+        flex-direction: column !important;
+        padding: 8px 0 !important; /* Padding kotak sedikit ditambah agar simetris */
+        overflow: visible !important;
+        background: rgba(255, 255, 255, 0.20) !important;
+        border: 2px solid rgba(255, 255, 255, 0.3) !important;
+        border-left: none !important;
+    }
+
+    #bdSidebar .mynav {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 2px !important; /* JARAK ANTAR IKON PAS 2PX */
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+    }
+
+    #bdSidebar .nav-item {
+        width: 100% !important;
+        display: flex !important;
+        justify-content: center !important;
+        margin: 0 !important; 
+    }
+
+    #bdSidebar .nav-item a {
+        width: 88px !important;
+        height: 56px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 8px !important;
+        background: transparent !important; /* ← TAMBAH INI */
+        color: rgba(255, 255, 255, 0.5) !important;
+        text-decoration: none !important;
+        transition: all 0.2s ease !important;
+        padding: 0 !important;
+    }
+
+    #bdSidebar .nav-item a:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    /* Active/Current Page Indicator - Garis Kiri */
+    #bdSidebar .nav-item a.active {
+        color: #ffffff !important; /* Icon jadi putih penuh */
+        position: relative;
+    }
+
+    #bdSidebar .nav-item a.active::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: #ffffff;
+        border-radius: 0 3px 3px 0;
+    }
+
+    /* Label Teks */
+    #bdSidebar .nav-label { 
+        font-size: 8.5px !important; 
+        font-weight: 500; 
+        text-align: center; 
+        line-height: 1.1; 
+        white-space: nowrap; 
+        letter-spacing: -0.1px;
+    }
+
+    /* Logout Button Style */
+    #bdSidebar .center form {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        display: flex !important;
+        justify-content: center !important;
+    }
+
+    /* Logout Section - PUSH KE BOTTOM */
+    #bdSidebar .align-items-center.center {
+        margin-top: auto !important;  /* INI YANG PENTING - push ke bawah */
+        padding: 8px 0 !important;
+        width: 100% !important;
+        display: flex !important;
+        justify-content: center !important;
+    }
+
+    /* Logout Button Style */
+    #bdSidebar .center form {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        display: flex !important;
+        justify-content: center !important;
+    }
+
+    #bdSidebar .logout-btn {
+        width: 88px !important;
+        height: 50px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 8px !important;
+        background: transparent !important;
+        border: none !important;
+        color: #ff8a80 !important;
+        cursor: pointer !important;
+        text-decoration: none !important;
+        padding: 0 !important;
+        transition: all 0.2s ease !important;
+    }
+
+    #bdSidebar .logout-btn:hover {
+        background: rgba(255, 138, 128, 0.1) !important;
+        color: #ff5252 !important;
+    }
+
+    #bdSidebar .logout-btn i {
+        font-size: 15px !important;
+        margin-bottom: 2px !important;
+    }
+
+    #bdSidebar .logout-btn .nav-label {
+        font-size: 9px !important;
+        font-weight: 500 !important;
+        text-align: center !important;
+        line-height: 1.1 !important;
+    }
+    #bdSidebar .center a {
+        width: 88px !important;
+        height: 50px !important; 
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 8px !important;
+        background: transparent !important; /* ← GANTI JADI TRANSPARENT */
+        color: #ff8a80 !important;
+        text-decoration: none !important;
+    }
+
+    #bdSidebar .center a i { font-size: 15px !important; margin-bottom: 2px !important; }
+        #bdSidebar .nav-label { font-size: 9px !important; font-weight: 500; text-align: center; line-height: 1.1; }
+
+        /* Logout Section */
+        #bdSidebar .align-items-center.center {
+            margin-top: auto !important;
+            padding: 0 !important;
+            width: 100% !important;
+            display: flex !important;
+            justify-content: center !important;
+        }
+
+        /* Logout Section */
+    #bdSidebar .align-items-center.center a {
+        width: 70px !important;
+        height: 70px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 12px !important;
+        background: transparent !important; /* ← GANTI TRANSPARENT */
+        border: none !important; /* ← HAPUS BORDER */
+        color: #f44336 !important;
+        text-decoration: none !important;
+    }
+
+        /* 10. CONTENT AREA */
+        .main-content-wrapper {
+            flex: 1;
+            height: calc(100vh -45px);
+            overflow: auto !important;
+            padding-top: 3px;
+        }
+
+        .main-content-wrapper::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+    }
+        .main-content-wrapper::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .main-content-wrapper::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+    }
+
+    .main-content-wrapper::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.5);
+    }
+        html, body { overflow: hidden !important; height: 100vh; margin: 0; }
+
+        /* MODAL FIX */
+        .modal-backdrop { display: none !important; }
+        .modal { z-index: 1050 !important; pointer-events: auto !important; }
+        body.modal-open #bdSidebar { pointer-events: none !important; opacity: 0.5; }
+
+        #exportModal .modal-content {
+            background: linear-gradient(180deg, #2d3548 0%, #1f2533 100%) !important;
+            border: 1px solid rgba(255,255,255,0.2) !important;
+            border-radius: 15px !important;
+            color: white;
+        }
+      .footer-copyright {
+        position: fixed !important;
+        bottom: 5px !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        padding: 5px 0 !important;
+        background: transparent !important;
+        z-index: 5 !important;
+        font-size: 10px !important;
+    }
+
+    .footer-copyright p {
+        margin: 0 !important;
+        opacity: 0.6 !important;
+        color: #ffffff !important;
+    }
+    #moreMenuPopup a:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
+        color: #ffffff !important;
+    }
+        </style> 
+    </head>
+
+    <body class="reusable-bg">
+
+        <header class="main-header">
+            <div class="header-content">
+                <div class="header-left"><img src="~/assets/PanasonicIcon.png" alt="Panasonic" /></div>
+                <div class="header-center">
+                    <span>PANAM</span><span class="brand-o"></span><span>N</span>
+                </div>
+
+                <div class="header-right">
+                    <p id="current-date"></p>
+                    <p id="current-time"></p>
+                </div>
             </div>
             <div class="header-center">
                 <span>PANAM</span><span class="brand-o"></span><span>N</span>

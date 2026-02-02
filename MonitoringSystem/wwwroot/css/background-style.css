@@ -1,7 +1,33 @@
-﻿html {
-    background: url('/assets/BackgroundPanamon.png') no-repeat center center fixed !important;
+﻿/* ====================================================
+   GLOBAL BACKGROUND SETTINGS - SATU DEFINISI UNTUK SEMUA
+   ==================================================== */
+
+/* Background image - loaded once and shared */
+:root {
+    --main-bg-url: url('/assets/BackgroundPanamon.png');
+}
+
+html.reusable-bg-html {
+
+    height: 100%;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+/* Auth body specific - DENGAN OVERLAY */
+.auth-body {
+    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), var(--main-bg-url) no-repeat center center fixed !important;
     background-size: cover !important;
-    min-height: 100vh !important;
+    min-height: 100vh;
+    padding: 20px 0;
+}
+
+/* Reusable background body - TANPA OVERLAY */
+body.reusable-bg {
+    background: var(--main-bg-url) no-repeat center center fixed !important;
+    background-size: cover !important;
+    background-color: transparent !important;
     margin: 0 !important;
     padding: 0 !important;
 }
